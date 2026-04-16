@@ -1,0 +1,116 @@
+﻿<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --theme-color: #1abc9c; 
+        --theme-hover: #16a085;
+        --bg-light: #f8f9fa;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--bg-light);
+    }
+
+    .modern-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        background: white;
+        transition: transform 0.2s;
+        overflow: hidden;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        background-color: var(--theme-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+
+    .btn-theme {
+        background-color: var(--theme-color);
+        color: white;
+        border-radius: 50px;
+        padding: 10px 25px;
+        border: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+        .btn-theme:hover {
+            background-color: var(--theme-hover);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(26, 188, 156, 0.3);
+        }
+</style>
+@model List<Tartisma>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Tartışma Platformu</h2>
+            <p class="text-muted small">Toplulukla etkileşime geçin ve fikirlerinizi paylaşın.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-theme shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i>Yeni Konu Başlat
+        </a>
+    </div>
+    <div class="row">
+        @if (Model.Count == 0)
+        {
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-chat-square-text text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                <h4 class="text-muted mt-3">Henüz hiç tartışma başlatılmamış.</h4>
+                <p>İlk konuyu sen başlat!</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var t in Model)
+            {
+                <div class="col-12 mb-3">
+                    <div class="modern-card p-4 h-100 position-relative">
+                        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background-color: var(--theme-color);"></div>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="user-avatar shadow-sm">
+                                    @(t.User.UserName.Substring(0, 1))
+                                </div>
+                                <div>
+                                    <small class="d-block fw-bold text-dark">@t.User.UserName</small>
+                                   
+                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                        <i class="bi bi-calendar3 me-1"></i>@t.CreatedAt.ToString("dd MMM yyyy")
+                                    </small>
+                                </div>
+                            </div>
+                            <span class="badge bg-light text-secondary border rounded-pill px-3">
+                                <i class="bi bi-chat-dots me-1"></i>Detaylar
+                            </span>
+                        </div>
+
+                        <h5 class="fw-bold mb-2">@t.Title</h5>
+                        <p class="text-muted mb-4" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            @t.Content
+                        </p>
+
+                        <a asp-action="Details" asp-route-id="@t.Id" class="btn btn-outline-dark btn-sm rounded-pill px-4">
+                            Tartışmaya Gir <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

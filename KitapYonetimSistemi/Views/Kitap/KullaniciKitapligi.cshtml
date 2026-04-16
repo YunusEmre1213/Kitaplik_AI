@@ -1,0 +1,68 @@
+﻿@model IEnumerable<KitapYonetimSistemi.Models.KullaniciKitaplik>
+
+@{
+    ViewData["Title"] = ViewBag.KullaniciAdi + " - Kitaplık";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="KullaniciKitapliklari">Kullanıcı Kitaplıkları</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewBag.KullaniciAdi</li>
+        </ol>
+    </nav>
+
+    <h1>👤 @ViewBag.KullaniciAdi - Kitaplık</h1>
+    <p class="text-muted">Bu kullanıcının kitaplığında <strong>@Model.Count()</strong> kitap var.</p>
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var kayit in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">@kayit.Kitap.KitapAdi</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">✍️ @kayit.Kitap.YazarAdi</h6>
+                            <p class="card-text">
+                                <small class="text-muted">📅 Yayın: @kayit.Kitap.YayinYili</small><br />
+                                <small class="text-muted">📆 Eklenme: @kayit.EklenmeTarihi.ToString("dd.MM.yyyy")</small>
+                            </p>
+                            <p class="card-text">
+                                @if (kayit.Kitap.Aciklama.Length > 80)
+                                {
+                                    @kayit.Kitap.Aciklama.Substring(0, 80)
+                        
+                                    <text>...</text>
+                                }
+                                else
+                                {
+                                    @kayit.Kitap.Aciklama
+                                }
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <a asp-action="Detay" asp-route-id="@kayit.KitapId" class="btn btn-primary btn-sm">
+                                📖 Detay ve Yorumlar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <h4>📚 Kitaplık Boş</h4>
+            <p>Bu kullanıcının henüz herkese açık kitabı yok.</p>
+        </div>
+    }
+
+    <div class="mt-4">
+        <a asp-action="KullaniciKitapliklari" class="btn btn-secondary">
+            ⬅️ Geri Dön
+        </a>
+    </div>
+</div>

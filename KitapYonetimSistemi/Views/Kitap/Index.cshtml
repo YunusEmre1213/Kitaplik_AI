@@ -1,0 +1,118 @@
+﻿@model IEnumerable<KitapYonetimSistemi.Models.Kitap>
+
+@{
+    ViewData["Title"] = "Kitaplar";
+}
+
+<h1 class="page-title">📚 Kitaplar</h1>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Mesaj"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (Model.Any())
+{
+    <div class="row g-4">
+        @foreach (var kitap in Model)
+        {
+            <div class="col-md-4">
+                <div class="card book-card h-100 shadow-sm border-0">
+                    @if (!string.IsNullOrEmpty(kitap.KapakResmiUrl))
+                    {
+                        <img src="@kitap.KapakResmiUrl" class="card-img-top" alt="@kitap.KitapAdi" style="height: 300px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center text-white" style="height: 300px; font-size: 3rem;">
+                            📚
+                        </div>
+                    }
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate" title="@kitap.KitapAdi">@kitap.KitapAdi</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@kitap.YazarAdi</h6>
+
+                        @if (kitap.ToplamPuanSayisi > 0)
+                        {
+                            <div class="mb-2">
+                                <span class="text-warning">⭐ @kitap.OrtalamaPuan.ToString("0.0")</span>
+                                <small class="text-muted">(@kitap.ToplamPuanSayisi)</small>
+                            </div>
+                        }
+
+                        <p class="card-text small text-muted mb-4">
+                            @(kitap.Aciklama != null && kitap.Aciklama.Length > 80 ? kitap.Aciklama.Substring(0, 80) + "..." : kitap.Aciklama)
+                        </p>
+
+                        <div class="mt-auto d-flex justify-content-between gap-1">
+                            <a asp-action="Detay" asp-route-id="@kitap.Id" class="btn btn-sm btn-outline-secondary flex-grow-1">Detay</a>
+
+                            <a asp-controller="AiLibrary" asp-action="AnalizEt" asp-route-id="@kitap.Id"
+                               class="btn btn-sm btn-outline-primary flex-grow-1"
+                               style="border-color: #6a11cb; color: #6a11cb;"
+                               title="Yapay Zeka Analizi"
+                               onclick="document.getElementById('aiLoadingOverlay').style.display = 'flex';">
+                                <i class="bi bi-stars"></i> AI
+                            </a>
+
+                            <button type="button" class="btn btn-sm btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#modal@(kitap.Id)">
+                                Ekle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modal@(kitap.Id)" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Kitaplığa Ekle</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form asp-action="KitapligaEkleYeni" method="post">
+                                <div class="modal-body">
+                                    <input type="hidden" name="kitapId" value="@kitap.Id" />
+                                    <div class="mb-3">
+                                        <label class="form-label">Okuma Durumu:</label>
+                                        <select name="okumaDurumu" class="form-select">
+                                            <option value="1">📖 Okunacak</option>
+                                            <option value="2">📕 Okuyorum</option>
+                                            <option value="3">✅ Okundu</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="herkesGorebilir" id="check@(kitap.Id)">
+                                        <label class="form-check-label" for="check@(kitap.Id)">
+                                            Herkes görebilsin
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                    <button type="submit" class="btn btn-primary">Ekle</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info text-center py-5">
+        <h4>📚 Henüz Kitap Yok</h4>
+        <p>Admin henüz kitap eklememiş.</p>
+    </div>
+}
+
+<div id="aiLoadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(5px);">
+    <div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status"></div>
+    <h3 class="mt-3 text-white fw-bold">Yapay Zeka Düşünüyor...</h3>
+    <p class="text-white-50">Kitabı inceliyor, lütfen bekleyin.</p>
+</div>

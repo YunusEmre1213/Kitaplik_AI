@@ -1,0 +1,93 @@
+﻿<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --theme-color: #1abc9c; 
+        --theme-hover: #16a085;
+        --bg-light: #f8f9fa;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--bg-light);
+    }
+
+    .modern-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        background: white;
+        transition: transform 0.2s;
+        overflow: hidden;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        background-color: var(--theme-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+
+    .btn-theme {
+        background-color: var(--theme-color);
+        color: white;
+        border-radius: 50px;
+        padding: 10px 25px;
+        border: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+        .btn-theme:hover {
+            background-color: var(--theme-hover);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(26, 188, 156, 0.3);
+        }
+</style>
+@model Tartisma
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="modern-card p-5">
+                <div class="text-center mb-4">
+                    <div class="icon-box mx-auto mb-3 text-white d-flex align-items-center justify-content-center shadow"
+                         style="width: 60px; height: 60px; border-radius: 50%; background-color: var(--theme-color);">
+                        <i class="bi bi-pen-fill fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold">Yeni Konu Başlat</h3>
+                    <p class="text-muted">Merak ettiğin bir şey mi var? Topluluğa sor.</p>
+                </div>
+
+                <form asp-action="Create" method="post">
+                    <div class="form-floating mb-3">
+                        <input asp-for="Title" class="form-control rounded-4 bg-light border-0" id="floatingTitle" placeholder="Konu başlığı">
+                        <label for="floatingTitle" class="text-muted">Konu Başlığı</label>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <textarea asp-for="Content" class="form-control rounded-4 bg-light border-0" id="floatingContent" placeholder="İçerik" style="height: 150px"></textarea>
+                        <label for="floatingContent" class="text-muted">Düşüncelerin neler?</label>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-theme py-3 shadow-sm">
+                            <i class="bi bi-send-fill me-2"></i>Tartışmayı Başlat
+                        </button>
+                        <a asp-action="Index" class="btn btn-link text-decoration-none text-muted">Vazgeç ve Geri Dön</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

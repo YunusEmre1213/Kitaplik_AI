@@ -1,0 +1,305 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f8f9fa;
+    }
+
+    .hero-card {
+        background: linear-gradient(120deg, #2c3e50 0%, #3498db 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        box-shadow: 0 10px 30px rgba(44, 62, 80, 0.15);
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+        opacity: 0.1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .custom-card {
+        background: white;
+        border: none;
+        border-radius: 16px;
+        padding: 2.5rem 1.5rem;
+        height: 100%;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        border-bottom: 4px solid transparent;
+    }
+
+        .custom-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+
+    /* MAVİ KART */
+    .card-blue {
+        border-bottom-color: #3498db;
+    }
+
+        .card-blue .icon-box {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+        }
+
+    /* MOR KART */
+    .card-purple {
+        border-bottom-color: #9b59b6;
+    }
+
+        .card-purple .icon-box {
+            background-color: rgba(155, 89, 182, 0.1);
+            color: #9b59b6;
+        }
+
+    /* TURUNCU KART */
+    .card-orange {
+        border-bottom-color: #e67e22;
+    }
+
+        .card-orange .icon-box {
+            background-color: rgba(230, 126, 34, 0.1);
+            color: #e67e22;
+        }
+
+    /* YENİ EKLENEN: TURKUAZ/YEŞİL KART (TARTIŞMA İÇİN) */
+    .card-green {
+        border-bottom-color: #1abc9c;
+    }
+
+        .card-green .icon-box {
+            background-color: rgba(26, 188, 156, 0.1);
+            color: #1abc9c;
+        }
+
+    .icon-box {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1.5rem auto;
+        transition: all 0.3s ease;
+    }
+
+    .custom-card:hover .icon-box {
+        transform: scale(1.1);
+    }
+
+    .card-title {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .card-text {
+        color: #7f8c8d;
+        margin-bottom: 2rem;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    /* BUTONLAR */
+    .btn-custom {
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-custom-blue {
+        color: #3498db;
+        border: 2px solid #3498db;
+    }
+
+        .btn-outline-custom-blue:hover {
+            background: #3498db;
+            color: white;
+        }
+
+    .btn-outline-custom-purple {
+        color: #9b59b6;
+        border: 2px solid #9b59b6;
+    }
+
+        .btn-outline-custom-purple:hover {
+            background: #9b59b6;
+            color: white;
+        }
+
+    .btn-outline-custom-orange {
+        color: #e67e22;
+        border: 2px solid #e67e22;
+    }
+
+        .btn-outline-custom-orange:hover {
+            background: #e67e22;
+            color: white;
+        }
+
+    /* YENİ BUTON STİLİ */
+    .btn-outline-custom-green {
+        color: #1abc9c;
+        border: 2px solid #1abc9c;
+    }
+
+        .btn-outline-custom-green:hover {
+            background: #1abc9c;
+            color: white;
+        }
+
+    .admin-alert {
+        background-color: #fff;
+        border-left: 5px solid #f1c40f;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border-radius: 8px;
+    }
+</style>
+
+<div class="container my-5">
+
+    <div class="hero-card text-center">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="display-4 fw-bold mb-3">HOŞGELDİNİZ</h1>
+            <p class="lead mb-4" style="opacity: 0.9; max-width: 700px; margin: 0 auto;">
+                Kütüphanenizi modern bir arayüzle yönetin. Okuduğunuz kitapları listeleyin,
+                yeni dünyalar keşfedin ve düşüncelerinizi özgürce paylaşın.
+            </p>
+            @if (!User.Identity.IsAuthenticated)
+            {
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-light text-primary fw-bold px-4 py-2 rounded-pill shadow-sm">Giriş Yap</a>
+                    <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-light fw-bold px-4 py-2 rounded-pill">Kayıt Ol</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-6 col-lg-3">
+            <div class="custom-card card-blue text-center">
+                <div class="icon-box">
+                    <i class="bi bi-journal-album"></i>
+                </div>
+                <h5 class="card-title">Arşivi Keşfet</h5>
+                <p class="card-text">Geniş kitap koleksiyonumuz arasında dolaşın, yeni yazarlar ve türler bulun.</p>
+
+                @if (User.IsInRole("User"))
+                {
+                    <a asp-controller="Kitap" asp-action="Index" class="btn btn-custom btn-outline-custom-blue">İncele</a>
+                }
+                else if (User.Identity.IsAuthenticated)
+                {
+                    <span class="text-muted small">Yetki Bekleniyor</span>
+                }
+                else
+                {
+                    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-custom btn-outline-custom-blue">Giriş Yap</a>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="custom-card card-green text-center">
+                <div class="icon-box">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h5 class="card-title">Tartışma Başlat</h5>
+                <p class="card-text">Sohbet odaları oluşturarak diğer okurlarla kitaplar üzerine tartışın.</p>
+
+                @if (User.IsInRole("User"))
+                {
+                    <a asp-controller="Kitap" asp-action="Index" class="btn btn-custom btn-outline-custom-green">Sohbet Et</a>
+                }
+                else if (User.Identity.IsAuthenticated)
+                {
+                    <span class="text-muted small">Yetki Bekleniyor</span>
+                }
+                else
+                {
+                    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-custom btn-outline-custom-green">Giriş Yap</a>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="custom-card card-purple text-center">
+                <div class="icon-box">
+                    <i class="bi bi-chat-dots-fill"></i>
+                </div>
+                <h5 class="card-title">Fikirlerini Yaz</h5>
+                <p class="card-text">Okuduğun kitaplar hakkında eleştirilerini yaz, diğer okurlara ışık tut.</p>
+
+                @if (User.IsInRole("User"))
+                {
+                    <a asp-controller="Kitap" asp-action="Index" class="btn btn-custom btn-outline-custom-purple">Yorum Yap</a>
+                }
+                else
+                {
+                    <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-custom btn-outline-custom-purple">Katıl</a>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="custom-card card-orange text-center">
+                <div class="icon-box">
+                    <i class="bi bi-bookmarks-fill"></i>
+                </div>
+                <h5 class="card-title">Kütüphaneni Kur</h5>
+                <p class="card-text">Kendi okuma listeni oluştur, okuduklarını ve okuyacaklarını düzenle.</p>
+
+                @if (User.IsInRole("User"))
+                {
+                    <a asp-controller="Kitap" asp-action="Kitapligim" class="btn btn-custom btn-outline-custom-orange">Listem</a>
+                }
+                else
+                {
+                    <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-custom btn-outline-custom-orange">Hesap Aç</a>
+                }
+            </div>
+        </div>
+
+    </div> @if (User.IsInRole("Admin"))
+    {
+        <div class="admin-alert p-4 mt-5 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-shield-lock text-warning fs-2 me-3"></i>
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">Yönetici Paneli</h5>
+                    <p class="text-muted mb-0 small">Sistem ayarları ve içerik yönetimi için panele erişin.</p>
+                </div>
+            </div>
+            <a asp-controller="Admin" asp-action="Index" class="btn btn-warning text-white fw-bold px-4 rounded-pill shadow-sm">Panele Git</a>
+        </div>
+    }
+
+</div>

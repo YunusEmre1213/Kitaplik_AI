@@ -1,0 +1,80 @@
+﻿@model IEnumerable<KitapYonetimSistemi.Models.KullaniciKitaplik>
+
+@if (Model.Any())
+{
+    <div class="row g-4">
+        @foreach (var kayit in Model)
+        {
+            <div class="col-md-4">
+                <div class="card">
+                    @if (!string.IsNullOrEmpty(kayit.Kitap.KapakResmiUrl))
+                    {
+                        <img src="@kayit.Kitap.KapakResmiUrl" class="book-cover" alt="@kayit.Kitap.KitapAdi">
+                    }
+                    else
+                    {
+                        <div class="book-cover bg-secondary d-flex align-items-center justify-content-center text-white" style="font-size: 3rem;">
+                            📚
+                        </div>
+                    }
+
+                    <div class="card-body">
+                        <h5 class="card-title">@kayit.Kitap.KitapAdi</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@kayit.Kitap.YazarAdi</h6>
+
+                        <!-- Durum Badge -->
+                        <div class="mb-2">
+                            @switch (kayit.OkumaDurumu)
+                            {
+                                case OkumaDurumu.Okunacak:
+                                    <span class="badge status-okunacak">📖 Okunacak</span>
+                                    break;
+                                case OkumaDurumu.Okuyorum:
+                                    <span class="badge status-okuyorum">📕 Okuyorum</span>
+                                    break;
+                                case OkumaDurumu.Okundu:
+                                    <span class="badge status-okundu">✅ Okundu</span>
+                                    break;
+                            }
+                        </div>
+
+                        <!-- Durum Değiştir -->
+                        <form asp-action="OkumaDurumuDegistir" method="post">
+                            <input type="hidden" name="kitaplikId" value="@kayit.Id" />
+                            <select name="yeniDurum" class="form-select form-select-sm mb-2" onchange="this.form.submit()">
+                                <option value="">-- Durum Değiştir --</option>
+                                <option value="1" @@(kayit.OkumaDurumu == OkumaDurumu.Okunacak ? "selected" : "")>📖 Okunacak</option>
+                                <option value="2" @@(kayit.OkumaDurumu == OkumaDurumu.Okuyorum ? "selected" : "")>📕 Okuyorum</option>
+                                <option value="3" @@(kayit.OkumaDurumu == OkumaDurumu.Okundu ? "selected" : "")>✅ Okundu</option>
+                            </select>
+                        </form>
+
+                        <div class="small text-muted">
+                            <div>Eklenme: @kayit.EklenmeTarihi.ToString("dd.MM.yyyy")</div>
+                            @if (kayit.OkumayaBaslamaTarihi.HasValue)
+                            {
+                                <div>Başlama: @kayit.OkumayaBaslamaTarihi.Value.ToString("dd.MM.yyyy")</div>
+                            }
+                            @if (kayit.OkumaBitisTarihi.HasValue)
+                            {
+                                <div>Bitiş: @kayit.OkumaBitisTarihi.Value.ToString("dd.MM.yyyy")</div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-white">
+                        <a asp-action="Detay" asp-route-id="@kayit.KitapId" class="btn btn-sm btn-primary">Detay</a>
+                        <form asp-action="KitapliktanCikar" method="post" class="d-inline" onsubmit="return confirm('Emin misiniz?');">
+                            <input type="hidden" name="kitapId" value="@kayit.KitapId" />
+                            <button type="submit" class="btn btn-sm btn-danger">Çıkar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="text-muted text-center">Bu kategoride kitap bulunmuyor.</p>
+}

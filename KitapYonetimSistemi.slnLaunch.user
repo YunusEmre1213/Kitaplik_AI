@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "KitapYonetimSistemi\\KitapYonetimSistemi.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "KitapYonetim.AI.Service\\KitapYonetim.AI.Service.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

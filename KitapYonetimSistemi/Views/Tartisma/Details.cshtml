@@ -1,0 +1,112 @@
+﻿@model Tartisma
+
+<style>
+    .comment-bubble {
+        background-color: #f1f2f6;
+        border-radius: 0px 20px 20px 20px;
+        padding: 15px 20px;
+        position: relative;
+        margin-left: 10px;
+    }
+
+    .comment-card {
+        transition: transform 0.2s;
+    }
+
+        .comment-card:hover {
+            transform: translateX(5px);
+        }
+</style>
+
+<div class="container py-5">
+
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill mb-4">
+        <i class="bi bi-arrow-left me-1"></i> Listeye Dön
+    </a>
+
+    <div class="modern-card p-5 mb-5 border-top border-4" style="border-top-color: var(--theme-color) !important;">
+        <h1 class="display-6 fw-bold mb-3">@Model.Title</h1>
+
+        <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+            <div class="user-avatar me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                @(Model.User?.UserName?.Substring(0, 1) ?? "?")
+            </div>
+            <div>
+                <span class="d-block fw-bold fs-5">@Model.User?.UserName</span>
+                <span class="text-muted small">
+                    <i class="bi bi-clock me-1"></i>Oluşturulma: @Model.CreatedAt.ToString("dd MMMM yyyy HH:mm")
+                </span>
+            </div>
+        </div>
+
+        <div class="lead text-dark opacity-75" style="line-height: 1.8;">
+            @Model.Content
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h4 class="mb-4 fw-bold text-secondary">
+                <i class="bi bi-chat-left-text-fill me-2"></i>Yorumlar (@(Model.Comments?.Count ?? 0))
+            </h4>
+
+            <div class="mb-5">
+                @if (Model.Comments == null || !Model.Comments.Any())
+                {
+                    <div class="alert alert-light border text-center text-muted rounded-4">
+                        Henüz yorum yapılmamış. İlk yorumu sen yap!
+                    </div>
+                }
+                else
+                {
+                    @foreach (var y in Model.Comments)
+                    {
+                        <div class="d-flex mb-4 comment-card">
+                            <div class="user-avatar mt-1" style="background-color: #95a5a6; width: 35px; height: 35px; font-size: 0.8rem;">
+                                @(y.User?.UserName?.Substring(0, 1) ?? "U")
+                            </div>
+
+
+                            <div class="comment-bubble flex-grow-1">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <strong class="text-dark">@y.User?.UserName</strong>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Bugün</small>
+                                </div>
+                                <p class="mb-0 text-secondary">(@y.Content)  </p>
+                            </div>
+                        </div>
+
+                    }
+                }
+            </div>
+
+            @if (User.Identity.IsAuthenticated)
+            {
+                <div class="modern-card p-4 bg-white sticky-bottom">
+                    <h5 class="fw-bold mb-3 small text-uppercase text-muted">Bir Cevap Yaz</h5>
+                    <form asp-action="AddComment" method="post">
+                        <input type="hidden" name="TartismaId" value="@Model.Id" />
+
+                        <div class="form-floating mb-3">
+                            <textarea name="Content" class="form-control bg-light border-0 rounded-4"
+                                  placeholder="Yorumunuzu buraya yazın" id="commentArea" style="height: 100px;"></textarea>
+                            <label for="commentArea" class="text-muted">Düşüncelerinizi paylaşın...</label>
+                        </div>
+
+                        <div class="text-end">
+                            <button class="btn btn-theme px-4">
+                                Gönder <i class="bi bi-send ms-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning rounded-4 text-center">
+                    Yorum yapmak için <a asp-area="Identity" asp-page="/Account/Login" class="fw-bold text-dark">giriş yapmalısınız</a>.
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,192 @@
+﻿@model IEnumerable<KitapYonetimSistemi.Models.YorumYonetimViewModel>
+
+@{
+    ViewData["Title"] = "Yorum Yönetimi";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item active">Yorum Yönetimi</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title mb-0">💬 Yorum Yönetimi</h1>
+    <a asp-action="Index" class="btn btn-secondary">⬅️ Dashboard</a>
+</div>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Mesaj"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Hata"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (Model.Any())
+{
+    <!-- İstatistikler -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">@Model.Count()</h3>
+                    <small class="text-muted">Toplam Yorum</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">@Model.Select(y => y.KullaniciId).Distinct().Count()</h3>
+                    <small class="text-muted">Yorum Yapan Kullanıcı</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">@Model.Select(y => y.KitapId).Distinct().Count()</h3>
+                    <small class="text-muted">Yorumlu Kitap</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">🔍 Filtrele</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Kitaba Göre:</label>
+                    <select class="form-select" id="kitapFiltre">
+                        <option value="">Tüm Kitaplar</option>
+                        @foreach (var kitap in Model.GroupBy(y => y.KitapId).Select(g => g.First()))
+                        {
+                            <option value="@kitap.KitapId">@kitap.KitapAdi (@Model.Count(y => y.KitapId == kitap.KitapId) yorum)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Kullanıcıya Göre:</label>
+                    <select class="form-select" id="kullaniciFiltre">
+                        <option value="">Tüm Kullanıcılar</option>
+                        @foreach (var kullanici in Model.GroupBy(y => y.KullaniciId).Select(g => g.First()))
+                        {
+                            <option value="@kullanici.KullaniciId">@kullanici.KullaniciEmail (@Model.Count(y => y.KullaniciId == kullanici.KullaniciId) yorum)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yorumlar -->
+    <div id="yorumlar">
+        @foreach (var yorum in Model)
+        {
+            <div class="card mb-3 yorum-item" data-kitap-id="@yorum.KitapId" data-kullanici-id="@yorum.KullaniciId">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-1">
+                                <a asp-action="KitapYorumlari" asp-route-kitapId="@yorum.KitapId" class="text-decoration-none">
+                                    📖 @yorum.KitapAdi
+                                </a>
+                            </h6>
+                            <small class="text-muted">
+                                <a asp-action="KullaniciYorumlari" asp-route-kullaniciId="@yorum.KullaniciId" class="text-decoration-none">
+                                    👤 @yorum.KullaniciEmail
+                                </a>
+                                • @yorum.YorumTarihi.ToString("dd.MM.yyyy HH:mm")
+                            </small>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#silModal@(yorum.YorumId)">
+                            🗑️ Sil
+                        </button>
+                    </div>
+                    <p class="mb-0">@yorum.YorumMetni</p>
+                </div>
+
+                <!-- Sil Modal -->
+                <div class="modal fade" id="silModal@(yorum.YorumId)" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Yorumu Sil</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form asp-action="YorumSil" method="post">
+                                <div class="modal-body">
+                                    <input type="hidden" name="yorumId" value="@yorum.YorumId" />
+                                    <div class="alert alert-warning">
+                                        <strong>⚠️ DİKKAT!</strong> Bu işlem geri alınamaz!
+                                    </div>
+                                    <p><strong>Kitap:</strong> @yorum.KitapAdi</p>
+                                    <p><strong>Kullanıcı:</strong> @yorum.KullaniciEmail</p>
+                                    <p><strong>Yorum:</strong></p>
+                                    <div class="border p-2 bg-light rounded">
+                                        @yorum.YorumMetni
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                    <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info text-center">
+        <h4>💬 Henüz Yorum Yok</h4>
+        <p>Kullanıcılar henüz hiç yorum yapmamış</p>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Kitap filtreleme
+        document.getElementById('kitapFiltre').addEventListener('change', function() {
+            var kitapId = this.value;
+            var items = document.querySelectorAll('.yorum-item');
+
+            items.forEach(function(item) {
+                if (kitapId === '' || item.getAttribute('data-kitap-id') === kitapId) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // Kullanıcı filtreleme
+        document.getElementById('kullaniciFiltre').addEventListener('change', function() {
+            var kullaniciId = this.value;
+            var items = document.querySelectorAll('.yorum-item');
+
+            items.forEach(function(item) {
+                if (kullaniciId === '' || item.getAttribute('data-kullanici-id') === kullaniciId) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
+}

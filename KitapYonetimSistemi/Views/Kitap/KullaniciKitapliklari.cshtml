@@ -1,0 +1,62 @@
+﻿@model IEnumerable<IGrouping<KitapYonetimSistemi.Data.ApplicationUser, KitapYonetimSistemi.Models.KullaniciKitaplik>>
+
+@{
+    ViewData["Title"] = "Kullanıcı Kitaplıkları";
+}
+
+<div class="container mt-4">
+    <h1>👥 Kullanıcı Kitaplıkları</h1>
+    <p class="text-muted">Diğer kullanıcıların herkese açık olarak paylaştığı kitaplıklar</p>
+
+    @if (Model.Any())
+    {
+        @foreach (var grup in Model)
+        {
+            <div class="card mb-4 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        👤 @grup.Key.UserName
+                        <span class="badge bg-light text-dark">@grup.Count() kitap</span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var kayit in grup.Take(6))
+                        {
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">@kayit.Kitap.KitapAdi</h6>
+                                        <p class="card-text">
+                                            <small class="text-muted">✍️ @kayit.Kitap.YazarAdi</small><br />
+                                            <small class="text-muted">📅 @kayit.Kitap.YayinYili</small>
+                                        </p>
+                                        <a asp-action="Detay" asp-route-id="@kayit.KitapId" class="btn btn-sm btn-primary">
+                                            Detay
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    @if (grup.Count() > 6)
+                    {
+                        <div class="text-center mt-3">
+                            <a asp-action="KullaniciKitapligi" asp-route-kullaniciId="@grup.Key.Id" class="btn btn-outline-primary">
+                                Tüm Kitaplığı Gör (@grup.Count() kitap)
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <h4>📚 Henüz Herkese Açık Kitaplık Yok</h4>
+            <p>Hiçbir kullanıcı henüz kitaplığını herkese açık olarak paylaşmamış.</p>
+            <p>Siz kendi kitaplığınızı oluştururken "Diğer kullanıcılar görebilsin" seçeneğini işaretleyerek paylaşabilirsiniz.</p>
+        </div>
+    }
+</div>

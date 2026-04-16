@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  # 1. MSSQL Veritabanı Servisi
+  mssql-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql-db-container
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=S3cur3P@ssW0rd! # Buraya güçlü bir şifre belirleyin
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql # Verilerin kaybolmaması için volume
+
+  # 2. Ana Projeniz: KitapYonetimSistemi
+  kitap-yonetim-app:
+    build:
+      context: .
+      dockerfile: KitapYonetimSistemi/Dockerfile
+    container_name: kitap-yonetim-app-container
+    ports:
+      - "5000:8080" # Tarayıcıda localhost:5000 üzerinden erişeceksiniz
+      - "5001:8081" # HTTPS için
+    depends_on:
+      - mssql-db # Veritabanı ayağa kalkmadan bu proje başlamaz
+    environment:
+      # Veritabanı bağlantı dizesini eziyoruz. "mssql-db" service adıyla bağlanır.
+      - ConnectionStrings__DefaultConnection=Server=mssql-db;Database=KitapYonetimDb;User Id=sa;Password=S3cur3P@ssW0rd!;TrustServerCertificate=True;
+
+  # 3. AI Servisiniz: KitapYonetim.AI.Service
+  kitap-yonetim-ai-app:
+    build:
+      context: .
+      dockerfile: KitapYonetim.AI.Service/Dockerfile
+    container_name: kitap-yonetim-ai-app-container
+    ports:
+      - "5002:8080" # Tarayıcıda localhost:5002 üzerinden erişeceksiniz
+      - "5003:8081" # HTTPS için
+    depends_on:
+      - mssql-db
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=mssql-db;Database=KitapYonetimDb;User Id=sa;Password=S3cur3P@ssW0rd!;TrustServerCertificate=True;
+
+# Veritabanı verilerinin kalıcı olması için volume tanımlaması
+volumes:
+  mssql-data:

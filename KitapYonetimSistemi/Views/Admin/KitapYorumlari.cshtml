@@ -1,0 +1,86 @@
+﻿@model IEnumerable<KitapYonetimSistemi.Models.YorumYonetimViewModel>
+
+@{
+    ViewData["Title"] = ViewBag.KitapAdi + " - Yorumlar";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="YorumYonetimi">Yorum Yönetimi</a></li>
+            <li class="breadcrumb-item active">@ViewBag.KitapAdi</li>
+        </ol>
+    </nav>
+
+    <h1>📖 @ViewBag.KitapAdi</h1>
+    <p class="text-muted">Bu kitap için yapılan yorumlar (@Model.Count() yorum)</p>
+
+    @if (TempData["Mesaj"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Mesaj"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="mb-3">
+        <a asp-action="YorumYonetimi" class="btn btn-secondary">⬅️ Tüm Yorumlara Dön</a>
+    </div>
+
+    @if (Model.Any())
+    {
+        @foreach (var yorum in Model)
+        {
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                👤 <a asp-action="KullaniciYorumlari" asp-route-kullaniciId="@yorum.KullaniciId">@yorum.KullaniciEmail</a>
+                                <small class="ms-2">@yorum.YorumTarihi.ToString("dd.MM.yyyy HH:mm")</small>
+                            </h6>
+                            <p class="card-text mt-3">@yorum.YorumMetni</p>
+                        </div>
+                        <div class="ms-3">
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#silModal@(yorum.YorumId)">
+                                🗑️ Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Silme Modal -->
+                <div class="modal fade" id="silModal@(yorum.YorumId)" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Yorumu Sil</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form asp-action="YorumSil" method="post">
+                                <div class="modal-body">
+                                    <input type="hidden" name="yorumId" value="@yorum.YorumId" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <p>Bu yorumu silmek istediğinize emin misiniz?</p>
+                                    <div class="border p-2 bg-light">
+                                        @yorum.YorumMetni
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                    <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Bu kitap için henüz yorum yapılmamış.
+        </div>
+    }
+</div>
