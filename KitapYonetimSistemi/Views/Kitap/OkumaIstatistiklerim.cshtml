@@ -1,0 +1,158 @@
+﻿@model KitapYonetimSistemi.Models.OkumaIstatistikViewModel
+
+@{
+    ViewData["Title"] = "Okuma İstatistiklerim";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Kitaplar</a></li>
+        <li class="breadcrumb-item"><a asp-action="Kitapligim">Kitaplığım</a></li>
+        <li class="breadcrumb-item active">İstatistiklerim</li>
+    </ol>
+</nav>
+
+<h1 class="page-title">📊 Okuma İstatistiklerim</h1>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div style="font-size: 2.5rem;">📖</div>
+            <div class="stat-number">@Model.OkunacakSayisi</div>
+            <div class="stat-label">Okunacak</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div style="font-size: 2.5rem;">📕</div>
+            <div class="stat-number">@Model.OkuyorumSayisi</div>
+            <div class="stat-label">Okuyorum</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div style="font-size: 2.5rem;">✅</div>
+            <div class="stat-number">@Model.OkunduSayisi</div>
+            <div class="stat-label">Okundu</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div style="font-size: 2.5rem;">📚</div>
+            <div class="stat-number">@Model.ToplamKitapSayisi</div>
+            <div class="stat-label">Toplam</div>
+        </div>
+    </div>
+</div>
+
+<!-- İlerleme -->
+<div class="card mb-4">
+    <div class="card-header">🎯 Okuma İlerlemeniz</div>
+    <div class="card-body">
+        <div class="progress" style="height: 30px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: @Model.OkunmaYuzdesi.ToString("0.0")%;"
+                 aria-valuenow="@Model.OkunmaYuzdesi" aria-valuemin="0" aria-valuemax="100">
+                @Model.OkunmaYuzdesi.ToString("0.0")%
+            </div>
+        </div>
+        <p class="text-center text-muted mt-2">
+            Kitaplığınızdaki kitapların <strong>@Model.OkunmaYuzdesi.ToString("0.0")%</strong>'ini okudunuz
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Şu An Okuduklarım -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">📕 Şu An Okuduklarım (@Model.SimdiOkuduklarim.Count)</div>
+            <div class="card-body">
+                @if (Model.SimdiOkuduklarim.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var kitap in Model.SimdiOkuduklarim)
+                        {
+                            <li class="list-group-item">
+                                <strong>@kitap.Kitap.KitapAdi</strong><br />
+                                <small class="text-muted">@kitap.Kitap.YazarAdi</small>
+                                @if (kitap.OkumayaBaslamaTarihi.HasValue)
+                                {
+                                    <br />
+                                    <small class="text-muted">Başlama: @kitap.OkumayaBaslamaTarihi.Value.ToString("dd.MM.yyyy")</small>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Şu an okumakta olduğunuz kitap yok</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Okuduklarım -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">✅ Son Okuduklarım</div>
+            <div class="card-body">
+                @if (Model.SonOkunanKitaplar.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var kitap in Model.SonOkunanKitaplar)
+                        {
+                            <li class="list-group-item">
+                                <strong>@kitap.Kitap.KitapAdi</strong><br />
+                                <small class="text-muted">@kitap.Kitap.YazarAdi</small>
+                                @if (kitap.OkumaBitisTarihi.HasValue)
+                                {
+                                    <br />
+                                    <small class="text-muted">Bitirme: @kitap.OkumaBitisTarihi.Value.ToString("dd.MM.yyyy")</small>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Henüz bitirdiğiniz kitap yok</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aylık İstatistikler -->
+@if (Model.AylikOkumaSayilari.Any())
+{
+    <div class="card mb-4">
+        <div class="card-header">📈 Aylık Okuma İstatistikleri</div>
+        <div class="card-body">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Ay</th>
+                        <th class="text-end">Okunan Kitap</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ay in Model.AylikOkumaSayilari)
+                    {
+                        <tr>
+                            <td>@ay.AyAdi</td>
+                            <td class="text-end"><span class="badge bg-primary">@ay.KitapSayisi</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="text-center">
+    <a asp-action="Kitapligim" class="btn btn-secondary">Kitaplığıma Dön</a>
+</div>

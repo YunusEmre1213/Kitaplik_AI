@@ -1,0 +1,106 @@
+﻿@model KitapYonetimSistemi.Models.Kitap
+
+@{
+    ViewData["Title"] = "Yeni Kitap Ekle";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-action="KitapListesi">Kitap Listesi</a></li>
+        <li class="breadcrumb-item active">Yeni Kitap Ekle</li>
+    </ol>
+</nav>
+
+<h1 class="page-title">➕ Yeni Kitap Ekle</h1>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="KitapEkle" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="KitapAdi" class="form-label">Kitap Adı</label>
+                        <input asp-for="KitapAdi" class="form-control" placeholder="Örn: Suç ve Ceza" />
+                        <span asp-validation-for="KitapAdi" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="YazarAdi" class="form-label">Yazar Adı</label>
+                        <input asp-for="YazarAdi" class="form-control" placeholder="Örn: Fyodor Dostoyevski" />
+                        <span asp-validation-for="YazarAdi" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="YayinYili" class="form-label">Yayın Yılı</label>
+                        <input asp-for="YayinYili" type="number" class="form-control" placeholder="Örn: 1866" min="1000" max="2025" />
+                        <span asp-validation-for="YayinYili" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Aciklama" class="form-label">Açıklama</label>
+                        <textarea asp-for="Aciklama" class="form-control" rows="5" placeholder="Kitap hakkında kısa bir açıklama..."></textarea>
+                        <span asp-validation-for="Aciklama" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Kapak Resmi</label>
+                        <input type="file" name="kapakResmi" class="form-control" accept="image/*" id="kapakInput" />
+                        <small class="form-text text-muted">JPG, PNG veya GIF formatında (Maks: 5MB)</small>
+                    </div>
+
+                    <!-- Önizleme -->
+                    <div class="mb-3" id="preview" style="display: none;">
+                        <label class="form-label">Önizleme:</label>
+                        <br />
+                        <img id="previewImg" src="" style="max-width: 200px; max-height: 300px; border-radius: 8px; border: 2px solid #ddd;" />
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-success">💾 Kaydet</button>
+                        <a asp-action="KitapListesi" class="btn btn-secondary">❌ İptal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="alert alert-info">
+            <h5>💡 İpuçları</h5>
+            <ul class="mb-0">
+                <li>Kitap adını tam olarak yazın</li>
+                <li>Yazar adını doğru yazın</li>
+                <li>Kapak resmi yüklemek opsiyoneldir</li>
+                <li>En az 300x450 piksel resim kullanın</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.getElementById('kapakInput').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                if (file.size > 5242880) {
+                    alert('Dosya boyutu 5MB\'dan küçük olmalıdır!');
+                    this.value = '';
+                    return;
+                }
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+}

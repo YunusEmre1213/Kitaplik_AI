@@ -1,0 +1,161 @@
+﻿@model IEnumerable<KitapYonetimSistemi.Models.KullaniciYonetimViewModel>
+
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item active">Kullanıcı Yönetimi</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title mb-0">👥 Kullanıcı Yönetimi</h1>
+    <a asp-action="Index" class="btn btn-secondary">⬅️ Dashboard</a>
+</div>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Mesaj"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Hata"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<p class="text-muted">Sistemde toplam <strong>@Model.Count()</strong> kullanıcı bulunmaktadır</p>
+
+<div class="row g-4">
+    @foreach (var kullanici in Model)
+    {
+        var isSelf = kullanici.Email == User.Identity.Name;
+        <div class="col-md-6 col-lg-4">
+            <div class="card @(isSelf ? "border-primary" : "")">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div style="font-size: 3rem;">👤</div>
+                        <h5 class="card-title mb-1">@kullanici.Email</h5>
+                        @if (isSelf)
+                        {
+                            <span class="badge bg-primary">Siz</span>
+                        }
+                    </div>
+
+                    <div class="mb-2">
+                        @if (kullanici.Rol == "Admin")
+                        {
+                            <span class="badge bg-danger">🔧 Admin</span>
+                        }
+                        else if (kullanici.Rol == "User")
+                        {
+                            <span class="badge bg-success">👤 User</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">❓ Rol Yok</span>
+                        }
+                    </div>
+
+                    <div class="row text-center my-3">
+                        <div class="col-6">
+                            <div class="fw-bold text-primary">@kullanici.KitaplikSayisi</div>
+                            <small class="text-muted">Kitaplık</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="fw-bold text-primary">@kullanici.YorumSayisi</div>
+                            <small class="text-muted">Yorum</small>
+                        </div>
+                    </div>
+
+                    @if (!isSelf)
+                    {
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#rolModal@(kullanici.Id.GetHashCode())">
+                                🔄 Rol Değiştir
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#silModal@(kullanici.Id.GetHashCode())">
+                                🗑️ Sil
+                            </button>
+                        </div>
+
+                        <!-- Rol Değiştir Modal -->
+                        <div class="modal fade" id="rolModal@(kullanici.Id.GetHashCode())" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Rol Değiştir</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form asp-action="RolDegistir" method="post">
+                                        <div class="modal-body">
+                                            <input type="hidden" name="kullaniciId" value="@kullanici.Id" />
+                                            <p><strong>@kullanici.Email</strong> kullanıcısının rolünü seçin:</p>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="radio" name="yeniRol" value="User" id="user@(kullanici.Id.GetHashCode())" checked>
+                                                <label class="form-check-label" for="user@(kullanici.Id.GetHashCode())">
+                                                    👤 User (Normal Kullanıcı)
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="yeniRol" value="Admin" id="admin@(kullanici.Id.GetHashCode())">
+                                                <label class="form-check-label" for="admin@(kullanici.Id.GetHashCode())">
+                                                    🔧 Admin (Yönetici)
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                            <button type="submit" class="btn btn-warning">Değiştir</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sil Modal -->
+                        <div class="modal fade" id="silModal@(kullanici.Id.GetHashCode())" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Kullanıcıyı Sil</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form asp-action="KullaniciSil" method="post">
+                                        <div class="modal-body">
+                                            <input type="hidden" name="kullaniciId" value="@kullanici.Id" />
+                                            <div class="alert alert-warning">
+                                                <strong>⚠️ DİKKAT!</strong> Bu işlem geri alınamaz!
+                                            </div>
+                                            <p><strong>@kullanici.Email</strong> kullanıcısını silmek istediğinize emin misiniz?</p>
+                                            <ul>
+                                                <li>@kullanici.YorumSayisi yorum silinecek</li>
+                                                <li>@kullanici.KitaplikSayisi kitaplık kaydı silinecek</li>
+                                            </ul>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                            <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center small mt-3 mb-0">Kendinizi düzenleyemezsiniz</p>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

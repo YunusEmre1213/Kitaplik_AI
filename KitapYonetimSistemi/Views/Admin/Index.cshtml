@@ -1,0 +1,111 @@
+﻿@model KitapYonetimSistemi.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h1 class="page-title"> Admin Dashboard</h1>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Mesaj"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div style="font-size: 2.5rem;">📚</div>
+            <div class="stat-number">@Model.ToplamKitapSayisi</div>
+            <div class="stat-label">Toplam Kitap</div>
+            <small class="text-muted">Bu ay: @Model.BuAyEklenenKitapSayisi</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div style="font-size: 2.5rem;">👥</div>
+            <div class="stat-number">@Model.ToplamKullaniciSayisi</div>
+            <div class="stat-label">Kullanıcı</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div style="font-size: 2.5rem;">💬</div>
+            <div class="stat-number">@Model.ToplamYorumSayisi</div>
+            <div class="stat-label">Yorum</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div style="font-size: 2.5rem;">📖</div>
+            <div class="stat-number">@Model.ToplamKitaplikSayisi</div>
+            <div class="stat-label">Kitaplık Kaydı</div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"> Hızlı İşlemler</div>
+    <div class="card-body">
+        <a asp-action="KitapEkle" class="btn btn-primary me-2">➕ Yeni Kitap Ekle</a>
+        <a asp-action="KitapListesi" class="btn btn-secondary me-2"> Tüm Kitaplar</a>
+        <a asp-action="KullaniciYonetimi" class="btn btn-success me-2"> Kullanıcılar</a>
+        <a asp-action="YorumYonetimi" class="btn btn-warning"> Yorumlar</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"> En Çok Yorumlanan Kitaplar</div>
+            <div class="card-body">
+                @if (Model.EnCokYorumlananKitaplar.Any())
+                {
+                    <ol class="list-group list-group-numbered">
+                        @foreach (var item in Model.EnCokYorumlananKitaplar)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                @item.KitapAdi
+                                <span class="badge bg-primary rounded-pill">@item.YorumSayisi</span>
+                            </li>
+                        }
+                    </ol>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Henüz yorum yapılmamış</p>
+                }
+            </div>
+        </div>
+    </div>
+    <!--En son eklenen kitaplar bölümü-->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">📚 Son Eklenen Kitaplar</div>
+            <div class="card-body">
+                @if (Model.SonEklenenKitaplar.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var kitap in Model.SonEklenenKitaplar)
+                        {
+                            <li class="list-group-item">
+                                <strong>@kitap.KitapAdi</strong> - @kitap.YazarAdi
+                                <br />
+                                <small class="text-muted">@kitap.EklenmeTarihi.ToString("dd.MM.yyyy")</small>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Henüz kitap eklenmemiş</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

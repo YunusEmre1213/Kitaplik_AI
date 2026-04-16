@@ -1,0 +1,73 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Giriş Yap";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Kitap Yönetim Sistemi</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/identity.css" asp-append-version="true" />
+</head>
+
+<body>
+    
+    <div class="identity-container">
+        <div class="identity-card">
+            <h1 class="identity-title">Giriş Yap</h1>
+            <p class="identity-subtitle">Hesabınıza giriş yapın</p>
+
+            <form id="account" method="post" class="identity-form">
+                <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label">E-posta</label>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="ornek@email.com" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label">Şifre</label>
+                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" placeholder="••••••••" type="password" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <div class="identity-checkbox">
+                    <div class="form-check">
+                        <input class="form-check-input" asp-for="Input.RememberMe" />
+                        <label class="form-check-label" asp-for="Input.RememberMe">
+                            Beni Hatırla
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn identity-btn identity-btn-primary">
+                     Giriş Yap
+                </button>
+
+                <div class="identity-links">
+                    <p class="mb-2">
+                        <a asp-page="./ForgotPassword">Şifremi Unuttum</a>
+                    </p>
+                    <p class="mb-0">
+                        Hesabınız yok mu? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Kayıt Ol</a>
+                    </p>
+                    <p class="mt-3">
+                        <a href="/"> Ana Sayfaya Dön</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/Identity/js/site.js" asp-append-version="true"></script>
+</body>
+</html>

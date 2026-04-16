@@ -1,0 +1,152 @@
+﻿@model KitapYonetimSistemi.Models.Kitap
+
+@{
+    ViewData["Title"] = Model.KitapAdi;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Kitaplar</a></li>
+        <li class="breadcrumb-item active">@Model.KitapAdi</li>
+    </ol>
+</nav>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Mesaj"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Kitap Bilgileri -->
+<div class="card mb-4">
+    <div class="row g-0">
+        <div class="col-md-4">
+            @if (!string.IsNullOrEmpty(Model.KapakResmiUrl))
+            {
+                <img src="@Model.KapakResmiUrl" class="img-fluid rounded-start" alt="@Model.KitapAdi" style="max-height: 500px; width: 100%; object-fit: cover;">
+            }
+            else
+            {
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded-start" style="height: 500px; font-size: 5rem;">
+                    📚
+                </div>
+            }
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h1 class="card-title text-primary">@Model.KitapAdi</h1>
+                <h5 class="card-subtitle mb-3 text-muted">Yazar: @Model.YazarAdi</h5>
+                <p><strong>Yayın Yılı:</strong> @Model.YayinYili</p>
+                <p><strong>Eklenme Tarihi:</strong> @Model.EklenmeTarihi.ToString("dd MMMM yyyy")</p>
+                <hr />
+                <h5>Açıklama:</h5>
+                <p class="lead">@Model.Aciklama</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Puan Sistemi -->
+<div class="card mb-4">
+    <div class="card-header bg-warning text-white">⭐ Kitap Puanı</div>
+    <div class="card-body text-center">
+        @if (Model.ToplamPuanSayisi > 0)
+        {
+            <h2 class="display-4 text-warning">@Model.OrtalamaPuan.ToString("0.0")</h2>
+            <div style="font-size: 2rem; color: #ffc107;">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    if (i <= Math.Round(Model.OrtalamaPuan))
+                    {
+                        <span>⭐</span>
+                    }
+                    else
+                    {
+                        <span style="color: #ddd;">☆</span>
+                    }
+                }
+            </div>
+            <p class="text-muted">@Model.ToplamPuanSayisi kişi puanladı</p>
+        }
+        else
+        {
+            <h4 class="text-muted">Henüz puanlanmadı</h4>
+            <p>İlk puanı siz verin!</p>
+        }
+
+        <hr />
+
+        <h5 class="mb-3">
+            @if (ViewBag.KullaniciPuani != null)
+            {
+                <span>Sizin Puanınız: @ViewBag.KullaniciPuani ⭐</span>
+            }
+            else
+            {
+                <span>Bu kitaba puan verin:</span>
+            }
+        </h5>
+
+        <form asp-action="PuanVer" method="post" id="ratingForm" class="d-inline">
+            <input type="hidden" name="kitapId" value="@Model.Id" />
+            <input type="hidden" name="puan" id="puanInput" value="@(ViewBag.KullaniciPuani ?? 0)" />
+
+            <div style="font-size: 2.5rem;">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <button type="button" class="btn btn-link p-0 text-decoration-none @(ViewBag.KullaniciPuani >= i ? "text-warning" : "text-secondary")"
+                            style="font-size: 2.5rem;" onclick="setPuan(@i)">
+                        ⭐
+                    </button>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Yorumlar -->
+<div class="card mb-4">
+    <div class="card-header">💬 Yorumlar (@(Model.Yorumlar?.Count ?? 0))</div>
+    <div class="card-body">
+        @if (Model.Yorumlar != null && Model.Yorumlar.Any())
+        {
+            @foreach (var yorum in Model.Yorumlar.OrderByDescending(y => y.YorumTarihi))
+            {
+                <div class="border-start border-4 border-primary ps-3 mb-3">
+                    <h6 class="text-muted mb-2">
+                        👤 @yorum.Kullanici.UserName
+                        <small>- @yorum.YorumTarihi.ToString("dd.MM.yyyy HH:mm")</small>
+                    </h6>
+                    <p class="mb-0">@yorum.YorumMetni</p>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-muted text-center">Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
+        }
+
+        <hr />
+
+        <h5>Yorum Yap</h5>
+        <form asp-action="YorumEkle" method="post">
+            <input type="hidden" name="kitapId" value="@Model.Id" />
+            <div class="mb-3">
+                <textarea name="yorumMetni" class="form-control" rows="3" placeholder="Yorumunuzu yazın..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Yorum Gönder</button>
+            <a asp-action="Index" class="btn btn-secondary">Kitaplara Dön</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function setPuan(rating) {
+            document.getElementById('puanInput').value = rating;
+            document.getElementById('ratingForm').submit();
+        }
+    </script>
+}

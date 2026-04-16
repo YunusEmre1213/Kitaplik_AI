@@ -1,0 +1,319 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Satır Arası</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/custom.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom mb-3">
+            <div class="container">
+                <a class="navbar-brand fw-bold text-primary" asp-controller="Home" asp-action="Index">
+                    Satır Arası
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">Gizlilik</a>
+                        </li>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Admin" asp-action="Index">Admin Panel</a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("User"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Kitap" asp-action="Index">Kitaplar</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Kitap" asp-action="Kitapligim">Kitaplığım</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Kitap" asp-action="OkumaIstatistiklerim">İstatistikler</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Tartisma" asp-action="Index">Tartışmalar</a>
+                            </li>
+                        }
+                    </ul>
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted mt-5">
+        <div class="container text-center py-3">
+            &copy; 2025 - Kitap Yönetim Sistemi - ASP.NET Core MVC Projesi
+        </div>
+    </footer>
+
+    <style>
+        /* Widget Stilleri - SOL TARAFA ALINDI */
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 25px;
+            left: 25px; /* DEĞİŞİKLİK: right yerine left yapıldı */
+            width: 60px;
+            height: 60px;
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 9999;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+            .chat-toggle-btn:hover {
+                transform: scale(1.1);
+            }
+
+        .chat-widget {
+            display: none;
+            position: fixed;
+            bottom: 95px;
+            left: 25px; /* DEĞİŞİKLİK: right yerine left yapıldı */
+            width: 350px;
+            height: 500px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 9999;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
+            border: 1px solid #ddd;
+        }
+
+        .chat-header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .close-chat {
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #0d6efd;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background-color: #e9ecef;
+            color: #212529;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-footer {
+            padding: 10px;
+            border-top: 1px solid #eee;
+            display: flex;
+            background-color: white;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .send-btn {
+            background-color: #0d6efd;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-left: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+            /* Buton devre dışı bırakıldığında görünümü */
+            .send-btn:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+
+        .typing-indicator {
+            font-style: italic;
+            color: #888;
+            font-size: 12px;
+            margin-left: 15px;
+            margin-bottom: 5px;
+            display: none;
+        }
+    </style>
+
+    <button class="chat-toggle-btn" onclick="toggleChat()" title="Asistanla Konuş">
+        💬
+    </button>
+
+    <div class="chat-widget" id="chatWidget">
+        <div class="chat-header">
+            <span>🤖 Kütüphane Asistanı</span>
+            <span class="close-chat" onclick="toggleChat()">✕</span>
+        </div>
+
+        <div class="chat-body" id="chatBody">
+            <div class="message bot-message">
+                Merhaba! Ben Kütüphane Asistanı. 👋<br>
+                Bana "Suç ve Ceza var mı?" veya "Kitaplığımda neler var?" gibi sorular sorabilirsin.
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">Asistan yazıyor...</div>
+
+        <div class="chat-footer">
+            <input type="text" class="chat-input" id="userMessage" placeholder="Bir şeyler sor..." onkeypress="handleEnter(event)">
+            <button type="button" class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleChat() {
+            var widget = document.getElementById("chatWidget");
+            if (widget.style.display === "none" || widget.style.display === "") {
+                widget.style.display = "flex";
+                setTimeout(() => document.getElementById("userMessage").focus(), 100);
+            } else {
+                widget.style.display = "none";
+            }
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        async function sendMessage() {
+            var input = document.getElementById("userMessage");
+            var message = input.value.trim();
+            var chatBody = document.getElementById("chatBody");
+            var typingIndicator = document.getElementById("typingIndicator");
+
+            // GÜVENLİK İÇİN BUTONU SEÇELİM
+            var sendBtn = document.querySelector(".send-btn");
+
+            if (message === "") return;
+
+            // 1. BUTONU KİLİTLE 
+            // Kullanıcı cevap gelene kadar tekrar basamaz
+            sendBtn.disabled = true;
+            sendBtn.style.opacity = "0.5";
+
+            // Kullanıcı mesajını ekle
+            chatBody.innerHTML += `<div class="message user-message">${message}</div>`;
+            input.value = "";
+            scrollToBottom();
+
+            // Backend'e istek at
+            typingIndicator.style.display = "block";
+
+            try {
+                // AiLibraryController / AskAgent metoduna gidiyoruz
+                let response = await fetch('/AiLibrary/AskAgent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ 'userMessage': message })
+                });
+
+                let data = await response.json();
+
+                typingIndicator.style.display = "none";
+
+                if (data.success) {
+                    // Satır sonlarını HTML <br> etiketiyle değiştir
+                    let formattedAnswer = data.answer.replace(/\n/g, '<br>');
+                    chatBody.innerHTML += `<div class="message bot-message">${formattedAnswer}</div>`;
+                } else {
+                    chatBody.innerHTML += `<div class="message bot-message text-danger">⚠️ ${data.answer}</div>`;
+                }
+
+            } catch (error) {
+                typingIndicator.style.display = "none";
+                chatBody.innerHTML += `<div class="message bot-message text-danger">⚠️ Bağlantı hatası oluştu.</div>`;
+                console.error(error);
+            } finally {
+                // 2. İŞLEM BİTİNCE BUTONU TEKRAR AÇ
+                sendBtn.disabled = false;
+                sendBtn.style.opacity = "1";
+                // Kullanıcı tekrar yazabilsin diye inputa odaklan
+                input.focus();
+            }
+
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            var chatBody = document.getElementById("chatBody");
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+    </script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

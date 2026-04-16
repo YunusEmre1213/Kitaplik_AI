@@ -1,0 +1,6 @@
+@KitapYonetim.AI.Service_HostAddress = http://localhost:5259
+
+GET {{KitapYonetim.AI.Service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

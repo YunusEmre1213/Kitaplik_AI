@@ -1,0 +1,139 @@
+﻿@model IEnumerable<KitapYonetimSistemi.Models.KullaniciKitaplik>
+
+@{
+    ViewData["Title"] = "Kitaplığım";
+}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center p-4">
+        <div>
+            <h1 class="page-title mb-1 d-flex align-items-center gap-2">
+                📚 Kitaplığım
+            </h1>
+            <p class="text-muted mb-0">
+                Toplam <span class="badge bg-secondary rounded-pill">@Model.Count()</span> kitabınız var.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Index", "AiLibrary")"
+               id="aiOneriBtn"
+               class="btn btn-primary text-white d-flex align-items-center gap-2"
+               style="background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%); border:none;">
+                <i class="bi bi-stars"></i>
+                <span id="btnText">✨ AI Kitap Önerisi</span>
+
+                <span id="loadingSpinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
+            </a>
+
+            <a asp-action="OkumaIstatistiklerim" class="btn btn-outline-info d-flex align-items-center gap-2">
+                <i class="bi bi-bar-chart-fill"></i> İstatistikler
+            </a>
+
+        </div>
+    </div>
+</div>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["Mesaj"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (Model.Any())
+{
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-0 pt-3 px-3">
+            <ul class="nav nav-pills card-header-pills" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#all" type="button">
+                        Tümü <span class="badge bg-light text-dark border">@Model.Count()</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#toread" type="button">
+                        Okunacak <span class="badge bg-light text-dark border">@Model.Count(k => k.OkumaDurumu == OkumaDurumu.Okunacak)</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#reading" type="button">
+                        Okuyorum <span class="badge bg-light text-dark border">@Model.Count(k => k.OkumaDurumu == OkumaDurumu.Okuyorum)</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#read" type="button">
+                        Okundu <span class="badge bg-light text-dark border">@Model.Count(k => k.OkumaDurumu == OkumaDurumu.Okundu)</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="all">
+                    @await Html.PartialAsync("_KitaplikKartlari", Model)
+                </div>
+                <div class="tab-pane fade" id="toread">
+                    @await Html.PartialAsync("_KitaplikKartlari", Model.Where(k => k.OkumaDurumu == OkumaDurumu.Okunacak))
+                </div>
+                <div class="tab-pane fade" id="reading">
+                    @await Html.PartialAsync("_KitaplikKartlari", Model.Where(k => k.OkumaDurumu == OkumaDurumu.Okuyorum))
+                </div>
+                <div class="tab-pane fade" id="read">
+                    @await Html.PartialAsync("_KitaplikKartlari", Model.Where(k => k.OkumaDurumu == OkumaDurumu.Okundu))
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <div class="mb-3">
+            <i class="bi bi-journal-bookmark display-1 text-muted"></i>
+        </div>
+        <h4 class="text-muted">📚 Kitaplığınız Henüz Boş</h4>
+        <p class="text-secondary mb-4">Okuduğunuz veya okumak istediğiniz kitapları ekleyerek başlayın.</p>
+        <a asp-action="Index" asp-controller="Home" class="btn btn-primary btn-lg">
+            <i class="bi bi-search"></i> Kitaplara Göz At
+        </a>
+    </div>
+}
+@section Scripts {
+    <script>
+        document.getElementById('aiOneriBtn').addEventListener('click', function(e) {
+            var btn = this;
+            var now = new Date().getTime();
+            var lastClick = localStorage.getItem('lastAiRequestTime');
+
+            // 1. ZAMAN KONTROLÜ (10 Saniye Kuralı)
+            // Eğer son tıklama üzerinden 10 saniye (10000 ms) geçmediyse engelle
+            if (lastClick && (now - lastClick < 10000)) {
+                e.preventDefault(); // Sayfaya gitmeyi durdur
+
+                var kalanSure = Math.ceil((10000 - (now - lastClick)) / 1000);
+                alert('⚠️ Çok hızlı işlem yapıyorsunuz! Lütfen ' + kalanSure + ' saniye bekleyin.');
+                return;
+            }
+
+            // 2. BUTONU KİLİTLEME (Görsel Geri Bildirim)
+            // Eğer süre dolmuşsa veya ilk kez tıklanıyorsa:
+
+            // Tıklamayı kaydet
+            localStorage.setItem('lastAiRequestTime', now);
+
+            // Butonu pasif görünüme sok (Pointer events ile tıklamayı engelle)
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.7';
+
+            // Yazıyı ve ikonu değiştir
+            document.getElementById('btnText').innerText = 'AI Hazırlanıyor...';
+            document.querySelector('.bi-stars').style.display = 'none';
+            document.getElementById('loadingSpinner').style.display = 'inline-block';
+
+            // Sayfanın yönlenmesine izin ver (href çalışacak)
+        });
+    </script>
+}
+

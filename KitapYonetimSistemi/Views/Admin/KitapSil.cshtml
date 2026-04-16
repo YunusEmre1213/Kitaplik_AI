@@ -1,0 +1,60 @@
+﻿@model KitapYonetimSistemi.Models.Kitap
+
+@{
+    ViewData["Title"] = "Kitap Sil";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-action="KitapListesi">Kitap Listesi</a></li>
+        <li class="breadcrumb-item active">Kitap Sil</li>
+    </ol>
+</nav>
+
+<h1 class="page-title text-danger">🗑️ Kitabı Silmek İstediğinize Emin Misiniz?</h1>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="alert alert-danger">
+            <h4>⚠️ DİKKAT!</h4>
+            <p class="mb-0">Bu işlem geri alınamaz. Kitap ve ilgili tüm veriler silinecektir.</p>
+        </div>
+
+        <div class="card">
+            <div class="row g-0">
+                <div class="col-md-4">
+                    @if (!string.IsNullOrEmpty(Model.KapakResmiUrl))
+                    {
+                        <img src="@Model.KapakResmiUrl" class="img-fluid rounded-start" alt="@Model.KitapAdi" style="max-height: 400px; width: 100%; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded-start" style="height: 400px; font-size: 5rem;">
+                            📚
+                        </div>
+                    }
+                </div>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <h3 class="card-title text-primary">@Model.KitapAdi</h3>
+                        <h5 class="card-subtitle mb-3 text-muted">Yazar: @Model.YazarAdi</h5>
+                        <p><strong>Yayın Yılı:</strong> @Model.YayinYili</p>
+                        <p><strong>Eklenme Tarihi:</strong> @Model.EklenmeTarihi.ToString("dd MMMM yyyy")</p>
+                        <hr />
+                        <p><strong>Açıklama:</strong></p>
+                        <p>@Model.Aciklama</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <form asp-action="KitapSil" method="post" class="d-inline">
+                <input type="hidden" asp-for="Id" />
+                <button type="submit" class="btn btn-danger">✓ Evet, Sil</button>
+            </form>
+            <a asp-action="KitapListesi" class="btn btn-secondary">❌ Hayır, İptal</a>
+        </div>
+    </div>
+</div>
