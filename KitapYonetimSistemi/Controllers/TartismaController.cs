@@ -32,8 +32,12 @@ public class TartismaController : Controller
 
     [HttpPost]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public IActionResult Create(Tartisma tartisma)
     {
+        if (string.IsNullOrWhiteSpace(tartisma.Title) || string.IsNullOrWhiteSpace(tartisma.Content))
+            return View(tartisma);
+
         tartisma.CreatedAt = DateTime.Now;
         tartisma.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -50,12 +54,18 @@ public class TartismaController : Controller
                 .ThenInclude(c => c.User)
             .FirstOrDefault(t => t.Id == id);
 
+        if (tartisma == null) return NotFound();
+
         return View(tartisma);
     }
     [HttpPost]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public IActionResult AddComment(Comment comment)
     {
+        if (string.IsNullOrWhiteSpace(comment.Content) || !_context.Tartismalar.Any(t => t.Id == comment.TartismaId))
+            return RedirectToAction("Index");
+
         comment.CreatedAt = DateTime.Now;
         comment.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 

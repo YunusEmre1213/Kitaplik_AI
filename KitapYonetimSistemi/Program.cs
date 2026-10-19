@@ -36,6 +36,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddMemoryCache();
 
 // ==========================================
 // 2. AI SERVİSİ (HTTP CLIENT) ENTEGRASYONU
