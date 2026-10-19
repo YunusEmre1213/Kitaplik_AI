@@ -276,7 +276,7 @@
                 // AiLibraryController / AskAgent metoduna gidiyoruz
                 let response = await fetch('/AiLibrary/AskAgent', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': '@(Context.RequestServices.GetRequiredService<Microsoft.AspNetCore.Antiforgery.IAntiforgery>().GetAndStoreTokens(Context).RequestToken)' },
                     body: new URLSearchParams({ 'userMessage': message })
                 });
 

@@ -77,7 +77,7 @@ namespace KitapYonetimSistemi.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> KitapEkle(Kitap kitap, IFormFile kapakResmi)
+        public async Task<IActionResult> KitapEkle(Kitap kitap, IFormFile? kapakResmi)
         {
             if (ModelState.IsValid)
             {
@@ -130,7 +130,7 @@ namespace KitapYonetimSistemi.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> KitapDuzenle(int id, Kitap kitap, IFormFile kapakResmi)
+        public async Task<IActionResult> KitapDuzenle(int id, Kitap kitap, IFormFile? kapakResmi)
         {
             if (id != kitap.Id) return NotFound();
 
@@ -140,37 +140,36 @@ namespace KitapYonetimSistemi.Controllers
                 {
                     if (kapakResmi != null && kapakResmi.Length > 0)
                     {
+                        var uzanti = Path.GetExtension(kapakResmi.FileName).ToLower();
+                        var izinliUzantilar = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+
+                        if (!izinliUzantilar.Contains(uzanti))
+                        {
+                            TempData["Hata"] = "Sadece JPG, PNG veya GIF formatında resim yükleyebilirsiniz!";
+                            return View(kitap);
+                        }
+
+                        // Eski dosya yolu istemciden geldiği için sadece kapaklar klasörü altındaki dosyalar silinir
                         if (!string.IsNullOrEmpty(kitap.KapakResmiUrl))
                         {
-                            var eskiDosyaYolu = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", kitap.KapakResmiUrl.TrimStart('/'));
-                            if (System.IO.File.Exists(eskiDosyaYolu))
+                            var klasor = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "kapaklar")) + Path.DirectorySeparatorChar;
+                            var eskiDosyaYolu = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", kitap.KapakResmiUrl.TrimStart('/')));
+                            if (eskiDosyaYolu.StartsWith(klasor, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(eskiDosyaYolu))
                             {
                                 System.IO.File.Delete(eskiDosyaYolu);
                             }
                         }
 
-                        var uzanti = Path.GetExtension(kapakResmi.FileName).ToLower();
-                        var izinliUzantilar = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                        var dosyaAdi = Guid.NewGuid().ToString() + uzanti;
+                        var klasorYolu = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "kapaklar");
+                        Directory.CreateDirectory(klasorYolu);
 
-                        if (izinliUzantilar.Contains(uzanti))
+                        using (var stream = new FileStream(Path.Combine(klasorYolu, dosyaAdi), FileMode.Create))
                         {
-                            var dosyaAdi = Guid.NewGuid().ToString() + uzanti;
-                            var klasorYolu = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "kapaklar");
-
-                            if (!Directory.Exists(klasorYolu))
-                            {
-                                Directory.CreateDirectory(klasorYolu);
-                            }
-
-                            var dosyaYolu = Path.Combine(klasorYolu, dosyaAdi);
-
-                            using (var stream = new FileStream(dosyaYolu, FileMode.Create))
-                            {
-                                await kapakResmi.CopyToAsync(stream);
-                            }
-
-                            kitap.KapakResmiUrl = "/uploads/kapaklar/" + dosyaAdi;
+                            await kapakResmi.CopyToAsync(stream);
                         }
+
+                        kitap.KapakResmiUrl = "/uploads/kapaklar/" + dosyaAdi;
                     }
 
                     _context.Update(kitap);
@@ -266,7 +265,7 @@ namespace KitapYonetimSistemi.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> YorumSil(int yorumId, string returnUrl = null)
+        public async Task<IActionResult> YorumSil(int yorumId, string? returnUrl = null)
         {
             var yorum = await _context.Yorumlar.FindAsync(yorumId);
 
@@ -281,7 +280,7 @@ namespace KitapYonetimSistemi.Controllers
 
             TempData["Mesaj"] = "Yorum başarıyla silindi!";
 
-            if (!string.IsNullOrEmpty(returnUrl))
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
             }
@@ -353,12 +352,25 @@ namespace KitapYonetimSistemi.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RolDegistir(string kullaniciId, string yeniRol)
         {
             var kullanici = await _userManager.FindByIdAsync(kullaniciId);
             if (kullanici == null)
             {
                 TempData["Hata"] = "Kullanıcı bulunamadı!";
+                return RedirectToAction(nameof(KullaniciYonetimi));
+            }
+
+            if (kullanici.Id == _userManager.GetUserId(User))
+            {
+                TempData["Hata"] = "Kendi rolünüzü değiştiremezsiniz!";
+                return RedirectToAction(nameof(KullaniciYonetimi));
+            }
+
+            if (!string.IsNullOrEmpty(yeniRol) && yeniRol != "Admin" && yeniRol != "User")
+            {
+                TempData["Hata"] = "Geçersiz rol!";
                 return RedirectToAction(nameof(KullaniciYonetimi));
             }
 
@@ -378,12 +390,19 @@ namespace KitapYonetimSistemi.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> KullaniciSil(string kullaniciId)
         {
             var kullanici = await _userManager.FindByIdAsync(kullaniciId);
             if (kullanici == null)
             {
                 TempData["Hata"] = "Kullanıcı bulunamadı!";
+                return RedirectToAction(nameof(KullaniciYonetimi));
+            }
+
+            if (kullanici.Id == _userManager.GetUserId(User))
+            {
+                TempData["Hata"] = "Kendi hesabınızı silemezsiniz!";
                 return RedirectToAction(nameof(KullaniciYonetimi));
             }
 

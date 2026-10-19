@@ -1,6 +1,7 @@
 ﻿using KitapYonetimSistemi.Data;
 using KitapYonetimSistemi.Models;
 using KitapYonetimSistemi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace KitapYonetimSistemi.Controllers
 {
+    [Authorize]
     public class AiLibraryController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
@@ -40,7 +42,7 @@ namespace KitapYonetimSistemi.Controllers
             try
             {
                 var user = await _userManager.GetUserAsync(User);
-                if (user == null) return RedirectToAction("Login", "Account");
+                if (user == null) return Redirect("/Identity/Account/Login");
 
                 var myBooks = await _context.KullaniciKitapliklari
                                             .Include(uk => uk.Kitap)
@@ -146,6 +148,7 @@ namespace KitapYonetimSistemi.Controllers
         // GÜVENLİ, AKILLI VE MCP UYUMLU CHAT METODU
         // ===================================================================
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AskAgent(string userMessage)
         {
             try
