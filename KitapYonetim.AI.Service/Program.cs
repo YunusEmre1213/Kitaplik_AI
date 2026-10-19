@@ -30,6 +30,26 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Sadece anahtarÄ± bilen istemciler (MVC uygulamasÄ±) AI servisini kullanabilir
+var servisAnahtari = app.Configuration["AiService:ApiKey"];
+app.Use(async (context, next) =>
+{
+    if (!app.Environment.IsDevelopment() && string.IsNullOrEmpty(servisAnahtari))
+    {
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        return;
+    }
+
+    if (!string.IsNullOrEmpty(servisAnahtari) &&
+        context.Request.Headers["X-Api-Key"] != servisAnahtari)
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return;
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 
 // Controller rotalarýný haritala (404 hatasýný çözen kýsým burasý)

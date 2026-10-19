@@ -50,13 +50,14 @@ namespace BookStore.AI.Service.Controllers
             };
 
             // DÜZELTİLDİ: URL ARTIK TERTEMİZ (Parantezler silindi)
-            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
+            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
             try
             {
                 // HttpClient'ı burada taze oluşturuyoruz (En güvenli yöntem)
                 using (var client = new HttpClient())
                 {
+                    client.DefaultRequestHeaders.Add("x-goog-api-key", apiKey.Trim());
                     var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
                     var response = await client.PostAsync(url, jsonContent);
 
@@ -123,12 +124,13 @@ namespace BookStore.AI.Service.Controllers
             };
 
             // DÜZELTİLDİ: URL Temizlendi
-            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
+            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
             try
             {
                 using (var client = new HttpClient())
                 {
+                    client.DefaultRequestHeaders.Add("x-goog-api-key", apiKey.Trim());
                     var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
                     var response = await client.PostAsync(url, jsonContent);
 
@@ -194,10 +196,11 @@ namespace BookStore.AI.Service.Controllers
                     tools = new[] { toolsPayload }
                 };
 
-                string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
+                string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
                 using (var client = new HttpClient())
                 {
+                    client.DefaultRequestHeaders.Add("x-goog-api-key", apiKey.Trim());
                     var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
                     var response = await client.PostAsync(url, jsonContent);
                     var responseString = await response.Content.ReadAsStringAsync();

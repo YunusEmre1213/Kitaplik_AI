@@ -43,19 +43,24 @@ builder.Services.AddMemoryCache();
 // ==========================================
 // Buradaki adresin AI PROJESİNİN (BookStore.AI.Service) adresi olduğundan emin ol.
 // Genellikle "http" değil "https" olur. Eğer çalışmazsa https://localhost:XXXX dene.
+var aiBaseUrl = builder.Configuration["AiService:BaseUrl"] ?? "https://localhost:7195/";
+var aiKey = builder.Configuration["AiService:ApiKey"];
+
 builder.Services.AddHttpClient("AiService", client =>
 {
-    // Adresin DOĞRU olduğunu 405 hatasıyla kanıtladın. Aynen kalsın.
-    client.BaseAddress = new Uri("https://localhost:7195/");
+    client.BaseAddress = new Uri(aiBaseUrl);
+    if (!string.IsNullOrEmpty(aiKey))
+        client.DefaultRequestHeaders.Add("X-Api-Key", aiKey);
 })
 .ConfigurePrimaryHttpMessageHandler(() =>
 {
-    // İŞTE SİHİRLİ KOD BURASI:
-    // Lokaldeki SSL sertifika hatasını görmezden gelmemizi sağlar.
-    return new HttpClientHandler
-    {
-        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
-    };
+    var handler = new HttpClientHandler();
+
+    // Sadece geliştirme ortamında self-signed sertifika hatası görmezden gelinir
+    if (builder.Environment.IsDevelopment())
+        handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+
+    return handler;
 });
 
 var app = builder.Build();
