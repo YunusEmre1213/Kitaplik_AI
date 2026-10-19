@@ -1,0 +1,15 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build çıktıları
+[Bb]in/
+[Oo]bj/
+
+# Yüklenen dosyalar
+KitapYonetimSistemi/wwwroot/uploads/
+
+# Gizli ayarlar
+appsettings.json
+secrets.json
