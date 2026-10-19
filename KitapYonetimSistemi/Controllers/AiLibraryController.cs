@@ -107,11 +107,6 @@ namespace KitapYonetimSistemi.Controllers
                 var requestData = new { Title = kitap.KitapAdi, Author = kitap.YazarAdi };
                 var client = _httpClientFactory.CreateClient("AiService");
 
-                if (client.BaseAddress == null)
-                {
-                    client.BaseAddress = new Uri("https://localhost:7195/");
-                }
-
                 var response = await client.PostAsJsonAsync("api/ai/analyze", requestData);
 
                 if (!response.IsSuccessStatusCode)
@@ -195,16 +190,12 @@ namespace KitapYonetimSistemi.Controllers
 
 
                 // 5. API İŞLEMİ
-                string targetUrl = "https://localhost:7195/api/ai/agent-chat";
-                var handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
-
-                using (var client = new HttpClient(handler))
+                using (var client = _httpClientFactory.CreateClient("AiService"))
                 {
                     // AI'ya işlenmiş ve kurallara bağlanmış mesajı gönderiyoruz
                     var requestData = new { Message = fullMessage };
 
-                    var response = await client.PostAsJsonAsync(targetUrl, requestData);
+                    var response = await client.PostAsJsonAsync("api/ai/agent-chat", requestData);
 
                     if (!response.IsSuccessStatusCode)
                     {

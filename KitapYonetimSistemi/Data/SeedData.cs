@@ -1,28 +1,35 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace KitapYonetimSistemi.Data
 {
     public static class SeedData
     {
+        private const string EskiVarsayilanSifre = "Admin123!";
+
         public static async Task Initialize(IServiceProvider serviceProvider)
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
-            // Admin rolü yoksa oluştur
-            if (!await roleManager.RoleExistsAsync("Admin"))
+            foreach (var rol in new[] { "Admin", "User" })
             {
-                await roleManager.CreateAsync(new IdentityRole("Admin"));
+                if (!await roleManager.RoleExistsAsync(rol))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(rol));
+                }
             }
 
-            // User rolü yoksa oluştur
-            if (!await roleManager.RoleExistsAsync("User"))
+            // Admin bilgileri koda yazılmaz; user-secrets veya ortam değişkenlerinden okunur
+            var adminEmail = configuration["Admin:Email"];
+            var adminPassword = configuration["Admin:Password"];
+
+            if (string.IsNullOrEmpty(adminEmail) || string.IsNullOrEmpty(adminPassword))
             {
-                await roleManager.CreateAsync(new IdentityRole("User"));
+                Console.WriteLine("Admin:Email / Admin:Password ayarlanmadığı için admin kullanıcısı oluşturulmadı.");
+                return;
             }
 
-            // Varsayılan admin kullanıcısı oluştur
-            var adminEmail = "admin@kitap.com";
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
             if (adminUser == null)
@@ -34,8 +41,19 @@ namespace KitapYonetimSistemi.Data
                     EmailConfirmed = true
                 };
 
-                await userManager.CreateAsync(adminUser, "Admin123!");
+                var sonuc = await userManager.CreateAsync(adminUser, adminPassword);
+                if (!sonuc.Succeeded)
+                {
+                    Console.WriteLine("Admin oluşturulamadı: " + string.Join(", ", sonuc.Errors.Select(e => e.Description)));
+                    return;
+                }
                 await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+            else if (await userManager.CheckPasswordAsync(adminUser, EskiVarsayilanSifre))
+            {
+                // Eski varsayılan şifre hâlâ geçerliyse ayarlanan şifreyle değiştir
+                var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
+                await userManager.ResetPasswordAsync(adminUser, token, adminPassword);
             }
         }
     }
