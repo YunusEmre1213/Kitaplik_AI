@@ -17,9 +17,12 @@ builder.Services.AddScoped<KitapYonetimSistemi.Services.LibraryToolService>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+var emailAyarliMi = KitapYonetimSistemi.Services.SmtpEmailSender.YapilandirmaVarMi(builder.Configuration);
+
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false;
+    // E-posta doğrulaması yalnızca SMTP ayarları tanımlıysa zorunlu olur, aksi halde kullanıcılar kilitli kalır
+    options.SignIn.RequireConfirmedAccount = emailAyarliMi;
 
     // Email doğrulamasını gevşet
     options.User.RequireUniqueEmail = true;
@@ -34,6 +37,14 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+if (emailAyarliMi)
+{
+    // Identity'nin varsayılan (hiçbir şey göndermeyen) gönderici kaydını geçersiz kılar
+    builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, KitapYonetimSistemi.Services.SmtpEmailSender>();
+}
+
+builder.Services.AddScoped<KitapYonetimSistemi.Services.EmailKodServisi>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();

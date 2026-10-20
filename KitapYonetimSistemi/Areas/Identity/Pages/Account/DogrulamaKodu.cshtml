@@ -1,0 +1,59 @@
+@page
+@model DogrulamaKoduModel
+
+@{
+    ViewData["Title"] = "E-posta Doğrulama";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Satır Arası</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/identity.css" asp-append-version="true" />
+</head>
+
+<body>
+    <div class="identity-container">
+        <div class="identity-card">
+            <h1 class="identity-title">E-posta Doğrulama</h1>
+            <p class="identity-subtitle">
+                <strong>@Model.Email</strong> adresine 6 haneli bir kod gönderdik.
+            </p>
+
+            @if (!string.IsNullOrEmpty(Model.Hata))
+            {
+                <div class="text-danger mb-3" role="alert">@Model.Hata</div>
+            }
+            @if (!string.IsNullOrEmpty(Model.Mesaj))
+            {
+                <div class="text-success mb-3" role="status">@Model.Mesaj</div>
+            }
+
+            <form method="post" class="identity-form">
+                <input type="hidden" name="Email" value="@Model.Email" />
+
+                <div class="mb-3">
+                    <label for="Kod" class="form-label">Doğrulama Kodu</label>
+                    <input id="Kod" name="Kod" class="form-control text-center" style="letter-spacing: 6px; font-size: 1.4rem;"
+                           inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" autofocus />
+                </div>
+
+                <button type="submit" class="btn identity-btn identity-btn-primary">Doğrula</button>
+            </form>
+
+            <form method="post" asp-page-handler="YenidenGonder" class="mt-3">
+                <input type="hidden" name="Email" value="@Model.Email" />
+                <button type="submit" class="btn btn-link p-0">Kodu tekrar gönder</button>
+            </form>
+
+            <div class="identity-links">
+                <p class="mt-3"><a asp-page="./Login">Giriş sayfasına dön</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

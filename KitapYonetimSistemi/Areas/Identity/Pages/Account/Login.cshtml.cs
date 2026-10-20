@@ -22,10 +22,15 @@ namespace KitapYonetimSistemi.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly KitapYonetimSistemi.Services.EmailKodServisi _kodServisi;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger,
+            UserManager<ApplicationUser> userManager, KitapYonetimSistemi.Services.EmailKodServisi kodServisi)
         {
             _signInManager = signInManager;
+            _userManager = userManager;
+            _kodServisi = kodServisi;
             _logger = logger;
         }
 
@@ -127,9 +132,19 @@ namespace KitapYonetimSistemi.Areas.Identity.Pages.Account
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
-                else
+                if (result.IsNotAllowed)
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    // Şifre doğru ama e-posta doğrulanmamış: yeni kod gönderip doğrulama sayfasına yönlendir
+                    var dogrulanmamis = await _userManager.FindByEmailAsync(Input.Email);
+                    if (dogrulanmamis != null && !dogrulanmamis.EmailConfirmed)
+                    {
+                        try { await _kodServisi.GonderAsync(dogrulanmamis); } catch (Exception) { }
+                        return RedirectToPage("./DogrulamaKodu", new { email = Input.Email });
+                    }
+                }
+
+                {
+                    ModelState.AddModelError(string.Empty, "Geçersiz e-posta veya şifre.");
                     return Page();
                 }
             }
