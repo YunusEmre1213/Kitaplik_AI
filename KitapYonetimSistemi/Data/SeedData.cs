@@ -20,6 +20,13 @@ namespace KitapYonetimSistemi.Data
                 }
             }
 
+            // E-posta doğrulaması gelmeden önce kayıt olmuş kullanıcılar (kayıt tarihi yok) doğrulanmış sayılır
+            foreach (var eskiKullanici in userManager.Users.Where(u => !u.EmailConfirmed && u.KayitTarihi == null).ToList())
+            {
+                eskiKullanici.EmailConfirmed = true;
+                await userManager.UpdateAsync(eskiKullanici);
+            }
+
             // Admin bilgileri koda yazılmaz; user-secrets veya ortam değişkenlerinden okunur
             var adminEmail = configuration["Admin:Email"];
             var adminPassword = configuration["Admin:Password"];

@@ -30,13 +30,15 @@ namespace KitapYonetimSistemi.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly KitapYonetimSistemi.Services.EmailKodServisi _kodServisi;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            KitapYonetimSistemi.Services.EmailKodServisi kodServisi)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +46,7 @@ namespace KitapYonetimSistemi.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _kodServisi = kodServisi;
         }
 
         /// <summary>
@@ -127,21 +130,24 @@ namespace KitapYonetimSistemi.Areas.Identity.Pages.Account
                     // KULLANICIYA "USER" ROLÜ ATA
                     await _userManager.AddToRoleAsync(user, "User");
 
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                    var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail",
-                        pageHandler: null,
-                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                        protocol: Request.Scheme);
-
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                    {
+                        try
+                        {
+                            await _kodServisi.GonderAsync(user);
+                        }
+                        catch (Exception)
+                        {
+                            // Doğrulama e-postası gitmediyse kullanıcı hiç giriş yapamaz, bu yüzden kaydı geri alıyoruz
+                            await _userManager.DeleteAsync(user);
+                            ModelState.AddModelError(string.Empty, "Doğrulama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin.");
+                            return Page();
+                        }
+                    }
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                        return RedirectToPage("DogrulamaKodu", new { email = Input.Email });
                     }
                     else
                     {
