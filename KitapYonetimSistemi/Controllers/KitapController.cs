@@ -19,13 +19,49 @@ namespace KitapYonetimSistemi.Controllers
             _userManager = userManager;
         }
 
-        // Tüm kitapları listele
-        public async Task<IActionResult> Index()
+        // Tüm kitapları listele (arama, tür filtresi, sıralama ve sayfalama)
+        public async Task<IActionResult> Index(string? arama, string? tur, string? siralama, int sayfa = 1)
         {
-            var kitaplar = await _context.Kitaplar //veri tabanından Kitaplar Tablosunu çağırıyor
-                .OrderByDescending(k => k.EklenmeTarihi) // eklenme tarihine göre sıralıyoruz
-                .ToListAsync();
-            return View(kitaplar);
+            var sorgu = _context.Kitaplar.Include(k => k.Puanlar).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(arama))
+            {
+                arama = arama.Trim();
+                sorgu = sorgu.Where(k => k.KitapAdi.Contains(arama) || k.YazarAdi.Contains(arama));
+            }
+
+            if (!string.IsNullOrWhiteSpace(tur))
+            {
+                sorgu = sorgu.Where(k => k.Tur == tur);
+            }
+
+            sorgu = siralama switch
+            {
+                "ad" => sorgu.OrderBy(k => k.KitapAdi),
+                "yazar" => sorgu.OrderBy(k => k.YazarAdi).ThenBy(k => k.KitapAdi),
+                "puan" => sorgu.OrderByDescending(k => k.Puanlar!.Average(p => (double?)p.Puan)).ThenBy(k => k.KitapAdi),
+                _ => sorgu.OrderByDescending(k => k.EklenmeTarihi)
+            };
+
+            var toplamKayit = await sorgu.CountAsync();
+            var toplamSayfa = Math.Max(1, (int)Math.Ceiling(toplamKayit / (double)KitapListeViewModel.SayfaBoyutu));
+            sayfa = Math.Clamp(sayfa, 1, toplamSayfa);
+
+            var model = new KitapListeViewModel
+            {
+                Kitaplar = await sorgu
+                    .Skip((sayfa - 1) * KitapListeViewModel.SayfaBoyutu)
+                    .Take(KitapListeViewModel.SayfaBoyutu)
+                    .ToListAsync(),
+                Arama = arama,
+                Tur = tur,
+                Siralama = siralama ?? "yeni",
+                Sayfa = sayfa,
+                ToplamSayfa = toplamSayfa,
+                ToplamKayit = toplamKayit
+            };
+
+            return View(model);
         }
 
         public async Task<IActionResult> Detay(int? id)

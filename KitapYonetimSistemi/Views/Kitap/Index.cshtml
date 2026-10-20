@@ -1,4 +1,4 @@
-﻿@model IEnumerable<KitapYonetimSistemi.Models.Kitap>
+﻿@model KitapYonetimSistemi.Models.KitapListeViewModel
 
 @{
     ViewData["Title"] = "Kitaplar";
@@ -14,10 +14,39 @@
     </div>
 }
 
-@if (Model.Any())
+<form method="get" asp-action="Index" class="row g-2 mb-4">
+    <div class="col-md-5">
+        <input type="text" name="arama" value="@Model.Arama" class="form-control" placeholder="Kitap adı veya yazar ara..." />
+    </div>
+    <div class="col-md-3">
+        <select name="tur" class="form-select">
+            <option value="">Tüm türler</option>
+            @foreach (var t in KitapYonetimSistemi.Models.KitapTurleri.Hepsi)
+            {
+                <option value="@t" selected="@(Model.Tur == t)">@t</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="siralama" class="form-select">
+            <option value="yeni" selected="@(Model.Siralama == "yeni")">En yeni</option>
+            <option value="puan" selected="@(Model.Siralama == "puan")">En yüksek puan</option>
+            <option value="ad" selected="@(Model.Siralama == "ad")">Kitap adı (A-Z)</option>
+            <option value="yazar" selected="@(Model.Siralama == "yazar")">Yazar (A-Z)</option>
+        </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">Ara</button>
+        <a asp-action="Index" class="btn btn-outline-secondary" title="Temizle">✕</a>
+    </div>
+</form>
+
+<p class="text-muted small">@Model.ToplamKayit kitap bulundu</p>
+
+@if (Model.Kitaplar.Any())
 {
     <div class="row g-4">
-        @foreach (var kitap in Model)
+        @foreach (var kitap in Model.Kitaplar)
         {
             <div class="col-md-4">
                 <div class="card book-card h-100 shadow-sm border-0">
@@ -35,6 +64,10 @@
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title text-truncate" title="@kitap.KitapAdi">@kitap.KitapAdi</h5>
                         <h6 class="card-subtitle mb-2 text-muted">@kitap.YazarAdi</h6>
+                        @if (!string.IsNullOrEmpty(kitap.Tur))
+                        {
+                            <div class="mb-2"><span class="badge bg-light text-dark border">@kitap.Tur</span></div>
+                        }
 
                         @if (kitap.ToplamPuanSayisi > 0)
                         {
@@ -101,6 +134,33 @@
                 </div>
             </div>
         }
+    </div>
+
+    @if (Model.ToplamSayfa > 1)
+    {
+        <nav class="mt-4" aria-label="Sayfalama">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(Model.Sayfa == 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-sayfa="@(Model.Sayfa - 1)" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama">Önceki</a>
+                </li>
+                @for (var i = 1; i <= Model.ToplamSayfa; i++)
+                {
+                    <li class="page-item @(i == Model.Sayfa ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-sayfa="@i" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.Sayfa == Model.ToplamSayfa ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-sayfa="@(Model.Sayfa + 1)" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama">Sonraki</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+else if (!string.IsNullOrWhiteSpace(Model.Arama) || !string.IsNullOrWhiteSpace(Model.Tur))
+{
+    <div class="alert alert-warning text-center py-5">
+        <h4>🔍 Sonuç bulunamadı</h4>
+        <p>Aramanızı değiştirmeyi veya filtreleri temizlemeyi deneyin.</p>
     </div>
 }
 else
