@@ -342,7 +342,7 @@ namespace KitapYonetimSistemi.Controllers
                     Id = kullanici.Id,
                     Email = kullanici.Email,
                     Rol = rol,
-                    KayitTarihi = DateTime.Now, 
+                    KayitTarihi = kullanici.KayitTarihi,
                     KitaplikSayisi = kitaplikSayisi,
                     YorumSayisi = yorumSayisi
                 });
@@ -406,15 +406,30 @@ namespace KitapYonetimSistemi.Controllers
                 return RedirectToAction(nameof(KullaniciYonetimi));
             }
 
-            var yorumlar = await _context.Yorumlar.Where(y => y.KullaniciId == kullaniciId).ToListAsync();
-            _context.Yorumlar.RemoveRange(yorumlar);
+            // Tartışma ilişkilerinde silme davranışı NoAction olduğu için kullanıcıya bağlı kayıtlar elle temizlenir
+            await using var islem = await _context.Database.BeginTransactionAsync();
 
-            var kitapliklar = await _context.KullaniciKitapliklari.Where(k => k.KullaniciId == kullaniciId).ToListAsync();
-            _context.KullaniciKitapliklari.RemoveRange(kitapliklar);
+            _context.Yorumlar.RemoveRange(_context.Yorumlar.Where(y => y.KullaniciId == kullaniciId));
+            _context.KitapPuanlari.RemoveRange(_context.KitapPuanlari.Where(p => p.KullaniciId == kullaniciId));
+            _context.KullaniciKitapliklari.RemoveRange(_context.KullaniciKitapliklari.Where(k => k.KullaniciId == kullaniciId));
+            _context.Comments.RemoveRange(_context.Comments.Where(c => c.UserId == kullaniciId));
+
+            // Kullanıcının açtığı tartışmalar silinir, altındaki diğer yorumlar da bununla birlikte silinir
+            var tartismaIdleri = await _context.Tartismalar.Where(t => t.UserId == kullaniciId).Select(t => t.Id).ToListAsync();
+            _context.Comments.RemoveRange(_context.Comments.Where(c => tartismaIdleri.Contains(c.TartismaId)));
+            _context.Tartismalar.RemoveRange(_context.Tartismalar.Where(t => t.UserId == kullaniciId));
 
             await _context.SaveChangesAsync();
 
-            await _userManager.DeleteAsync(kullanici);
+            var sonuc = await _userManager.DeleteAsync(kullanici);
+            if (!sonuc.Succeeded)
+            {
+                await islem.RollbackAsync();
+                TempData["Hata"] = "Kullanıcı silinemedi!";
+                return RedirectToAction(nameof(KullaniciYonetimi));
+            }
+
+            await islem.CommitAsync();
 
             TempData["Mesaj"] = "Kullanıcı başarıyla silindi!";
             return RedirectToAction(nameof(KullaniciYonetimi));
