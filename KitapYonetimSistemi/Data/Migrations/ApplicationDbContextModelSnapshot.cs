@@ -140,6 +140,9 @@ namespace KitapYonetimSistemi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Tur")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("YayinYili")
                         .HasColumnType("int");
 

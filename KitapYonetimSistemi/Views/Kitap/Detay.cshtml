@@ -39,6 +39,10 @@
                 <h1 class="card-title text-primary">@Model.KitapAdi</h1>
                 <h5 class="card-subtitle mb-3 text-muted">Yazar: @Model.YazarAdi</h5>
                 <p><strong>Yayın Yılı:</strong> @Model.YayinYili</p>
+                @if (!string.IsNullOrEmpty(Model.Tur))
+                {
+                    <p><strong>Tür:</strong> @Model.Tur</p>
+                }
                 <p><strong>Eklenme Tarihi:</strong> @Model.EklenmeTarihi.ToString("dd MMMM yyyy")</p>
                 <hr />
                 <h5>Açıklama:</h5>

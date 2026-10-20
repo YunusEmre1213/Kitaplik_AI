@@ -38,8 +38,15 @@
                     </div>
 
                     <div class="mb-3">
+                        <label asp-for="Tur" class="form-label">Tür</label>
+                        <select asp-for="Tur" class="form-select" asp-items="@(new SelectList(KitapYonetimSistemi.Models.KitapTurleri.Hepsi))">
+                            <option value="">Seçiniz</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
                         <label asp-for="YayinYili" class="form-label">Yayın Yılı</label>
-                        <input asp-for="YayinYili" type="number" class="form-control" min="1000" max="2025" />
+                        <input asp-for="YayinYili" type="number" class="form-control" min="1000" max="2100" />
                         <span asp-validation-for="YayinYili" class="text-danger"></span>
                     </div>
 

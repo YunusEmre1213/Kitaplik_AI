@@ -9,6 +9,7 @@
         public string Aciklama { get; set; } = string.Empty;
         public DateTime EklenmeTarihi { get; set; }
         public string? KapakResmiUrl { get; set; }
+        public string? Tur { get; set; }
 
         // İlişkiler
         public ICollection<Yorum>? Yorumlar { get; set; }
