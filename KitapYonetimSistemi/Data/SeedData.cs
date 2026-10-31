@@ -56,9 +56,11 @@ namespace KitapYonetimSistemi.Data
                 }
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
-            else if (await userManager.CheckPasswordAsync(adminUser, EskiVarsayilanSifre))
+            else if (await userManager.CheckPasswordAsync(adminUser, EskiVarsayilanSifre) ||
+                     (serviceProvider.GetRequiredService<IHostEnvironment>().IsDevelopment() &&
+                      !await userManager.CheckPasswordAsync(adminUser, adminPassword)))
             {
-                // Eski varsayılan şifre hâlâ geçerliyse ayarlanan şifreyle değiştir
+                // Eski varsayılan şifre hâlâ geçerliyse ya da geliştirme ortamında ayarlanan şifre farklıysa ayarlanan şifreyle değiştir
                 var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
                 await userManager.ResetPasswordAsync(adminUser, token, adminPassword);
             }

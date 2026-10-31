@@ -13,6 +13,10 @@ namespace KitapYonetimSistemi.Models
         public DateTime? OkumayaBaslamaTarihi { get; set; }
         public DateTime? OkumaBitisTarihi { get; set; }
 
+        // Okunan son sayfa ve ilerleme notları
+        public int? MevcutSayfa { get; set; }
+        public ICollection<OkumaGunlugu> Gunlukler { get; set; } = new List<OkumaGunlugu>();
+
         // Foreign Keys
         public string KullaniciId { get; set; } = string.Empty;
         public ApplicationUser? Kullanici { get; set; }

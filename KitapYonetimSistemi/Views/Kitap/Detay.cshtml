@@ -1,4 +1,5 @@
-﻿@model KitapYonetimSistemi.Models.Kitap
+﻿@using System.Security.Claims
+@model KitapYonetimSistemi.Models.Kitap
 
 @{
     ViewData["Title"] = Model.KitapAdi;
@@ -39,6 +40,10 @@
                 <h1 class="card-title text-primary">@Model.KitapAdi</h1>
                 <h5 class="card-subtitle mb-3 text-muted">Yazar: @Model.YazarAdi</h5>
                 <p><strong>Yayın Yılı:</strong> @Model.YayinYili</p>
+                @if (Model.SayfaSayisi.HasValue)
+                {
+                    <p><strong>Sayfa Sayısı:</strong> @Model.SayfaSayisi</p>
+                }
                 @if (!string.IsNullOrEmpty(Model.Tur))
                 {
                     <p><strong>Tür:</strong> @Model.Tur</p>
@@ -110,6 +115,80 @@
     </div>
 </div>
 
+<!-- Alıntılar -->
+@{
+    var mevcutKullaniciId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var alintilar = (Model.Alintilar ?? new List<KitapYonetimSistemi.Models.Alinti>())
+        .OrderByDescending(a => a.Begeniler.Count)
+        .ThenByDescending(a => a.Tarih)
+        .ToList();
+}
+<div class="card mb-4">
+    <div class="card-header">❝ Alıntılar (@alintilar.Count)</div>
+    <div class="card-body">
+        @if (TempData["Hata"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Hata"]</div>
+        }
+
+        @if (alintilar.Any())
+        {
+            @foreach (var alinti in alintilar)
+            {
+                var begendi = alinti.Begeniler.Any(b => b.KullaniciId == mevcutKullaniciId);
+                <figure class="border-start border-4 border-warning ps-3 mb-4">
+                    <blockquote class="blockquote mb-1" style="white-space: pre-line;">@alinti.Metin</blockquote>
+                    <figcaption class="small text-muted">
+                        👤 @alinti.Kullanici?.UserName
+                        @if (alinti.SayfaNo.HasValue)
+                        {
+                            <span> · s. @alinti.SayfaNo</span>
+                        }
+                        · @alinti.Tarih.ToString("dd.MM.yyyy")
+                    </figcaption>
+                    <div class="d-flex gap-2 mt-2">
+                        <form asp-action="AlintiBegen" method="post">
+                            <input type="hidden" name="alintiId" value="@alinti.Id" />
+                            <button type="submit" class="btn btn-sm @(begendi ? "btn-danger" : "btn-outline-danger")">
+                                ❤ @alinti.Begeniler.Count
+                            </button>
+                        </form>
+                        @if (alinti.KullaniciId == mevcutKullaniciId)
+                        {
+                            <form asp-action="AlintiSil" method="post" onsubmit="return confirm('Alıntı silinsin mi?');">
+                                <input type="hidden" name="alintiId" value="@alinti.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Sil</button>
+                            </form>
+                        }
+                    </div>
+                </figure>
+            }
+        }
+        else
+        {
+            <p class="text-muted text-center">Henüz alıntı paylaşılmamış. İlk alıntıyı siz ekleyin!</p>
+        }
+
+        <hr />
+
+        <h5>Alıntı Ekle</h5>
+        <form asp-action="AlintiEkle" method="post">
+            <input type="hidden" name="kitapId" value="@Model.Id" />
+            <div class="mb-2">
+                <textarea name="metin" class="form-control" rows="3" maxlength="1000" placeholder="Kitaptan etkilendiğiniz bir bölüm..." required></textarea>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <input type="number" name="sayfaNo" class="form-control" min="1" max="20000" placeholder="Sayfa no (isteğe bağlı)" />
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-warning">Alıntıyı Paylaş</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Yorumlar -->
 <div class="card mb-4">
     <div class="card-header">💬 Yorumlar (@(Model.Yorumlar?.Count ?? 0))</div>
@@ -123,7 +202,17 @@
                         👤 @yorum.Kullanici.UserName
                         <small>- @yorum.YorumTarihi.ToString("dd.MM.yyyy HH:mm")</small>
                     </h6>
-                    <p class="mb-0">@yorum.YorumMetni</p>
+                    @if (yorum.Spoiler)
+                    {
+                        <details>
+                            <summary class="text-warning">⚠️ Bu yorum spoiler içeriyor, görmek için tıklayın</summary>
+                            <p class="mb-0 mt-2">@yorum.YorumMetni</p>
+                        </details>
+                    }
+                    else
+                    {
+                        <p class="mb-0">@yorum.YorumMetni</p>
+                    }
                 </div>
             }
         }
@@ -139,6 +228,10 @@
             <input type="hidden" name="kitapId" value="@Model.Id" />
             <div class="mb-3">
                 <textarea name="yorumMetni" class="form-control" rows="3" placeholder="Yorumunuzu yazın..." required></textarea>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="spoiler" value="true" id="spoilerCheck" />
+                <label class="form-check-label" for="spoilerCheck">Bu yorum spoiler içeriyor</label>
             </div>
             <button type="submit" class="btn btn-primary">Yorum Gönder</button>
             <a asp-action="Index" class="btn btn-secondary">Kitaplara Dön</a>

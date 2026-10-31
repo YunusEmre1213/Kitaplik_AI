@@ -17,6 +17,10 @@ namespace KitapYonetimSistemi.Data
         public DbSet<KitapPuan> KitapPuanlari { get; set; }
         public DbSet<Tartisma> Tartismalar { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<OkumaHedefi> OkumaHedefleri { get; set; }
+        public DbSet<OkumaGunlugu> OkumaGunlukleri { get; set; }
+        public DbSet<Alinti> Alintilar { get; set; }
+        public DbSet<AlintiBegeni> AlintiBegenileri { get; set; }
 
      
         protected override void OnModelCreating(ModelBuilder builder)
@@ -76,6 +80,54 @@ namespace KitapYonetimSistemi.Data
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // Okuma hedefi: kullanıcı başına yılda bir hedef
+            builder.Entity<OkumaHedefi>()
+                .HasOne(h => h.Kullanici)
+                .WithMany()
+                .HasForeignKey(h => h.KullaniciId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<OkumaHedefi>()
+                .HasIndex(h => new { h.KullaniciId, h.Yil })
+                .IsUnique();
+
+            // Okuma günlüğü
+            builder.Entity<OkumaGunlugu>()
+                .HasOne(g => g.KullaniciKitaplik)
+                .WithMany(k => k.Gunlukler)
+                .HasForeignKey(g => g.KullaniciKitaplikId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Alıntılar
+            builder.Entity<Alinti>()
+                .HasOne(a => a.Kitap)
+                .WithMany(k => k.Alintilar)
+                .HasForeignKey(a => a.KitapId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Alinti>()
+                .HasOne(a => a.Kullanici)
+                .WithMany()
+                .HasForeignKey(a => a.KullaniciId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<AlintiBegeni>()
+                .HasOne(b => b.Alinti)
+                .WithMany(a => a.Begeniler)
+                .HasForeignKey(b => b.AlintiId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Birden fazla silme zinciri oluşmaması için NoAction, kullanıcı silinirken elle temizlenir
+            builder.Entity<AlintiBegeni>()
+                .HasOne(b => b.Kullanici)
+                .WithMany()
+                .HasForeignKey(b => b.KullaniciId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<AlintiBegeni>()
+                .HasIndex(b => new { b.AlintiId, b.KullaniciId })
+                .IsUnique();
 
             // YORUM - TARTIŞMA
             builder.Entity<Comment>()

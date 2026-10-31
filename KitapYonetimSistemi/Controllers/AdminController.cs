@@ -413,6 +413,7 @@ namespace KitapYonetimSistemi.Controllers
             _context.KitapPuanlari.RemoveRange(_context.KitapPuanlari.Where(p => p.KullaniciId == kullaniciId));
             _context.KullaniciKitapliklari.RemoveRange(_context.KullaniciKitapliklari.Where(k => k.KullaniciId == kullaniciId));
             _context.Comments.RemoveRange(_context.Comments.Where(c => c.UserId == kullaniciId));
+            _context.AlintiBegenileri.RemoveRange(_context.AlintiBegenileri.Where(b => b.KullaniciId == kullaniciId));
 
             // Kullanıcının açtığı tartışmalar silinir, altındaki diğer yorumlar da bununla birlikte silinir
             var tartismaIdleri = await _context.Tartismalar.Where(t => t.UserId == kullaniciId).Select(t => t.Id).ToListAsync();

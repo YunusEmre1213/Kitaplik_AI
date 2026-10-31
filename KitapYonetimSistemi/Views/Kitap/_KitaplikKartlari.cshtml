@@ -38,14 +38,42 @@
                             }
                         </div>
 
+                        @if (kayit.OkumaDurumu == OkumaDurumu.Okuyorum)
+                        {
+                            var toplam = kayit.Kitap.SayfaSayisi;
+                            var mevcut = kayit.MevcutSayfa ?? 0;
+                            var yuzde = toplam > 0 ? Math.Min(100, mevcut * 100 / toplam.Value) : 0;
+
+                            @if (toplam.HasValue)
+                            {
+                                <div class="progress mb-1" style="height: 14px;">
+                                    <div class="progress-bar bg-success" style="width: @yuzde%;">%@yuzde</div>
+                                </div>
+                                <div class="small text-muted mb-2">@mevcut / @toplam sayfa</div>
+                            }
+                            else if (kayit.MevcutSayfa.HasValue)
+                            {
+                                <div class="small text-muted mb-2">@mevcut. sayfadasınız</div>
+                            }
+
+                            <form asp-action="IlerlemeGuncelle" method="post" class="mb-2">
+                                <input type="hidden" name="kitaplikId" value="@kayit.Id" />
+                                <div class="input-group input-group-sm mb-1">
+                                    <input type="number" name="sayfa" class="form-control" min="0" max="@(toplam ?? 20000)" value="@mevcut" placeholder="Sayfa" required />
+                                    <button type="submit" class="btn btn-outline-success">Kaydet</button>
+                                </div>
+                                <input type="text" name="not" class="form-control form-control-sm" maxlength="500" placeholder="Not (isteğe bağlı)" />
+                            </form>
+                        }
+
                         <!-- Durum Değiştir -->
                         <form asp-action="OkumaDurumuDegistir" method="post">
                             <input type="hidden" name="kitaplikId" value="@kayit.Id" />
                             <select name="yeniDurum" class="form-select form-select-sm mb-2" onchange="this.form.submit()">
                                 <option value="">-- Durum Değiştir --</option>
-                                <option value="1" @@(kayit.OkumaDurumu == OkumaDurumu.Okunacak ? "selected" : "")>📖 Okunacak</option>
-                                <option value="2" @@(kayit.OkumaDurumu == OkumaDurumu.Okuyorum ? "selected" : "")>📕 Okuyorum</option>
-                                <option value="3" @@(kayit.OkumaDurumu == OkumaDurumu.Okundu ? "selected" : "")>✅ Okundu</option>
+                                <option value="1" selected="@(kayit.OkumaDurumu == OkumaDurumu.Okunacak)">📖 Okunacak</option>
+                                <option value="2" selected="@(kayit.OkumaDurumu == OkumaDurumu.Okuyorum)">📕 Okuyorum</option>
+                                <option value="3" selected="@(kayit.OkumaDurumu == OkumaDurumu.Okundu)">✅ Okundu</option>
                             </select>
                         </form>
 

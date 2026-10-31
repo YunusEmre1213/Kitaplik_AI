@@ -90,6 +90,65 @@ namespace KitapYonetimSistemi.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("KitapYonetimSistemi.Models.Alinti", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("KitapId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("KullaniciId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Metin")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("SayfaNo")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Tarih")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KitapId");
+
+                    b.HasIndex("KullaniciId");
+
+                    b.ToTable("Alintilar");
+                });
+
+            modelBuilder.Entity("KitapYonetimSistemi.Models.AlintiBegeni", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlintiId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("KullaniciId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KullaniciId");
+
+                    b.HasIndex("AlintiId", "KullaniciId")
+                        .IsUnique();
+
+                    b.ToTable("AlintiBegenileri");
+                });
+
             modelBuilder.Entity("KitapYonetimSistemi.Models.Comment", b =>
                 {
                     b.Property<int>("Id")
@@ -142,6 +201,9 @@ namespace KitapYonetimSistemi.Data.Migrations
                     b.Property<string>("KitapAdi")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("SayfaSayisi")
+                        .HasColumnType("int");
 
                     b.Property<string>("Tur")
                         .HasColumnType("nvarchar(max)");
@@ -210,6 +272,9 @@ namespace KitapYonetimSistemi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int?>("MevcutSayfa")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("OkumaBitisTarihi")
                         .HasColumnType("datetime2");
 
@@ -226,6 +291,59 @@ namespace KitapYonetimSistemi.Data.Migrations
                     b.HasIndex("KullaniciId");
 
                     b.ToTable("KullaniciKitapliklari");
+                });
+
+            modelBuilder.Entity("KitapYonetimSistemi.Models.OkumaGunlugu", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("KullaniciKitaplikId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Not")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Sayfa")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Tarih")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KullaniciKitaplikId");
+
+                    b.ToTable("OkumaGunlukleri");
+                });
+
+            modelBuilder.Entity("KitapYonetimSistemi.Models.OkumaHedefi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("KitapSayisi")
+                        .HasColumnType("int");
+
+                    b.Property<string>("KullaniciId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Yil")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KullaniciId", "Yil")
+                        .IsUnique();
+
+                    b.ToTable("OkumaHedefleri");
                 });
 
             modelBuilder.Entity("KitapYonetimSistemi.Models.Tartisma", b =>
@@ -272,6 +390,9 @@ namespace KitapYonetimSistemi.Data.Migrations
                     b.Property<string>("KullaniciId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("Spoiler")
+                        .HasColumnType("bit");
 
                     b.Property<string>("YorumMetni")
                         .IsRequired()
@@ -426,6 +547,44 @@ namespace KitapYonetimSistemi.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("KitapYonetimSistemi.Models.Alinti", b =>
+                {
+                    b.HasOne("KitapYonetimSistemi.Models.Kitap", "Kitap")
+                        .WithMany("Alintilar")
+                        .HasForeignKey("KitapId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KitapYonetimSistemi.Data.ApplicationUser", "Kullanici")
+                        .WithMany()
+                        .HasForeignKey("KullaniciId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Kitap");
+
+                    b.Navigation("Kullanici");
+                });
+
+            modelBuilder.Entity("KitapYonetimSistemi.Models.AlintiBegeni", b =>
+                {
+                    b.HasOne("KitapYonetimSistemi.Models.Alinti", "Alinti")
+                        .WithMany("Begeniler")
+                        .HasForeignKey("AlintiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KitapYonetimSistemi.Data.ApplicationUser", "Kullanici")
+                        .WithMany()
+                        .HasForeignKey("KullaniciId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Alinti");
+
+                    b.Navigation("Kullanici");
+                });
+
             modelBuilder.Entity("KitapYonetimSistemi.Models.Comment", b =>
                 {
                     b.HasOne("KitapYonetimSistemi.Models.Tartisma", "Tartisma")
@@ -479,6 +638,28 @@ namespace KitapYonetimSistemi.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Kitap");
+
+                    b.Navigation("Kullanici");
+                });
+
+            modelBuilder.Entity("KitapYonetimSistemi.Models.OkumaGunlugu", b =>
+                {
+                    b.HasOne("KitapYonetimSistemi.Models.KullaniciKitaplik", "KullaniciKitaplik")
+                        .WithMany("Gunlukler")
+                        .HasForeignKey("KullaniciKitaplikId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("KullaniciKitaplik");
+                });
+
+            modelBuilder.Entity("KitapYonetimSistemi.Models.OkumaHedefi", b =>
+                {
+                    b.HasOne("KitapYonetimSistemi.Data.ApplicationUser", "Kullanici")
+                        .WithMany()
+                        .HasForeignKey("KullaniciId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Kullanici");
                 });
@@ -573,13 +754,25 @@ namespace KitapYonetimSistemi.Data.Migrations
                     b.Navigation("Yorumlar");
                 });
 
+            modelBuilder.Entity("KitapYonetimSistemi.Models.Alinti", b =>
+                {
+                    b.Navigation("Begeniler");
+                });
+
             modelBuilder.Entity("KitapYonetimSistemi.Models.Kitap", b =>
                 {
+                    b.Navigation("Alintilar");
+
                     b.Navigation("KullaniciKitapliklari");
 
                     b.Navigation("Puanlar");
 
                     b.Navigation("Yorumlar");
+                });
+
+            modelBuilder.Entity("KitapYonetimSistemi.Models.KullaniciKitaplik", b =>
+                {
+                    b.Navigation("Gunlukler");
                 });
 
             modelBuilder.Entity("KitapYonetimSistemi.Models.Tartisma", b =>

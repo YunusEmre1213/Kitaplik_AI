@@ -34,6 +34,12 @@
                     </div>
 
                     <div class="mb-3">
+                        <label asp-for="SayfaSayisi" class="form-label">Sayfa Sayısı</label>
+                        <input asp-for="SayfaSayisi" type="number" class="form-control" placeholder="Örn: 420" min="1" max="20000" />
+                        <span asp-validation-for="SayfaSayisi" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
                         <label asp-for="Tur" class="form-label">Tür</label>
                         <select asp-for="Tur" class="form-select" asp-items="@(new SelectList(KitapYonetimSistemi.Models.KitapTurleri.Hepsi))">
                             <option value="">Seçiniz</option>

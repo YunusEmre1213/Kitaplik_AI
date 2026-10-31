@@ -8,6 +8,9 @@ namespace KitapYonetimSistemi.Models
         public string YorumMetni { get; set; } = string.Empty;
         public DateTime YorumTarihi { get; set; }
 
+        // Yorum kitabın içeriğini açık ediyorsa işaretlenir, okuyucu tıklayınca görür
+        public bool Spoiler { get; set; }
+
         // Foreign Keys
         public int KitapId { get; set; }
         public Kitap? Kitap { get; set; }

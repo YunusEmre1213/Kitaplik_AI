@@ -48,6 +48,58 @@
     </div>
 </div>
 
+<!-- Yıllık Okuma Hedefi -->
+<div class="card mb-4">
+    <div class="card-header">🎯 @Model.Yil Okuma Hedefi</div>
+    <div class="card-body">
+        @if (TempData["Mesaj"] != null)
+        {
+            <div class="alert alert-success">@TempData["Mesaj"]</div>
+        }
+        @if (TempData["Hata"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Hata"]</div>
+        }
+
+        @if (Model.HedefKitapSayisi.HasValue)
+        {
+            <div class="d-flex justify-content-between mb-1">
+                <strong>@Model.BuYilOkunanSayisi / @Model.HedefKitapSayisi kitap</strong>
+                <span>%@Model.HedefYuzdesi.ToString("0")</span>
+            </div>
+            <div class="progress mb-2" style="height: 24px;">
+                <div class="progress-bar bg-warning" role="progressbar" style="width: @Model.HedefYuzdesi.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%;"></div>
+            </div>
+            @if (Model.BuYilOkunanSayisi >= Model.HedefKitapSayisi)
+            {
+                <p class="text-success mb-2">🎉 Hedefinize ulaştınız, tebrikler!</p>
+            }
+            else if (Model.AylikGerekenKitap.HasValue)
+            {
+                <p class="text-muted mb-2">Hedefe ulaşmak için ayda yaklaşık <strong>@Model.AylikGerekenKitap.Value.ToString("0.#")</strong> kitap okumalısınız.</p>
+            }
+        }
+        else
+        {
+            <p class="text-muted">Bu yıl için henüz bir hedef belirlemediniz.</p>
+        }
+
+        @if (Model.BuYilOkunanSayfa > 0)
+        {
+            <p class="mb-3">Bu yıl okuduğunuz toplam sayfa: <strong>@Model.BuYilOkunanSayfa</strong></p>
+        }
+
+        <form asp-action="HedefBelirle" method="post" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <input type="number" name="hedef" class="form-control" min="1" max="1000" value="@Model.HedefKitapSayisi" placeholder="Kitap sayısı" required />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-warning">@(Model.HedefKitapSayisi.HasValue ? "Hedefi Güncelle" : "Hedef Belirle")</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- İlerleme -->
 <div class="card mb-4">
     <div class="card-header">🎯 Okuma İlerlemeniz</div>
@@ -156,3 +208,29 @@
 <div class="text-center">
     <a asp-action="Kitapligim" class="btn btn-secondary">Kitaplığıma Dön</a>
 </div>
+
+@if (Model.SonGunlukler.Any())
+{
+    <div class="card mb-4">
+        <div class="card-header">📝 Okuma Günlüğüm</div>
+        <ul class="list-group list-group-flush">
+            @foreach (var g in Model.SonGunlukler)
+            {
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <strong>@g.KullaniciKitaplik?.Kitap?.KitapAdi</strong>
+                        <small class="text-muted">@g.Tarih.ToString("dd.MM.yyyy HH:mm")</small>
+                    </div>
+                    @if (g.Sayfa.HasValue)
+                    {
+                        <div class="small">📖 @g.Sayfa. sayfa</div>
+                    }
+                    @if (!string.IsNullOrEmpty(g.Not))
+                    {
+                        <div class="text-muted">@g.Not</div>
+                    }
+                </li>
+            }
+        </ul>
+    </div>
+}

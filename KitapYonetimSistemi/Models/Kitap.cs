@@ -11,9 +11,13 @@
         public string? KapakResmiUrl { get; set; }
         public string? Tur { get; set; }
 
+        [System.ComponentModel.DataAnnotations.Range(1, 20000, ErrorMessage = "Sayfa sayısı 1 ile 20000 arasında olmalıdır.")]
+        public int? SayfaSayisi { get; set; }
+
         // İlişkiler
         public ICollection<Yorum>? Yorumlar { get; set; }
         public ICollection<KullaniciKitaplik>? KullaniciKitapliklari { get; set; }
+        public ICollection<Alinti>? Alintilar { get; set; }
 
         // YENİ: Puan ilişkisi
         public ICollection<KitapPuan>? Puanlar { get; set; }
