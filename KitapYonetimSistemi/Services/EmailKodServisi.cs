@@ -9,7 +9,8 @@ namespace KitapYonetimSistemi.Services
     // Böylece e-posta başka bir cihazdan (telefon vb.) açılsa bile doğrulama çalışır.
     public class EmailKodServisi
     {
-        private const string Amac = "EmailConfirmation";
+        public const string EmailDogrulama = "EmailConfirmation";
+        public const string SifreSifirlama = "ResetPassword";
         private const int EnFazlaDeneme = 5;
         private static readonly TimeSpan YenidenGondermeSuresi = TimeSpan.FromSeconds(60);
         private static readonly TimeSpan DenemeSuresi = TimeSpan.FromMinutes(10);
@@ -26,25 +27,30 @@ namespace KitapYonetimSistemi.Services
         }
 
         // Kod gönderir. Çok sık istenirse göndermez ve false döner.
-        public async Task<bool> GonderAsync(ApplicationUser kullanici)
+        public async Task<bool> GonderAsync(ApplicationUser kullanici, string amac = EmailDogrulama)
         {
-            var bekleKey = $"KodBekle_{kullanici.Id}";
+            var bekleKey = $"KodBekle_{amac}_{kullanici.Id}";
             if (_cache.TryGetValue(bekleKey, out _))
                 return false;
 
-            var kod = await _userManager.GenerateUserTokenAsync(kullanici, TokenOptions.DefaultEmailProvider, Amac);
+            var kod = await _userManager.GenerateUserTokenAsync(kullanici, TokenOptions.DefaultEmailProvider, amac);
 
-            await _emailSender.SendEmailAsync(kullanici.Email!, "Satır Arası - Doğrulama kodunuz",
-                $"<p>Merhaba,</p><p>Doğrulama kodunuz:</p><h2 style='letter-spacing:4px'>{kod}</h2>" +
-                "<p>Kod birkaç dakika geçerlidir. Bu kaydı siz yapmadıysanız bu e-postayı yok sayabilirsiniz.</p>");
+            var konu = amac == SifreSifirlama ? "Satır Arası - Şifre sıfırlama kodunuz" : "Satır Arası - Doğrulama kodunuz";
+            var aciklama = amac == SifreSifirlama ? "Şifre sıfırlama kodunuz:" : "Doğrulama kodunuz:";
+            var uyari = amac == SifreSifirlama ? "Şifre sıfırlamayı siz istemediyseniz bu e-postayı yok sayabilirsiniz, şifreniz değişmez." : "Bu kaydı siz yapmadıysanız bu e-postayı yok sayabilirsiniz.";
+
+            await _emailSender.SendEmailAsync(kullanici.Email!, konu,
+                $"<p>Merhaba,</p><p>{aciklama}</p><h2 style='letter-spacing:4px'>{kod}</h2>" +
+                $"<p>Kod birkaç dakika geçerlidir. {uyari}</p>");
 
             _cache.Set(bekleKey, true, YenidenGondermeSuresi);
             return true;
         }
 
-        public async Task<(bool Basarili, string? Hata)> DogrulaAsync(ApplicationUser kullanici, string kod)
+        // Kodu doğrular, hatalı denemeleri sayar. Hesap üzerinde hiçbir değişiklik yapmaz.
+        public async Task<(bool Basarili, string? Hata)> KodKontrolAsync(ApplicationUser kullanici, string kod, string amac)
         {
-            var denemeKey = $"KodDeneme_{kullanici.Id}";
+            var denemeKey = $"KodDeneme_{amac}_{kullanici.Id}";
             var deneme = _cache.TryGetValue(denemeKey, out int sayi) ? sayi : 0;
 
             if (deneme >= EnFazlaDeneme)
@@ -52,15 +58,24 @@ namespace KitapYonetimSistemi.Services
 
             kod = (kod ?? string.Empty).Trim();
 
-            if (!await _userManager.VerifyUserTokenAsync(kullanici, TokenOptions.DefaultEmailProvider, Amac, kod))
+            if (!await _userManager.VerifyUserTokenAsync(kullanici, TokenOptions.DefaultEmailProvider, amac, kod))
             {
                 _cache.Set(denemeKey, deneme + 1, DenemeSuresi);
                 return (false, "Kod hatalı ya da süresi dolmuş. Yeni bir kod isteyebilirsiniz.");
             }
 
+            _cache.Remove(denemeKey);
+            return (true, null);
+        }
+
+        public async Task<(bool Basarili, string? Hata)> DogrulaAsync(ApplicationUser kullanici, string kod)
+        {
+            var sonuc = await KodKontrolAsync(kullanici, kod, EmailDogrulama);
+            if (!sonuc.Basarili)
+                return sonuc;
+
             kullanici.EmailConfirmed = true;
             await _userManager.UpdateAsync(kullanici);
-            _cache.Remove(denemeKey);
             return (true, null);
         }
     }
