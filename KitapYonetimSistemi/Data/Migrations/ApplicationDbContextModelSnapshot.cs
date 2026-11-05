@@ -192,8 +192,16 @@ namespace KitapYonetimSistemi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DisKaynakId")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
                     b.Property<DateTime>("EklenmeTarihi")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Isbn")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("KapakResmiUrl")
                         .HasColumnType("nvarchar(max)");
@@ -216,6 +224,14 @@ namespace KitapYonetimSistemi.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DisKaynakId")
+                        .IsUnique()
+                        .HasFilter("[DisKaynakId] IS NOT NULL");
+
+                    b.HasIndex("Isbn")
+                        .IsUnique()
+                        .HasFilter("[Isbn] IS NOT NULL");
 
                     b.ToTable("Kitaplar");
                 });

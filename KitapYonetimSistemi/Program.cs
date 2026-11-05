@@ -46,6 +46,18 @@ if (emailAyarliMi)
 
 builder.Services.AddScoped<KitapYonetimSistemi.Services.EmailKodServisi>();
 
+builder.Services.AddHttpClient(KitapYonetimSistemi.Services.DisKitapServisi.GoogleIstemciAdi, client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(6);
+});
+builder.Services.AddHttpClient(KitapYonetimSistemi.Services.DisKitapServisi.OpenLibraryIstemciAdi, client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(8);
+    // Open Library, istemcilerden kendilerini tanıtmalarını ister
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("SatirArasi/1.0 (kitap yonetim sistemi)");
+});
+builder.Services.AddScoped<KitapYonetimSistemi.Services.DisKitapServisi>();
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 

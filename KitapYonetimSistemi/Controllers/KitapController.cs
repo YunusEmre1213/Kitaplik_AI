@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using KitapYonetimSistemi.Data;
 using KitapYonetimSistemi.Models;
 
@@ -12,11 +13,19 @@ namespace KitapYonetimSistemi.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly Services.DisKitapServisi _disKitapServisi;
+        private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
 
-        public KitapController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public KitapController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            Services.DisKitapServisi disKitapServisi,
+            Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
         {
             _context = context;
             _userManager = userManager;
+            _disKitapServisi = disKitapServisi;
+            _cache = cache;
         }
 
         // Tüm kitapları listele (arama, tür filtresi, sıralama ve sayfalama)
@@ -61,7 +70,59 @@ namespace KitapYonetimSistemi.Controllers
                 ToplamKayit = toplamKayit
             };
 
+            // Arama yapıldıysa kataloğumuzda olmayan kitaplar dış kaynaktan da önerilir
+            if (!string.IsNullOrWhiteSpace(arama) && sayfa == 1 && string.IsNullOrWhiteSpace(tur))
+            {
+                var disSonuclar = await _disKitapServisi.AraAsync(arama, 8);
+                model.DisSonuclar = disSonuclar.Where(d => d.KatalogId == null).Take(6).ToList();
+            }
+
             return View(model);
+        }
+
+        // Dış kaynaktaki kitabı kataloğa ekleyip kullanıcının kitaplığına koyar
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DisKaynaktanKitapligaEkle(string disKaynakId)
+        {
+            var kullanici = await _userManager.GetUserAsync(User);
+            if (kullanici == null)
+                return Challenge();
+
+            // Katalog kirliliğini önlemek için kullanıcı başına saatte en fazla 10 yeni kitap
+            var sinirKey = $"DisEkle_{kullanici.Id}";
+            var sayi = _cache.TryGetValue(sinirKey, out int mevcutSayi) ? mevcutSayi : 0;
+            if (sayi >= 10)
+            {
+                TempData["Hata"] = "Bir saat içinde en fazla 10 yeni kitap ekleyebilirsiniz. Lütfen daha sonra tekrar deneyin.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var kitap = await _disKitapServisi.IceAktarAsync(disKaynakId);
+            if (kitap == null)
+            {
+                TempData["Hata"] = "Kitap dış kaynaktan alınamadı!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            _cache.Set(sinirKey, sayi + 1, TimeSpan.FromHours(1));
+
+            var zatenVar = await _context.KullaniciKitapliklari
+                .AnyAsync(kk => kk.KullaniciId == kullanici.Id && kk.KitapId == kitap.Id);
+
+            if (!zatenVar)
+            {
+                _context.KullaniciKitapliklari.Add(new KullaniciKitaplik
+                {
+                    KullaniciId = kullanici.Id,
+                    KitapId = kitap.Id,
+                    EklenmeTarihi = DateTime.Now
+                });
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Mesaj"] = $"'{kitap.KitapAdi}' kitaplığınıza eklendi!";
+            return RedirectToAction(nameof(Kitapligim));
         }
 
         public async Task<IActionResult> Detay(int? id)

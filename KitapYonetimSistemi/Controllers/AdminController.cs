@@ -12,11 +12,13 @@ namespace KitapYonetimSistemi.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly Services.DisKitapServisi _disKitapServisi;
 
-        public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, Services.DisKitapServisi disKitapServisi)
         {
             _context = context;
             _userManager = userManager;
+            _disKitapServisi = disKitapServisi;
         }
 
         //  DASHBOARD İŞLEMLERİ
@@ -68,6 +70,35 @@ namespace KitapYonetimSistemi.Controllers
                 .OrderByDescending(k => k.EklenmeTarihi)
                 .ToListAsync();
             return View(kitaplar);
+        }
+
+        // DIŞ KAYNAKTAN (GOOGLE BOOKS) KİTAP EKLE
+
+        public async Task<IActionResult> DisKaynak(string? arama)
+        {
+            ViewBag.Arama = arama;
+
+            if (string.IsNullOrWhiteSpace(arama))
+                return View(new List<Services.DisKitapSonuc>());
+
+            var sonuclar = await _disKitapServisi.AraAsync(arama, 20);
+            if (sonuclar.Count == 0)
+                ViewBag.Bilgi = "Sonuç bulunamadı ya da dış servise şu an ulaşılamıyor.";
+
+            return View(sonuclar);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DisKaynakEkle(string disKaynakId, string? arama)
+        {
+            var kitap = await _disKitapServisi.IceAktarAsync(disKaynakId);
+
+            TempData[kitap == null ? "Hata" : "Mesaj"] = kitap == null
+                ? "Kitap dış kaynaktan alınamadı!"
+                : $"'{kitap.KitapAdi}' kataloğa eklendi!";
+
+            return RedirectToAction(nameof(DisKaynak), new { arama });
         }
 
         public IActionResult KitapEkle()

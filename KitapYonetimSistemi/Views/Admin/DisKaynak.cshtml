@@ -1,0 +1,99 @@
+@model List<KitapYonetimSistemi.Services.DisKitapSonuc>
+
+@{
+    ViewData["Title"] = "Dış Kaynaktan Kitap Ekle";
+    var arama = ViewBag.Arama as string;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-action="KitapListesi">Kitap Listesi</a></li>
+        <li class="breadcrumb-item active">Dış Kaynak</li>
+    </ol>
+</nav>
+
+<h1 class="page-title">🔎 Dış Kaynaktan Kitap Ekle</h1>
+<p class="text-muted">Kitap adı, yazar ya da ISBN ile arayın (Open Library, Google Books anahtarı tanımlıysa Google Books). Seçtiğiniz kitabın bilgileri ve kapağı otomatik gelir.</p>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Mesaj"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Hata"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<form method="get" asp-action="DisKaynak" class="input-group input-group-lg mb-4">
+    <input type="text" name="arama" value="@arama" class="form-control" maxlength="100" placeholder="Örn: Suç ve Ceza ya da 9789750719387" autofocus />
+    <button type="submit" class="btn btn-primary">Ara</button>
+</form>
+
+@if (ViewBag.Bilgi != null)
+{
+    <div class="alert alert-warning">@ViewBag.Bilgi</div>
+}
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">Kapak</th>
+                    <th>Kitap</th>
+                    <th>Yıl</th>
+                    <th>Sayfa</th>
+                    <th>Tür</th>
+                    <th style="width: 140px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var sonuc in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(sonuc.KapakUrl))
+                            {
+                                <img src="@sonuc.KapakUrl" alt="@sonuc.Baslik" style="width: 48px; height: 70px; object-fit: cover; border-radius: 4px;" />
+                            }
+                        </td>
+                        <td>
+                            <div class="fw-bold">@sonuc.Baslik</div>
+                            <div class="small text-muted">@sonuc.Yazar</div>
+                            @if (!string.IsNullOrEmpty(sonuc.Isbn))
+                            {
+                                <div class="small text-muted">ISBN: @sonuc.Isbn</div>
+                            }
+                        </td>
+                        <td>@(sonuc.Yil > 0 ? sonuc.Yil.ToString() : "-")</td>
+                        <td>@(sonuc.SayfaSayisi?.ToString() ?? "-")</td>
+                        <td>@(sonuc.Tur ?? "-")</td>
+                        <td>
+                            @if (sonuc.KatalogId.HasValue)
+                            {
+                                <span class="badge bg-secondary">Katalogda var</span>
+                            }
+                            else
+                            {
+                                <form asp-action="DisKaynakEkle" method="post">
+                                    <input type="hidden" name="disKaynakId" value="@sonuc.DisKaynakId" />
+                                    <input type="hidden" name="arama" value="@arama" />
+                                    <button type="submit" class="btn btn-sm btn-success">➕ Ekle</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="small text-muted">Kaynak: @string.Join(", ", Model.Select(m => m.Kaynak).Distinct())</p>
+}

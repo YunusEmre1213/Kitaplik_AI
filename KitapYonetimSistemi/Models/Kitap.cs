@@ -11,6 +11,10 @@
         public string? KapakResmiUrl { get; set; }
         public string? Tur { get; set; }
 
+        // Dış kaynaktan (Google Books) eklenen kitaplarda tekrarı önlemek için
+        public string? Isbn { get; set; }
+        public string? DisKaynakId { get; set; }
+
         [System.ComponentModel.DataAnnotations.Range(1, 20000, ErrorMessage = "Sayfa sayısı 1 ile 20000 arasında olmalıdır.")]
         public int? SayfaSayisi { get; set; }
 

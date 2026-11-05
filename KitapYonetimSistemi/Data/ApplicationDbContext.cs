@@ -27,6 +27,22 @@ namespace KitapYonetimSistemi.Data
         {
             base.OnModelCreating(builder);
 
+            // Aynı ISBN ya da dış kaynak kimliği ile ikinci bir kitap eklenemez
+            builder.Entity<Kitap>()
+                .Property(k => k.Isbn).HasMaxLength(20);
+            builder.Entity<Kitap>()
+                .Property(k => k.DisKaynakId).HasMaxLength(40);
+
+            builder.Entity<Kitap>()
+                .HasIndex(k => k.Isbn)
+                .IsUnique()
+                .HasFilter("[Isbn] IS NOT NULL");
+
+            builder.Entity<Kitap>()
+                .HasIndex(k => k.DisKaynakId)
+                .IsUnique()
+                .HasFilter("[DisKaynakId] IS NOT NULL");
+
             // Yorum ilişkileri
             builder.Entity<Yorum>()
                 .HasOne(y => y.Kitap)

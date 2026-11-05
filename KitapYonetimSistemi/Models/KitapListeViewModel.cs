@@ -5,6 +5,9 @@ namespace KitapYonetimSistemi.Models
         public const int SayfaBoyutu = 12;
 
         public List<Kitap> Kitaplar { get; set; } = new();
+
+        // Kataloğumuzda olmayan, dış kaynaktan bulunan kitaplar
+        public List<Services.DisKitapSonuc> DisSonuclar { get; set; } = new();
         public string? Arama { get; set; }
         public string? Tur { get; set; }
         public string Siralama { get; set; } = "yeni";

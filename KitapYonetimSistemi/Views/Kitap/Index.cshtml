@@ -43,6 +43,54 @@
 
 <p class="text-muted small">@Model.ToplamKayit kitap bulundu</p>
 
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Hata"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (Model.DisSonuclar.Any())
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <strong>🌐 Kataloğumuzda olmayan sonuçlar</strong>
+            <small class="text-muted d-block">Dış kaynaklarda bulundu. Ekleyince kataloğa ve kitaplığınıza girer.</small>
+        </div>
+        <ul class="list-group list-group-flush">
+            @foreach (var dis in Model.DisSonuclar)
+            {
+                <li class="list-group-item d-flex gap-3 align-items-center">
+                    @if (!string.IsNullOrEmpty(dis.KapakUrl))
+                    {
+                        <img src="@dis.KapakUrl" alt="@dis.Baslik" style="width: 48px; height: 70px; object-fit: cover; border-radius: 4px;" />
+                    }
+                    else
+                    {
+                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 70px; border-radius: 4px;">📚</div>
+                    }
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">@dis.Baslik</div>
+                        <div class="small text-muted">
+                            @dis.Yazar
+                            @if (dis.Yil > 0) { <span>· @dis.Yil</span> }
+                            @if (dis.SayfaSayisi.HasValue) { <span>· @dis.SayfaSayisi sayfa</span> }
+                        </div>
+                    </div>
+                    <form asp-action="DisKaynaktanKitapligaEkle" method="post">
+                        <input type="hidden" name="disKaynakId" value="@dis.DisKaynakId" />
+                        <button type="submit" class="btn btn-sm btn-success">Kitaplığıma Ekle</button>
+                    </form>
+                </li>
+            }
+        </ul>
+        <div class="card-footer bg-white small text-muted">Kaynak: @string.Join(", ", Model.DisSonuclar.Select(d => d.Kaynak).Distinct())</div>
+    </div>
+}
+
+
+
 @if (Model.Kitaplar.Any())
 {
     <div class="row g-4">
