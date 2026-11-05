@@ -96,6 +96,95 @@ namespace KitapYonetimSistemi.Controllers
             }
         }
 
+        // ===================================================================
+        // RUH HALİNE GÖRE ÖNERİ
+        // ===================================================================
+        [HttpGet]
+        public IActionResult RuhHali()
+        {
+            return View(new RuhHaliViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RuhHali(string? mood)
+        {
+            var model = new RuhHaliViewModel { Mood = mood };
+            mood = (mood ?? string.Empty).Trim();
+
+            if (mood.Length < 3 || mood.Length > 300)
+            {
+                model.Hata = "Lütfen 3 ile 300 karakter arasında bir şey yazın.";
+                return View(model);
+            }
+
+            // Hız sınırı: kullanıcı başına 10 saniyede bir istek
+            var userId = _userManager.GetUserId(User);
+            var cacheKey = $"MoodRate_{userId}";
+            if (_cache.TryGetValue(cacheKey, out _))
+            {
+                model.Hata = "Çok hızlı istek gönderiyorsunuz, lütfen birkaç saniye bekleyin.";
+                return View(model);
+            }
+            _cache.Set(cacheKey, true, TimeSpan.FromSeconds(10));
+
+            try
+            {
+                var kitaplik = await _context.KullaniciKitapliklari
+                    .Where(uk => uk.KullaniciId == userId)
+                    .Select(uk => uk.Kitap!.KitapAdi + " - " + uk.Kitap.YazarAdi)
+                    .ToListAsync();
+
+                var client = _httpClientFactory.CreateClient("AiService");
+                var response = await client.PostAsJsonAsync("api/ai/mood", new { Mood = mood, ExcludeBooks = kitaplik });
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var hataIcerigi = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[API ERROR] RuhHali: {response.StatusCode} - {hataIcerigi}");
+
+                    model.Hata = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests
+                        ? "Yapay zekâ şu an çok yoğun, lütfen biraz sonra tekrar deneyin."
+                        : "Öneriler alınırken bir sorun oluştu.";
+                    return View(model);
+                }
+
+                var jsonString = await response.Content.ReadAsStringAsync();
+                if (jsonString.StartsWith("\"") && jsonString.EndsWith("\""))
+                    jsonString = JsonConvert.DeserializeObject<string>(jsonString)!;
+
+                var oneriler = JsonConvert.DeserializeObject<List<RuhHaliOneri>>(jsonString) ?? new List<RuhHaliOneri>();
+
+                // Yapay zekâ metni modelden geldiği için uzunluklar sınırlanır, sonra katalogla eşleştirilir
+                oneriler = oneriler
+                    .Where(o => !string.IsNullOrWhiteSpace(o.Title))
+                    .Take(5)
+                    .ToList();
+
+                foreach (var oneri in oneriler)
+                {
+                    var baslik = oneri.Title.Trim();
+                    var eslesen = await _context.Kitaplar
+                        .Where(k => k.KitapAdi == baslik)
+                        .Select(k => (int?)k.Id)
+                        .FirstOrDefaultAsync();
+                    oneri.KatalogKitapId = eslesen;
+                }
+
+                model.Oneriler = oneriler;
+                if (oneriler.Count == 0)
+                    model.Hata = "Bu isteğe uygun öneri bulunamadı, farklı bir şekilde anlatmayı deneyin.";
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SYSTEM ERROR] RuhHali: {ex}");
+                model.Hata = "Sistemde geçici bir hata oluştu.";
+                return View(model);
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> AnalizEt(int id)
         {

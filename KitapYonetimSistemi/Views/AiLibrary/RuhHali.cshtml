@@ -1,0 +1,78 @@
+@model KitapYonetimSistemi.Models.RuhHaliViewModel
+
+@{
+    ViewData["Title"] = "Ruh Haline Göre Öneri";
+    var ornekler = new[]
+    {
+        "Hüzünlü ama umut veren kısa bir roman",
+        "Akşam tek oturuşta bitirebileceğim sürükleyici bir polisiye",
+        "Kafamı boşaltacak hafif ve komik bir şey",
+        "Hayata dair düşündüren felsefi bir kitap"
+    };
+}
+
+<div class="container py-4">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4">
+        <div class="card-body p-5 text-center text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h1 class="fw-bold">🎭 Bugün Ne Okumak İstersin?</h1>
+            <p class="lead mb-0 opacity-75">Ruh halini ya da aradığın atmosferi anlat, sana uygun kitaplar önerelim.</p>
+        </div>
+    </div>
+
+    <form asp-action="RuhHali" method="post" class="mb-3">
+        <div class="input-group input-group-lg">
+            <input type="text" name="mood" value="@Model.Mood" class="form-control" maxlength="300"
+                   placeholder="Örn: Hüzünlü ama umut veren kısa bir roman" required />
+            <button type="submit" class="btn btn-primary" id="moodBtn">✨ Öner</button>
+        </div>
+    </form>
+
+    <div class="mb-4 d-flex flex-wrap gap-2">
+        @foreach (var ornek in ornekler)
+        {
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.querySelector('[name=mood]').value = this.innerText;">@ornek</button>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Hata))
+    {
+        <div class="alert alert-warning shadow-sm border-0">@Model.Hata</div>
+    }
+
+    @if (Model.Oneriler != null && Model.Oneriler.Any())
+    {
+        <div class="row g-4">
+            @foreach (var oneri in Model.Oneriler)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold mb-1">@oneri.Title</h5>
+                            <h6 class="card-subtitle text-muted mb-3">@oneri.Author</h6>
+                            <p class="fst-italic flex-grow-1">"@oneri.Reason"</p>
+
+                            @if (oneri.KatalogKitapId.HasValue)
+                            {
+                                <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@oneri.KatalogKitapId" class="btn btn-success btn-sm">Kataloğumuzda var, incele</a>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-muted border align-self-start">Henüz kataloğumuzda yok</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelector('form').addEventListener('submit', function () {
+            var btn = document.getElementById('moodBtn');
+            btn.disabled = true;
+            btn.innerText = 'Düşünüyorum...';
+        });
+    </script>
+}
