@@ -21,6 +21,12 @@ namespace KitapYonetimSistemi.Data
         public DbSet<OkumaGunlugu> OkumaGunlukleri { get; set; }
         public DbSet<Alinti> Alintilar { get; set; }
         public DbSet<AlintiBegeni> AlintiBegenileri { get; set; }
+        public DbSet<Yazar> Yazarlar { get; set; }
+        public DbSet<KitapYazar> KitapYazarlari { get; set; }
+        public DbSet<Kategori> Kategoriler { get; set; }
+        public DbSet<KitapKategori> KitapKategorileri { get; set; }
+        public DbSet<Yayinevi> Yayinevleri { get; set; }
+        public DbSet<ImportLog> ImportLoglari { get; set; }
 
      
         protected override void OnModelCreating(ModelBuilder builder)
@@ -42,6 +48,77 @@ namespace KitapYonetimSistemi.Data
                 .HasIndex(k => k.DisKaynakId)
                 .IsUnique()
                 .HasFilter("[DisKaynakId] IS NOT NULL");
+
+            // Kitap katalog alanları: indekslenebilmesi için uzunluk sınırları
+            builder.Entity<Kitap>(k =>
+            {
+                k.Property(x => x.KitapAdi).HasMaxLength(400);
+                k.Property(x => x.YazarAdi).HasMaxLength(400);
+                k.Property(x => x.Tur).HasMaxLength(100);
+                k.Property(x => x.Dil).HasMaxLength(10);
+                k.Property(x => x.Isbn10).HasMaxLength(10);
+                k.Property(x => x.Isbn13).HasMaxLength(13);
+                k.Property(x => x.YayinTarihi).HasMaxLength(50);
+                k.Property(x => x.OpenLibraryEditionKey).HasMaxLength(20);
+                k.Property(x => x.OpenLibraryWorkKey).HasMaxLength(20);
+
+                // Her baskı bir kez bulunur, aynı ISBN birden fazla baskıda tekrar edebilir (indeks benzersiz değil)
+                k.HasIndex(x => x.OpenLibraryEditionKey).IsUnique().HasFilter("[OpenLibraryEditionKey] IS NOT NULL");
+                k.HasIndex(x => x.OpenLibraryWorkKey);
+                k.HasIndex(x => x.Isbn13);
+                k.HasIndex(x => x.Isbn10);
+                k.HasIndex(x => x.KitapAdi);
+                k.HasIndex(x => x.YazarAdi);
+                k.HasIndex(x => x.EklenmeTarihi);
+                k.HasIndex(x => x.Tur);
+                k.HasIndex(x => x.Dil);
+
+                k.HasOne(x => x.Yayinevi).WithMany().HasForeignKey(x => x.YayineviId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            builder.Entity<Yazar>(y =>
+            {
+                y.Property(x => x.Ad).HasMaxLength(300).IsRequired();
+                y.Property(x => x.OpenLibraryKey).HasMaxLength(20);
+                y.HasIndex(x => x.OpenLibraryKey).IsUnique().HasFilter("[OpenLibraryKey] IS NOT NULL");
+                y.HasIndex(x => x.Ad);
+            });
+
+            builder.Entity<KitapYazar>(ky =>
+            {
+                ky.HasKey(x => new { x.KitapId, x.YazarId });
+                ky.HasOne(x => x.Kitap).WithMany(k => k.Yazarlar).HasForeignKey(x => x.KitapId).OnDelete(DeleteBehavior.Cascade);
+                ky.HasOne(x => x.Yazar).WithMany(y => y.Kitaplar).HasForeignKey(x => x.YazarId).OnDelete(DeleteBehavior.Cascade);
+                ky.HasIndex(x => x.YazarId);
+            });
+
+            builder.Entity<Kategori>(k =>
+            {
+                k.Property(x => x.Ad).HasMaxLength(100).IsRequired();
+                k.HasIndex(x => x.Ad).IsUnique();
+            });
+
+            builder.Entity<KitapKategori>(kk =>
+            {
+                kk.HasKey(x => new { x.KitapId, x.KategoriId });
+                kk.HasOne(x => x.Kitap).WithMany(k => k.Kategoriler).HasForeignKey(x => x.KitapId).OnDelete(DeleteBehavior.Cascade);
+                kk.HasOne(x => x.Kategori).WithMany(k => k.Kitaplar).HasForeignKey(x => x.KategoriId).OnDelete(DeleteBehavior.Cascade);
+                kk.HasIndex(x => x.KategoriId);
+            });
+
+            builder.Entity<Yayinevi>(y =>
+            {
+                y.Property(x => x.Ad).HasMaxLength(300).IsRequired();
+                y.HasIndex(x => x.Ad).IsUnique();
+            });
+
+            builder.Entity<ImportLog>(l =>
+            {
+                l.Property(x => x.Kaynak).HasMaxLength(50).IsRequired();
+                l.Property(x => x.Surum).HasMaxLength(100).IsRequired();
+                l.Property(x => x.Durum).HasMaxLength(20).IsRequired();
+                l.HasIndex(x => new { x.Kaynak, x.Surum });
+            });
 
             // Yorum ilişkileri
             builder.Entity<Yorum>()

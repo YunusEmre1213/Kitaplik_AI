@@ -13,3 +13,8 @@ KitapYonetimSistemi/wwwroot/uploads/
 # Gizli ayarlar
 appsettings.json
 secrets.json
+
+# Open Library dump dosyaları ve importer çıktıları (çok büyük, repoya girmemeli)
+/data/
+import-hatalari.log
+*.txt.gz

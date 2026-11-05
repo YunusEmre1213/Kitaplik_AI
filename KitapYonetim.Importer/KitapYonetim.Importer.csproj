@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>KitapYonetim.Importer</RootNamespace>
+    <!-- Ana uygulamayla aynı user-secrets deposunu kullanır, böylece bağlantı dizesi tekrar girilmez -->
+    <UserSecretsId>aspnet-KitapYonetimSistemi-68a269d0-4321-48f7-918f-6e6837f5553e</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.8" />
+  </ItemGroup>
+
+</Project>

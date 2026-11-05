@@ -15,6 +15,19 @@
         public string? Isbn { get; set; }
         public string? DisKaynakId { get; set; }
 
+        // Toplu aktarımdan gelen baskı bilgileri
+        public string? Dil { get; set; }
+        public string? Isbn10 { get; set; }
+        public string? Isbn13 { get; set; }
+        public string? YayinTarihi { get; set; }
+        public int? YayineviId { get; set; }
+        public Yayinevi? Yayinevi { get; set; }
+        public string? OpenLibraryEditionKey { get; set; }
+        public string? OpenLibraryWorkKey { get; set; }
+
+        public ICollection<KitapYazar> Yazarlar { get; set; } = new List<KitapYazar>();
+        public ICollection<KitapKategori> Kategoriler { get; set; } = new List<KitapKategori>();
+
         [System.ComponentModel.DataAnnotations.Range(1, 20000, ErrorMessage = "Sayfa sayısı 1 ile 20000 arasında olmalıdır.")]
         public int? SayfaSayisi { get; set; }
 
