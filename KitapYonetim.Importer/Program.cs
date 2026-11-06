@@ -1,4 +1,4 @@
-using KitapYonetim.Importer;
+﻿using KitapYonetim.Importer;
 using Microsoft.Extensions.Configuration;
 
 Ayarlar ayarlar;
@@ -52,6 +52,9 @@ try
 
     if (ayarlar.Asamalar.Contains("birlestir"))
         aktarici.Birlestir();
+
+    if (ayarlar.Asamalar.Contains("zenginlestir"))
+        await new Zenginlestirici(db, ayarlar, yapilandirma["GoogleBooks:ApiKey"], iptal.Token).CalistirAsync();
 
     Gunluk.Bilgi("Bitti.");
     return 0;

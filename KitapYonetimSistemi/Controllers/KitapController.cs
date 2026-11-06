@@ -29,7 +29,7 @@ namespace KitapYonetimSistemi.Controllers
         }
 
         // Tüm kitapları listele (arama, tür filtresi, sıralama ve sayfalama)
-        public async Task<IActionResult> Index(string? arama, string? tur, string? siralama, int sayfa = 1)
+        public async Task<IActionResult> Index(string? arama, string? tur, string? siralama, bool kapakli = false, int sayfa = 1)
         {
             var sorgu = _context.Kitaplar.Include(k => k.Puanlar).AsQueryable();
 
@@ -41,7 +41,13 @@ namespace KitapYonetimSistemi.Controllers
 
             if (!string.IsNullOrWhiteSpace(tur))
             {
-                sorgu = sorgu.Where(k => k.Tur == tur);
+                // Toplu aktarılan kitaplarda tür, kategori tablosunda tutulur
+                sorgu = sorgu.Where(k => k.Tur == tur || k.Kategoriler.Any(x => x.Kategori!.Ad == tur));
+            }
+
+            if (kapakli)
+            {
+                sorgu = sorgu.Where(k => k.KapakResmiUrl != null && k.KapakResmiUrl != "");
             }
 
             sorgu = siralama switch
@@ -64,6 +70,7 @@ namespace KitapYonetimSistemi.Controllers
                     .ToListAsync(),
                 Arama = arama,
                 Tur = tur,
+                Kapakli = kapakli,
                 Siralama = siralama ?? "yeni",
                 Sayfa = sayfa,
                 ToplamSayfa = toplamSayfa,

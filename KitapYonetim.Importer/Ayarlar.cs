@@ -1,4 +1,4 @@
-namespace KitapYonetim.Importer;
+﻿namespace KitapYonetim.Importer;
 
 // Komut satırı seçenekleri
 public sealed class Ayarlar
@@ -18,6 +18,11 @@ public sealed class Ayarlar
 
     // Tamamlanmış aşamaları da yeniden çalıştır
     public bool Yeniden { get; set; }
+
+    // zenginlestir aşaması: en fazla kaç kitap (0 = hepsi), istekler arası bekleme, denenmişleri de yeniden dene
+    public int ZenginlestirMax { get; set; }
+    public int ZenginlestirBeklemeMs { get; set; } = 300;
+    public bool ZenginlestirYeniden { get; set; }
 
     public int Parti { get; set; } = 2000;
     public string? Baglanti { get; set; }
@@ -42,6 +47,9 @@ public sealed class Ayarlar
                 case "--baglanti": a.Baglanti = Deger(); break;
                 case "--hata-log": a.HataLogYolu = Deger(); break;
                 case "--yeniden": a.Yeniden = true; break;
+                case "--zenginlestir-max": a.ZenginlestirMax = int.Parse(Deger()); break;
+                case "--zenginlestir-bekleme-ms": a.ZenginlestirBeklemeMs = int.Parse(Deger()); break;
+                case "--zenginlestir-yeniden": a.ZenginlestirYeniden = true; break;
                 case "--yardim": case "-h": case "--help": throw new ArgumentException("yardim");
                 default: throw new ArgumentException($"Bilinmeyen seçenek: {args[i]}");
             }
@@ -62,6 +70,11 @@ public sealed class Ayarlar
           --diller tur,eng            Aktarılacak diller (varsayılan: tur,eng)
           --dil-basina-max <N>        Dil başına en fazla N baskı (varsayılan: sınırsız)
           --asamalar a,b,c            editions,works,authors,birlestir (varsayılan: hepsi)
+                                      zenginlestir: ISBN ile eksik kapak/açıklamayı Open Library ve Google Books'tan tamamlar
+                                      (varsayılana dahil değildir, tek başına çalıştırın: --asamalar zenginlestir)
+          --zenginlestir-max <N>      En fazla N kitap işle (varsayılan: hepsi)
+          --zenginlestir-bekleme-ms   İstekler arası bekleme (varsayılan: 300)
+          --zenginlestir-yeniden      Daha önce denenmiş kitapları da yeniden dene
           --parti <N>                 Toplu yazma parti boyutu (varsayılan: 2000)
           --baglanti "<cs>"           Bağlantı dizesi (varsayılan: user-secrets / ortam değişkeni)
           --hata-log <yol>            Hatalı kayıtların yazılacağı dosya

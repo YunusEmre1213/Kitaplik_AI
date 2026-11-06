@@ -1,129 +1,71 @@
+/* Giriş, kayıt ve şifre sayfaları (koyu tema) */
 .identity-container {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #696969;
-    padding: 20px;
+    padding: 24px 0;
 }
 
 .identity-card {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    max-width: 450px;
+    background: var(--sa-surface);
+    border: 1px solid var(--sa-line);
+    border-radius: 18px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+    max-width: 440px;
     width: 100%;
-    padding: 40px;
+    padding: 36px;
 }
 
 .identity-title {
     text-align: center;
-    color: #333;
-    margin-bottom: 30px;
-    font-size: 2rem;
-    font-weight: bold;
+    color: var(--sa-ink);
+    margin-bottom: 8px;
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
 }
 
 .identity-subtitle {
     text-align: center;
-    color: #666;
-    margin-bottom: 30px;
+    color: var(--sa-muted);
+    margin-bottom: 28px;
 }
 
-.identity-form .form-label {
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
-}
+.identity-form .form-label { font-weight: 500; color: var(--sa-muted); margin-bottom: 6px; font-size: .9rem; }
 
-.identity-form .form-control {
-    border-radius: 8px;
-    border: 2px solid #e0e0e0;
-    padding: 12px 15px;
-    transition: all 0.3s;
-}
+.identity-form .form-control { padding: 11px 14px; }
 
-    .identity-form .form-control:focus {
-        border-color: #6b7280;
-        box-shadow: 0 0 0 0.2rem rgba(107, 114, 128, 0.25);
-    }
-
-.identity-btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 16px;
-    transition: all 0.3s;
-}
+.identity-btn { width: 100%; padding: 11px; border-radius: 10px; font-weight: 600; font-size: 1rem; }
 
 .identity-btn-primary {
-    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-    border: none;
-    color: white;
+    background: var(--sa-accent);
+    border: 0;
+    color: #0e1015;
 }
+.identity-btn-primary:hover { background: #9399ff; color: #0e1015; }
 
-    .identity-btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(107, 114, 128, 0.4);
-    }
+.identity-checkbox { margin: 18px 0; }
+.identity-checkbox .form-check-label { color: var(--sa-muted); cursor: pointer; }
 
-.identity-checkbox {
-    margin: 20px 0;
-}
+.identity-links { text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--sa-line); }
+.identity-links a { color: var(--sa-accent); font-weight: 500; }
 
-    .identity-checkbox .form-check-label {
-        color: #666;
-        cursor: pointer;
-    }
-
-.identity-links {
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #e0e0e0;
-}
-
-    .identity-links a {
-        color: #6b7280;
-        text-decoration: none;
-        font-weight: 600;
-    }
-
-        .identity-links a:hover {
-            text-decoration: underline;
-        }
-
-.text-danger {
-    font-size: 14px;
-    margin-top: 5px;
-}
+.text-danger { font-size: 14px; margin-top: 5px; color: var(--sa-danger) !important; }
 
 .validation-summary-errors {
-    background: #ffe6e6;
-    border: 1px solid #ff4444;
-    border-radius: 8px;
-    padding: 15px;
+    background: rgba(248, 113, 113, .1);
+    border: 1px solid rgba(248, 113, 113, .35);
+    color: #fca5a5;
+    border-radius: 10px;
+    padding: 14px;
     margin-bottom: 20px;
 }
+.validation-summary-errors ul { margin: 0; padding-left: 20px; }
 
-    .validation-summary-errors ul {
-        margin: 0;
-        padding-left: 20px;
-    }
-
-.identity-icon {
-    text-align: center;
-    font-size: 4rem;
-    margin-bottom: 20px;
-}
+.identity-icon { text-align: center; font-size: 3.5rem; margin-bottom: 16px; }
 
 @media (max-width: 576px) {
-    .identity-card {
-        padding: 30px 20px;
-    }
-
-    .identity-title {
-        font-size: 1.5rem;
-    }
+    .identity-card { padding: 28px 20px; }
+    .identity-title { font-size: 1.4rem; }
 }

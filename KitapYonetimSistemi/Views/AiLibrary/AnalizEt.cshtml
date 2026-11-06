@@ -12,16 +12,7 @@
     <div class="row g-5 align-items-start">
         <div class="col-md-4 text-center">
             <div class="card border-0 shadow-lg overflow-hidden position-relative">
-                @if (!string.IsNullOrEmpty(Model.CoverUrl))
-                {
-                    <img src="@Model.CoverUrl" class="img-fluid w-100" style="object-fit:cover; height:450px;" alt="@Model.Title">
-                }
-                else
-                {
-                    <div class="bg-light d-flex align-items-center justify-content-center" style="height:450px;">
-                        <i class="bi bi-book display-1 text-muted"></i>
-                    </div>
-                }
+                <partial name="_Kapak" model='new KapakModel(Model.CoverUrl, Model.Title, Model.Author, "lg")' />
 
                 <div class="card-body bg-dark text-white p-4">
                     <h3 class="fw-bold mb-1">@Model.Title</h3>

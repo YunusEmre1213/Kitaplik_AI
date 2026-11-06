@@ -4,7 +4,10 @@
     ViewData["Title"] = "Kitaplar";
 }
 
-<h1 class="page-title">📚 Kitaplar</h1>
+<div class="katalog-ust">
+    <h1 class="page-title">Kitaplar</h1>
+    <span class="katalog-sayac">@Model.ToplamKayit.ToString("N0") kitap</span>
+</div>
 
 @if (TempData["Mesaj"] != null)
 {
@@ -14,11 +17,11 @@
     </div>
 }
 
-<form method="get" asp-action="Index" class="row g-2 mb-4">
-    <div class="col-md-5">
+<form method="get" asp-action="Index" class="filtre-cubugu row g-2 align-items-center">
+    <div class="col-lg-4">
         <input type="text" name="arama" value="@Model.Arama" class="form-control" placeholder="Kitap adı veya yazar ara..." />
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-lg-2">
         <select name="tur" class="form-select">
             <option value="">Tüm türler</option>
             @foreach (var t in KitapYonetimSistemi.Models.KitapTurleri.Hepsi)
@@ -27,7 +30,7 @@
             }
         </select>
     </div>
-    <div class="col-md-2">
+    <div class="col-6 col-lg-2">
         <select name="siralama" class="form-select">
             <option value="yeni" selected="@(Model.Siralama == "yeni")">En yeni</option>
             <option value="puan" selected="@(Model.Siralama == "puan")">En yüksek puan</option>
@@ -35,13 +38,17 @@
             <option value="yazar" selected="@(Model.Siralama == "yazar")">Yazar (A-Z)</option>
         </select>
     </div>
-    <div class="col-md-2 d-flex gap-2">
+    <div class="col-6 col-lg-2">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="kapakli" value="true" id="kapakliFiltre" checked="@Model.Kapakli" />
+            <label class="form-check-label" for="kapakliFiltre">Yalnızca kapaklı</label>
+        </div>
+    </div>
+    <div class="col-6 col-lg-2 d-flex gap-2">
         <button type="submit" class="btn btn-primary flex-grow-1">Ara</button>
         <a asp-action="Index" class="btn btn-outline-secondary" title="Temizle">✕</a>
     </div>
 </form>
-
-<p class="text-muted small">@Model.ToplamKayit kitap bulundu</p>
 
 @if (TempData["Hata"] != null)
 {
@@ -61,15 +68,8 @@
         <ul class="list-group list-group-flush">
             @foreach (var dis in Model.DisSonuclar)
             {
-                <li class="list-group-item d-flex gap-3 align-items-center">
-                    @if (!string.IsNullOrEmpty(dis.KapakUrl))
-                    {
-                        <img src="@dis.KapakUrl" alt="@dis.Baslik" style="width: 48px; height: 70px; object-fit: cover; border-radius: 4px;" />
-                    }
-                    else
-                    {
-                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 70px; border-radius: 4px;">📚</div>
-                    }
+                <li class="list-group-item dis-sonuc">
+                    <div style="width: 48px; flex: none;"><partial name="_Kapak" model='new KapakModel(dis.KapakUrl, dis.Baslik, null, "sm")' /></div>
                     <div class="flex-grow-1">
                         <div class="fw-bold">@dis.Baslik</div>
                         <div class="small text-muted">
@@ -93,118 +93,98 @@
 
 @if (Model.Kitaplar.Any())
 {
-    <div class="row g-4">
+    <div class="kitap-izgara">
         @foreach (var kitap in Model.Kitaplar)
         {
-            <div class="col-md-4">
-                <div class="card book-card h-100 shadow-sm border-0">
-                    @if (!string.IsNullOrEmpty(kitap.KapakResmiUrl))
-                    {
-                        <img src="@kitap.KapakResmiUrl" class="card-img-top" alt="@kitap.KitapAdi" style="height: 300px; object-fit: cover;">
-                    }
-                    else
-                    {
-                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center text-white" style="height: 300px; font-size: 3rem;">
-                            📚
-                        </div>
-                    }
-
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title text-truncate" title="@kitap.KitapAdi">@kitap.KitapAdi</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">@kitap.YazarAdi</h6>
-                        @if (!string.IsNullOrEmpty(kitap.Tur))
-                        {
-                            <div class="mb-2"><span class="badge bg-light text-dark border">@kitap.Tur</span></div>
-                        }
-
-                        @if (kitap.ToplamPuanSayisi > 0)
-                        {
-                            <div class="mb-2">
-                                <span class="text-warning">⭐ @kitap.OrtalamaPuan.ToString("0.0")</span>
-                                <small class="text-muted">(@kitap.ToplamPuanSayisi)</small>
-                            </div>
-                        }
-
-                        <p class="card-text small text-muted mb-4">
-                            @(kitap.Aciklama != null && kitap.Aciklama.Length > 80 ? kitap.Aciklama.Substring(0, 80) + "..." : kitap.Aciklama)
-                        </p>
-
-                        <div class="mt-auto d-flex justify-content-between gap-1">
-                            <a asp-action="Detay" asp-route-id="@kitap.Id" class="btn btn-sm btn-outline-secondary flex-grow-1">Detay</a>
-
-                            <a asp-controller="AiLibrary" asp-action="AnalizEt" asp-route-id="@kitap.Id"
-                               class="btn btn-sm btn-outline-primary flex-grow-1"
-                               style="border-color: #6a11cb; color: #6a11cb;"
-                               title="Yapay Zeka Analizi"
-                               onclick="document.getElementById('aiLoadingOverlay').style.display = 'flex';">
-                                <i class="bi bi-stars"></i> AI
-                            </a>
-
-                            <button type="button" class="btn btn-sm btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#modal@(kitap.Id)">
-                                Ekle
-                            </button>
-                        </div>
-                    </div>
+            <div class="kitap-kart">
+                <a asp-action="Detay" asp-route-id="@kitap.Id" class="kitap-baglanti" title="@kitap.KitapAdi">
+                    <partial name="_Kapak" model='KapakModel.Of(kitap, "md")' />
+                    <div class="kitap-ad">@kitap.KitapAdi</div>
+                </a>
+                <div class="kitap-yazar">@(string.IsNullOrWhiteSpace(kitap.YazarAdi) ? "Yazar bilinmiyor" : kitap.YazarAdi)</div>
+                <div class="kitap-meta">
+                    @if (!string.IsNullOrEmpty(kitap.Tur)) { <span class="kitap-etiket">@kitap.Tur</span> }
+                    @if (kitap.YayinYili > 0) { <span>@kitap.YayinYili</span> }
+                    @if (kitap.ToplamPuanSayisi > 0) { <span class="kitap-puan">★ @kitap.OrtalamaPuan.ToString("0.0")</span> }
                 </div>
-
-                <div class="modal fade" id="modal@(kitap.Id)" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Kitaplığa Ekle</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <form asp-action="KitapligaEkleYeni" method="post">
-                                <div class="modal-body">
-                                    <input type="hidden" name="kitapId" value="@kitap.Id" />
-                                    <div class="mb-3">
-                                        <label class="form-label">Okuma Durumu:</label>
-                                        <select name="okumaDurumu" class="form-select">
-                                            <option value="1">📖 Okunacak</option>
-                                            <option value="2">📕 Okuyorum</option>
-                                            <option value="3">✅ Okundu</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="herkesGorebilir" id="check@(kitap.Id)">
-                                        <label class="form-check-label" for="check@(kitap.Id)">
-                                            Herkes görebilsin
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                                    <button type="submit" class="btn btn-primary">Ekle</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                <div class="kitap-eylemler">
+                    <a asp-controller="AiLibrary" asp-action="AnalizEt" asp-route-id="@kitap.Id"
+                       class="btn btn-sm btn-outline-primary" title="Yapay Zeka Analizi"
+                       onclick="document.getElementById('aiLoadingOverlay').style.display = 'flex';">AI</a>
+                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#kitapligaEkleModal"
+                            data-kitap-id="@kitap.Id" data-kitap-adi="@kitap.KitapAdi">Ekle</button>
                 </div>
             </div>
         }
     </div>
 
+    <div class="modal fade" id="kitapligaEkleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kitaplığa Ekle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="KitapligaEkleYeni" method="post">
+                    <div class="modal-body">
+                        <p class="fw-bold" id="ekleKitapAdi"></p>
+                        <input type="hidden" name="kitapId" id="ekleKitapId" />
+                        <div class="mb-3">
+                            <label class="form-label">Okuma Durumu:</label>
+                            <select name="okumaDurumu" class="form-select">
+                                <option value="1">📖 Okunacak</option>
+                                <option value="2">📕 Okuyorum</option>
+                                <option value="3">✅ Okundu</option>
+                            </select>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="herkesGorebilir" id="ekleHerkes">
+                            <label class="form-check-label" for="ekleHerkes">Herkes görebilsin</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                        <button type="submit" class="btn btn-primary">Ekle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @if (Model.ToplamSayfa > 1)
     {
-        <nav class="mt-4" aria-label="Sayfalama">
-            <ul class="pagination justify-content-center">
+        // Binlerce sayfa olabileceği için yalnızca geçerli sayfanın çevresi gösterilir
+        var bas = Math.Max(1, Model.Sayfa - 2);
+        var son = Math.Min(Model.ToplamSayfa, Model.Sayfa + 2);
+        <nav class="mt-5" aria-label="Sayfalama">
+            <ul class="pagination justify-content-center flex-wrap">
                 <li class="page-item @(Model.Sayfa == 1 ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-sayfa="@(Model.Sayfa - 1)" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama">Önceki</a>
+                    <a class="page-link" asp-action="Index" asp-route-sayfa="@(Model.Sayfa - 1)" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama" asp-route-kapakli="@Model.Kapakli">Önceki</a>
                 </li>
-                @for (var i = 1; i <= Model.ToplamSayfa; i++)
+                @if (bas > 1)
+                {
+                    <li class="page-item"><a class="page-link" asp-action="Index" asp-route-sayfa="1" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama" asp-route-kapakli="@Model.Kapakli">1</a></li>
+                    @if (bas > 2) { <li class="page-item disabled"><span class="page-link">…</span></li> }
+                }
+                @for (var i = bas; i <= son; i++)
                 {
                     <li class="page-item @(i == Model.Sayfa ? "active" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-sayfa="@i" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama">@i</a>
+                        <a class="page-link" asp-action="Index" asp-route-sayfa="@i" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama" asp-route-kapakli="@Model.Kapakli">@i</a>
                     </li>
                 }
+                @if (son < Model.ToplamSayfa)
+                {
+                    @if (son < Model.ToplamSayfa - 1) { <li class="page-item disabled"><span class="page-link">…</span></li> }
+                    <li class="page-item"><a class="page-link" asp-action="Index" asp-route-sayfa="@Model.ToplamSayfa" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama" asp-route-kapakli="@Model.Kapakli">@Model.ToplamSayfa</a></li>
+                }
                 <li class="page-item @(Model.Sayfa == Model.ToplamSayfa ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-sayfa="@(Model.Sayfa + 1)" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama">Sonraki</a>
+                    <a class="page-link" asp-action="Index" asp-route-sayfa="@(Model.Sayfa + 1)" asp-route-arama="@Model.Arama" asp-route-tur="@Model.Tur" asp-route-siralama="@Model.Siralama" asp-route-kapakli="@Model.Kapakli">Sonraki</a>
                 </li>
             </ul>
         </nav>
     }
 }
-else if (!string.IsNullOrWhiteSpace(Model.Arama) || !string.IsNullOrWhiteSpace(Model.Tur))
+else if (!string.IsNullOrWhiteSpace(Model.Arama) || !string.IsNullOrWhiteSpace(Model.Tur) || Model.Kapakli)
 {
     <div class="alert alert-warning text-center py-5">
         <h4>🔍 Sonuç bulunamadı</h4>
@@ -224,3 +204,13 @@ else
     <h3 class="mt-3 text-white fw-bold">Yapay Zeka Düşünüyor...</h3>
     <p class="text-white-50">Kitabı inceliyor, lütfen bekleyin.</p>
 </div>
+
+@section Scripts {
+    <script>
+        document.getElementById('kitapligaEkleModal')?.addEventListener('show.bs.modal', function (e) {
+            var d = e.relatedTarget.dataset;
+            document.getElementById('ekleKitapId').value = d.kitapId;
+            document.getElementById('ekleKitapAdi').textContent = d.kitapAdi;
+        });
+    </script>
+}

@@ -1,4 +1,4 @@
-namespace KitapYonetimSistemi.Models
+﻿namespace KitapYonetimSistemi.Models
 {
     public class KitapListeViewModel
     {
@@ -10,6 +10,7 @@ namespace KitapYonetimSistemi.Models
         public List<Services.DisKitapSonuc> DisSonuclar { get; set; } = new();
         public string? Arama { get; set; }
         public string? Tur { get; set; }
+        public bool Kapakli { get; set; }
         public string Siralama { get; set; } = "yeni";
         public int Sayfa { get; set; } = 1;
         public int ToplamSayfa { get; set; }

@@ -4,27 +4,25 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
-<ul class="navbar-nav">
+<ul class="navbar-nav align-items-md-center gap-md-1">
     @if (SignInManager.IsSignedIn(User))
     {
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
-                Merhaba @User.Identity?.Name!
-            </a>
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Hesabım"><i class="bi bi-person-circle me-1"></i>@User.Identity?.Name</a>
         </li>
         <li class="nav-item">
             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button type="submit" class="nav-link btn btn-link text-dark">Çıkış Yap</button>
+                <button type="submit" class="nav-link btn btn-link">Çıkış</button>
             </form>
         </li>
     }
     else
     {
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Kayıt Ol</a>
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">Giriş Yap</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Giriş Yap</a>
+            <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Register">Kayıt Ol</a>
         </li>
     }
 </ul>

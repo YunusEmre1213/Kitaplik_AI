@@ -7,16 +7,7 @@
         {
             <div class="col-md-4">
                 <div class="card">
-                    @if (!string.IsNullOrEmpty(kayit.Kitap.KapakResmiUrl))
-                    {
-                        <img src="@kayit.Kitap.KapakResmiUrl" class="book-cover" alt="@kayit.Kitap.KitapAdi">
-                    }
-                    else
-                    {
-                        <div class="book-cover bg-secondary d-flex align-items-center justify-content-center text-white" style="font-size: 3rem;">
-                            📚
-                        </div>
-                    }
+                    <partial name="_Kapak" model='KapakModel.Of(kayit.Kitap, "md")' />
 
                     <div class="card-body">
                         <h5 class="card-title">@kayit.Kitap.KitapAdi</h5>

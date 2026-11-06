@@ -1,0 +1,16 @@
+@model KitapYonetimSistemi.Models.KapakModel
+
+@* Üretilmiş kapak her zaman altta durur; gerçek kapak yüklenirse üstünü örter, yüklenemezse (404) kaldırılır. *@
+<div class="kapak kapak-@Model.Boyut kapak-renk-@Model.Renk">
+    <div class="kapak-uretilmis" aria-hidden="@(string.IsNullOrEmpty(Model.Url) ? "false" : "true")">
+        <span class="kapak-baslik">@Model.Baslik</span>
+        @if (!string.IsNullOrWhiteSpace(Model.Yazar))
+        {
+            <span class="kapak-yazar">@Model.Yazar</span>
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(Model.Url))
+    {
+        <img src="@Model.Url" alt="@Model.Baslik" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" />
+    }
+</div>

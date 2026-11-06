@@ -24,16 +24,7 @@
 <div class="card mb-4">
     <div class="row g-0">
         <div class="col-md-4">
-            @if (!string.IsNullOrEmpty(Model.KapakResmiUrl))
-            {
-                <img src="@Model.KapakResmiUrl" class="img-fluid rounded-start" alt="@Model.KitapAdi" style="max-height: 500px; width: 100%; object-fit: cover;">
-            }
-            else
-            {
-                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded-start" style="height: 500px; font-size: 5rem;">
-                    📚
-                </div>
-            }
+            <div class="p-4"><partial name="_Kapak" model='KapakModel.Of(Model, "lg")' /></div>
         </div>
         <div class="col-md-8">
             <div class="card-body">
@@ -51,7 +42,14 @@
                 <p><strong>Eklenme Tarihi:</strong> @Model.EklenmeTarihi.ToString("dd MMMM yyyy")</p>
                 <hr />
                 <h5>Açıklama:</h5>
-                <p class="lead">@Model.Aciklama</p>
+                @if (string.IsNullOrWhiteSpace(Model.Aciklama))
+                {
+                    <p class="text-muted fst-italic">Bu kitap için henüz bir açıklama eklenmemiş.</p>
+                }
+                else
+                {
+                    <p class="lead">@Model.Aciklama</p>
+                }
             </div>
         </div>
     </div>
@@ -73,7 +71,7 @@
                     }
                     else
                     {
-                        <span style="color: #ddd;">☆</span>
+                        <span style="color: var(--sa-line);">☆</span>
                     }
                 }
             </div>
