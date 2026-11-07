@@ -1,4 +1,4 @@
-@model KitapYonetimSistemi.Models.KapakModel
+﻿@model KitapYonetimSistemi.Models.KapakModel
 
 @* Üretilmiş kapak her zaman altta durur; gerçek kapak yüklenirse üstünü örter, yüklenemezse (404) kaldırılır. *@
 <div class="kapak kapak-@Model.Boyut kapak-renk-@Model.Renk">
@@ -11,6 +11,6 @@
     </div>
     @if (!string.IsNullOrEmpty(Model.Url))
     {
-        <img src="@Model.Url" alt="@Model.Baslik" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" />
+        <img src="@Model.Url" alt="@Model.Baslik" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" onload="if(this.naturalWidth < 40 || this.naturalHeight < 40) this.remove()" />
     }
 </div>

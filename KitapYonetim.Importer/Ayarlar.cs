@@ -72,6 +72,7 @@ public sealed class Ayarlar
           --asamalar a,b,c            editions,works,authors,birlestir (varsayılan: hepsi)
                                       zenginlestir: ISBN ile eksik kapak/açıklamayı Open Library ve Google Books'tan tamamlar
                                       (varsayılana dahil değildir, tek başına çalıştırın: --asamalar zenginlestir)
+                                      kapakkontrol: boş/bulunamayan Open Library kapaklarını temizler (varsayılana dahil değildir)
           --zenginlestir-max <N>      En fazla N kitap işle (varsayılan: hepsi)
           --zenginlestir-bekleme-ms   İstekler arası bekleme (varsayılan: 300)
           --zenginlestir-yeniden      Daha önce denenmiş kitapları da yeniden dene

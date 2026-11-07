@@ -1,71 +1,32 @@
-/* Giriş, kayıt ve şifre sayfaları (koyu tema) */
-.identity-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 0;
-}
+/* Giriş, kayıt ve şifre sayfaları (krem, editoryal) */
+.identity-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 0; }
 
-.identity-card {
-    background: var(--sa-surface);
-    border: 1px solid var(--sa-line);
-    border-radius: 18px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
-    max-width: 440px;
-    width: 100%;
-    padding: 36px;
-}
+.identity-card { background: var(--sa-paper); border: 1px solid var(--sa-line); border-top: 3px solid var(--sa-accent); border-radius: var(--sa-radius); max-width: 430px; width: 100%; padding: 2.4rem 2.2rem; }
 
-.identity-title {
-    text-align: center;
-    color: var(--sa-ink);
-    margin-bottom: 8px;
-    font-size: 1.7rem;
-    font-weight: 700;
-    letter-spacing: -.02em;
-}
+.identity-title { text-align: left; color: var(--sa-ink); margin-bottom: .35rem; font-family: var(--sa-display); font-size: 2rem; font-weight: 700; }
+.identity-subtitle { text-align: left; color: var(--sa-muted); margin-bottom: 1.8rem; }
 
-.identity-subtitle {
-    text-align: center;
-    color: var(--sa-muted);
-    margin-bottom: 28px;
-}
+.identity-form .form-label { font-weight: 500; color: var(--sa-muted); margin-bottom: 5px; font-size: .85rem; }
+.identity-form .form-control { padding: 10px 13px; }
 
-.identity-form .form-label { font-weight: 500; color: var(--sa-muted); margin-bottom: 6px; font-size: .9rem; }
+.identity-btn { width: 100%; padding: 10px; border-radius: var(--sa-radius); font-weight: 500; font-size: .95rem; }
+.identity-btn-primary { background: var(--sa-accent); border: 0; color: #FBF8F2; }
+.identity-btn-primary:hover { background: var(--sa-accent-dark); color: #FBF8F2; }
 
-.identity-form .form-control { padding: 11px 14px; }
-
-.identity-btn { width: 100%; padding: 11px; border-radius: 10px; font-weight: 600; font-size: 1rem; }
-
-.identity-btn-primary {
-    background: var(--sa-accent);
-    border: 0;
-    color: #0e1015;
-}
-.identity-btn-primary:hover { background: #9399ff; color: #0e1015; }
-
-.identity-checkbox { margin: 18px 0; }
+.identity-checkbox { margin: 16px 0; }
 .identity-checkbox .form-check-label { color: var(--sa-muted); cursor: pointer; }
 
-.identity-links { text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--sa-line); }
+.identity-links { text-align: left; margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid var(--sa-line); font-size: .9rem; }
 .identity-links a { color: var(--sa-accent); font-weight: 500; }
+.identity-links p, .identity-links div { margin-bottom: .5rem; }
 
-.text-danger { font-size: 14px; margin-top: 5px; color: var(--sa-danger) !important; }
-
-.validation-summary-errors {
-    background: rgba(248, 113, 113, .1);
-    border: 1px solid rgba(248, 113, 113, .35);
-    color: #fca5a5;
-    border-radius: 10px;
-    padding: 14px;
-    margin-bottom: 20px;
-}
+.text-danger { font-size: 13px; margin-top: 5px; color: var(--sa-danger) !important; }
+.validation-summary-errors { background: transparent; border: 1px solid var(--sa-danger); border-left-width: 3px; color: var(--sa-danger); border-radius: var(--sa-radius); padding: 12px 14px; margin-bottom: 18px; }
 .validation-summary-errors ul { margin: 0; padding-left: 20px; }
 
-.identity-icon { text-align: center; font-size: 3.5rem; margin-bottom: 16px; }
+.identity-icon { text-align: left; font-size: 2.4rem; margin-bottom: 12px; }
 
 @media (max-width: 576px) {
-    .identity-card { padding: 28px 20px; }
-    .identity-title { font-size: 1.4rem; }
+    .identity-card { padding: 1.8rem 1.3rem; }
+    .identity-title { font-size: 1.6rem; }
 }

@@ -12,12 +12,12 @@
     </ol>
 </nav>
 
-<h1 class="page-title text-danger">🗑️ Kitabı Silmek İstediğinize Emin Misiniz?</h1>
+<h1 class="page-title text-danger">Kitabı Silmek İstediğinize Emin Misiniz?</h1>
 
 <div class="row">
     <div class="col-lg-8">
         <div class="alert alert-danger">
-            <h4>⚠️ DİKKAT!</h4>
+            <h4>DİKKAT!</h4>
             <p class="mb-0">Bu işlem geri alınamaz. Kitap ve ilgili tüm veriler silinecektir.</p>
         </div>
 
@@ -31,7 +31,7 @@
                     else
                     {
                         <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded-start" style="height: 400px; font-size: 5rem;">
-                            📚
+                            
                         </div>
                     }
                 </div>
@@ -52,9 +52,9 @@
         <div class="mt-4">
             <form asp-action="KitapSil" method="post" class="d-inline">
                 <input type="hidden" asp-for="Id" />
-                <button type="submit" class="btn btn-danger">✓ Evet, Sil</button>
+                <button type="submit" class="btn btn-danger">Evet, Sil</button>
             </form>
-            <a asp-action="KitapListesi" class="btn btn-secondary">❌ Hayır, İptal</a>
+            <a asp-action="KitapListesi" class="btn btn-secondary">Hayır, İptal</a>
         </div>
     </div>
 </div>

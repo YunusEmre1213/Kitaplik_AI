@@ -2,98 +2,97 @@
 
 @if (Model.Any())
 {
-    <div class="row g-4">
+    <div class="kitap-izgara">
         @foreach (var kayit in Model)
         {
-            <div class="col-md-4">
-                <div class="card">
+            var toplam = kayit.Kitap.SayfaSayisi;
+            var mevcut = kayit.MevcutSayfa ?? 0;
+            var yuzde = toplam > 0 ? Math.Min(100, mevcut * 100 / toplam.Value) : 0;
+            var durum = kayit.OkumaDurumu switch
+            {
+                OkumaDurumu.Okunacak => "Okunacak",
+                OkumaDurumu.Okuyorum => "Okuyorum",
+                _ => "Okundu"
+            };
+
+            <div class="kitap-kart">
+                <a asp-action="Detay" asp-route-id="@kayit.KitapId" class="kitap-baglanti" title="@kayit.Kitap.KitapAdi">
                     <partial name="_Kapak" model='KapakModel.Of(kayit.Kitap, "md")' />
+                    <div class="kitap-ad">@kayit.Kitap.KitapAdi</div>
+                </a>
+                <div class="kitap-yazar">@(string.IsNullOrWhiteSpace(kayit.Kitap.YazarAdi) ? "Yazar bilinmiyor" : kayit.Kitap.YazarAdi)</div>
 
-                    <div class="card-body">
-                        <h5 class="card-title">@kayit.Kitap.KitapAdi</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">@kayit.Kitap.YazarAdi</h6>
-
-                        <!-- Durum Badge -->
-                        <div class="mb-2">
-                            @switch (kayit.OkumaDurumu)
-                            {
-                                case OkumaDurumu.Okunacak:
-                                    <span class="badge status-okunacak">📖 Okunacak</span>
-                                    break;
-                                case OkumaDurumu.Okuyorum:
-                                    <span class="badge status-okuyorum">📕 Okuyorum</span>
-                                    break;
-                                case OkumaDurumu.Okundu:
-                                    <span class="badge status-okundu">✅ Okundu</span>
-                                    break;
-                            }
-                        </div>
-
-                        @if (kayit.OkumaDurumu == OkumaDurumu.Okuyorum)
-                        {
-                            var toplam = kayit.Kitap.SayfaSayisi;
-                            var mevcut = kayit.MevcutSayfa ?? 0;
-                            var yuzde = toplam > 0 ? Math.Min(100, mevcut * 100 / toplam.Value) : 0;
-
-                            @if (toplam.HasValue)
-                            {
-                                <div class="progress mb-1" style="height: 14px;">
-                                    <div class="progress-bar bg-success" style="width: @yuzde%;">%@yuzde</div>
-                                </div>
-                                <div class="small text-muted mb-2">@mevcut / @toplam sayfa</div>
-                            }
-                            else if (kayit.MevcutSayfa.HasValue)
-                            {
-                                <div class="small text-muted mb-2">@mevcut. sayfadasınız</div>
-                            }
-
-                            <form asp-action="IlerlemeGuncelle" method="post" class="mb-2">
-                                <input type="hidden" name="kitaplikId" value="@kayit.Id" />
-                                <div class="input-group input-group-sm mb-1">
-                                    <input type="number" name="sayfa" class="form-control" min="0" max="@(toplam ?? 20000)" value="@mevcut" placeholder="Sayfa" required />
-                                    <button type="submit" class="btn btn-outline-success">Kaydet</button>
-                                </div>
-                                <input type="text" name="not" class="form-control form-control-sm" maxlength="500" placeholder="Not (isteğe bağlı)" />
-                            </form>
-                        }
-
-                        <!-- Durum Değiştir -->
-                        <form asp-action="OkumaDurumuDegistir" method="post">
-                            <input type="hidden" name="kitaplikId" value="@kayit.Id" />
-                            <select name="yeniDurum" class="form-select form-select-sm mb-2" onchange="this.form.submit()">
-                                <option value="">-- Durum Değiştir --</option>
-                                <option value="1" selected="@(kayit.OkumaDurumu == OkumaDurumu.Okunacak)">📖 Okunacak</option>
-                                <option value="2" selected="@(kayit.OkumaDurumu == OkumaDurumu.Okuyorum)">📕 Okuyorum</option>
-                                <option value="3" selected="@(kayit.OkumaDurumu == OkumaDurumu.Okundu)">✅ Okundu</option>
-                            </select>
-                        </form>
-
-                        <div class="small text-muted">
-                            <div>Eklenme: @kayit.EklenmeTarihi.ToString("dd.MM.yyyy")</div>
-                            @if (kayit.OkumayaBaslamaTarihi.HasValue)
-                            {
-                                <div>Başlama: @kayit.OkumayaBaslamaTarihi.Value.ToString("dd.MM.yyyy")</div>
-                            }
-                            @if (kayit.OkumaBitisTarihi.HasValue)
-                            {
-                                <div>Bitiş: @kayit.OkumaBitisTarihi.Value.ToString("dd.MM.yyyy")</div>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="card-footer bg-white">
-                        <a asp-action="Detay" asp-route-id="@kayit.KitapId" class="btn btn-sm btn-primary">Detay</a>
-                        <form asp-action="KitapliktanCikar" method="post" class="d-inline" onsubmit="return confirm('Emin misiniz?');">
-                            <input type="hidden" name="kitapId" value="@kayit.KitapId" />
-                            <button type="submit" class="btn btn-sm btn-danger">Çıkar</button>
-                        </form>
-                    </div>
+                <div class="kitap-meta">
+                    <span class="durum durum-@durum.ToLowerInvariant()">@durum</span>
+                    @if (kayit.OkumaDurumu == OkumaDurumu.Okuyorum && toplam.HasValue)
+                    {
+                        <span>@mevcut / @toplam sayfa</span>
+                    }
+                    else if (kayit.OkumaDurumu == OkumaDurumu.Okuyorum && kayit.MevcutSayfa.HasValue)
+                    {
+                        <span>@mevcut. sayfa</span>
+                    }
                 </div>
+
+                @if (kayit.OkumaDurumu == OkumaDurumu.Okuyorum && toplam.HasValue)
+                {
+                    <div class="ince-ilerleme" role="progressbar" aria-valuenow="@yuzde" aria-valuemin="0" aria-valuemax="100"><span style="width: @yuzde%"></span></div>
+                }
+
+                @if (kayit.OkumaDurumu != OkumaDurumu.Okundu && ViewBag.AktifOturum == null)
+                {
+                    <form asp-action="OturumBaslat" method="post" class="mt-2">
+                        <input type="hidden" name="kitaplikId" value="@kayit.Id" />
+                        <button type="submit" class="oturum-baslat">Okumaya başla</button>
+                    </form>
+                }
+
+                <details class="kitap-duzen">
+                    <summary>Düzenle</summary>
+
+                    @if (kayit.OkumaDurumu == OkumaDurumu.Okuyorum)
+                    {
+                        <form asp-action="IlerlemeGuncelle" method="post" class="mb-2">
+                            <input type="hidden" name="kitaplikId" value="@kayit.Id" />
+                            <div class="input-group input-group-sm mb-1">
+                                <input type="number" name="sayfa" class="form-control" min="0" max="@(toplam ?? 20000)" value="@mevcut" placeholder="Sayfa" required />
+                                <button type="submit" class="btn btn-outline-secondary">Kaydet</button>
+                            </div>
+                            <input type="text" name="not" class="form-control form-control-sm" maxlength="500" placeholder="Not (isteğe bağlı)" />
+                        </form>
+                    }
+
+                    <form asp-action="OkumaDurumuDegistir" method="post" class="mb-2">
+                        <input type="hidden" name="kitaplikId" value="@kayit.Id" />
+                        <select name="yeniDurum" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Okuma durumu">
+                            <option value="1" selected="@(kayit.OkumaDurumu == OkumaDurumu.Okunacak)">Okunacak</option>
+                            <option value="2" selected="@(kayit.OkumaDurumu == OkumaDurumu.Okuyorum)">Okuyorum</option>
+                            <option value="3" selected="@(kayit.OkumaDurumu == OkumaDurumu.Okundu)">Okundu</option>
+                        </select>
+                    </form>
+
+                    <div class="kucuk-tarih">
+                        <div>Eklenme: @kayit.EklenmeTarihi.ToString("dd.MM.yyyy")</div>
+                        @if (kayit.OkumayaBaslamaTarihi.HasValue)
+                        {
+                            <div>Başlama: @kayit.OkumayaBaslamaTarihi.Value.ToString("dd.MM.yyyy")</div>
+                        }
+                        @if (kayit.OkumaBitisTarihi.HasValue)
+                        {
+                            <div>Bitiş: @kayit.OkumaBitisTarihi.Value.ToString("dd.MM.yyyy")</div>
+                        }
+                    </div>
+
+                    <form asp-action="KitapliktanCikar" method="post" onsubmit="return confirm('Bu kitabı kitaplığınızdan çıkarmak istiyor musunuz?');" class="mt-2">
+                        <input type="hidden" name="kitapId" value="@kayit.KitapId" />
+                        <button type="submit" class="cikar-btn">Kitaplığımdan çıkar</button>
+                    </form>
+                </details>
             </div>
         }
     </div>
 }
 else
 {
-    <p class="text-muted text-center">Bu kategoride kitap bulunmuyor.</p>
+    <p class="text-muted text-center py-4">Bu kategoride kitap bulunmuyor.</p>
 }

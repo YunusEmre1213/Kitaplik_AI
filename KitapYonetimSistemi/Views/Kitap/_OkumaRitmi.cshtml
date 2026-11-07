@@ -1,0 +1,84 @@
+﻿@model KitapYonetimSistemi.Models.OkumaRitmi
+
+@{
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    string Sure(int dk) => dk >= 60 ? $"{dk / 60} sa {dk % 60} dk" : $"{dk} dk";
+    var enYuksek = Math.Max(1, Model.SonGunler.Max(g => g.Sayfa));
+}
+
+<section class="ritim-bolum">
+    <div class="bolum-baslik">
+        <h2>Okuma ritmin</h2>
+        <a asp-action="YilOzeti" class="etiket">Yıl özetini gör &rarr;</a>
+    </div>
+
+    @if (!Model.VeriVar)
+    {
+        <p class="text-muted">Ritmini görmek için bir kitaba sayfa ilerlemesi gir ya da Kitaplığım'dan bir okuma oturumu başlat. Her gün okudukça serin uzar.</p>
+    }
+    else
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number">@Model.GuncelSeri</div>
+                    <div class="stat-label">Günlük seri</div>
+                    <div class="ritim-not">@(Model.BugunOkundu ? "Bugün okudun" : (Model.GuncelSeri > 0 ? "Bugün okursan sürer" : "Bugün başla")). En uzun: @Model.EnUzunSeri gün</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number">@Model.GunlukTempo.ToString("0.#", tr)</div>
+                    <div class="stat-label">Sayfa / gün</div>
+                    <div class="ritim-not">Son @OkumaRitmi.TempoGunSayisi günün ortalaması</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number">@(Model.BuHaftaDakika > 0 ? Sure(Model.BuHaftaDakika) : "0")</div>
+                    <div class="stat-label">Bu hafta</div>
+                    <div class="ritim-not">Toplam: @Sure(Model.ToplamDakika) oturum</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number ritim-kelime">@(Model.EnVerimliZaman ?? "-")</div>
+                    <div class="stat-label">En çok okuduğun vakit</div>
+                    <div class="ritim-not">@(Model.EnVerimliZaman == null ? "En az 3 oturumdan sonra görünür" : "Oturum sürelerine göre")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="etiket mb-2">Son @OkumaRitmi.GrafikGunSayisi gün (sayfa)</div>
+        <div class="ritim-grafik" role="img" aria-label="Son 30 günde okunan sayfalar">
+            @foreach (var g in Model.SonGunler)
+            {
+                var yuzde = g.Sayfa == 0 ? 0 : Math.Max(6, g.Sayfa * 100 / enYuksek);
+                <div class="ritim-sutun" title="@g.Gun.ToString("d MMMM", tr): @g.Sayfa sayfa@(g.Dakika > 0 ? $", {g.Dakika} dk" : "")">
+                    <span class="@(g.Sayfa == 0 ? "bos" : "")" style="height: @(yuzde)%"></span>
+                </div>
+            }
+        </div>
+        <div class="isi-alt"><span>@Model.SonGunler.First().Gun.ToString("d MMM", tr)</span><span>@Model.SonGunlerToplamSayfa sayfa, aktif gün başına @Model.AktifGunBasinaSayfa.ToString("0.#", tr)</span><span>Bugün</span></div>
+
+        @if (Model.Tahminler.Any())
+        {
+            <div class="etiket mt-4 mb-1">Bu hızla bitiş tahmini</div>
+            <p class="ritim-not mb-2">Her kitap için günlük tempon tamamen o kitaba verilirse hesaplanır; birden fazla kitap okuyorsan süre uzar.</p>
+            <ul class="kenar-liste mt-0">
+                @foreach (var t in Model.Tahminler)
+                {
+                    <li>
+                        <span class="kenar-sayfa">@t.KalanSayfa s.</span>
+                        <div class="kenar-icerik">
+                            <p><strong>@t.KitapAdi</strong></p>
+                            <div class="kenar-alt">
+                                <span>@(t.GunSayisi > 730 ? "Bu tempoyla 2 yıldan uzun sürer" : $"Yaklaşık {t.Tarih.ToString("d MMMM yyyy", tr)} ({t.GunSayisi} gün sonra)")</span>
+                            </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    }
+</section>

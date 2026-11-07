@@ -1,13 +1,14 @@
 ﻿<!DOCTYPE html>
-<html lang="tr" data-bs-theme="dark">
+<html lang="tr" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light" />
+    <script>try{if(localStorage.getItem("sa-tema")==="dark"){var h=document.documentElement;h.setAttribute("data-theme","dark");h.setAttribute("data-bs-theme","dark");}}catch(e){}</script>
     <title>@ViewData["Title"] - Satır Arası</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital@1&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/custom.css" asp-append-version="true" />
@@ -21,7 +22,7 @@
         <nav class="navbar navbar-expand-md sa-nav">
             <div class="container">
                 <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                    <span class="logo"><i class="bi bi-book-half"></i></span>Satır Arası
+                    Satır Arası
                 </a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#anaMenu" aria-label="Menü">
@@ -42,6 +43,8 @@
                             <li class="nav-item"><a class="nav-link @Aktif("Tartisma")" asp-controller="Tartisma" asp-action="Index">Tartışmalar</a></li>
                         }
                     </ul>
+                    @await Component.InvokeAsync("AktifOturum")
+                    <button type="button" class="tema-btn" id="temaBtn" aria-label="Koyu / açık tema" title="Koyu / açık tema"><i class="bi bi-moon"></i><i class="bi bi-sun"></i></button>
                     <partial name="_LoginPartial" />
                 </div>
             </div>
@@ -55,24 +58,23 @@
     </div>
 
     <footer class="footer mt-5">
-        <div class="container text-center py-4">
-            &copy; @DateTime.Now.Year Satır Arası
+        <div class="container d-flex flex-wrap justify-content-between align-items-baseline gap-2 py-4">
+            <span class="marka">Satır Arası</span>
+            <span>Okuduklarını kaydet, düşüncelerini sakla. &copy; @DateTime.Now.Year</span>
         </div>
     </footer>
 
-    <button class="chat-toggle-btn" onclick="toggleChat()" title="Asistanla Konuş">
-        💬
-    </button>
+    <button class="chat-toggle-btn" onclick="toggleChat()" title="Asistanla Konuş"><i class="bi bi-chat-text"></i></button>
 
     <div class="chat-widget" id="chatWidget">
         <div class="chat-header">
-            <span>🤖 Kütüphane Asistanı</span>
-            <span class="close-chat" onclick="toggleChat()">✕</span>
+            <span>Kütüphane Asistanı</span>
+            <span class="close-chat" onclick="toggleChat()" aria-label="Kapat">✕</span>
         </div>
 
         <div class="chat-body" id="chatBody">
             <div class="message bot-message">
-                Merhaba! Ben Kütüphane Asistanı. 👋<br>
+                Merhaba! Ben Kütüphane Asistanı. <br>
                 Bana "Suç ve Ceza var mı?" veya "Kitaplığımda neler var?" gibi sorular sorabilirsin.
             </div>
         </div>
@@ -141,12 +143,12 @@
                     let formattedAnswer = data.answer.replace(/\n/g, '<br>');
                     chatBody.innerHTML += `<div class="message bot-message">${formattedAnswer}</div>`;
                 } else {
-                    chatBody.innerHTML += `<div class="message bot-message text-danger">⚠️ ${data.answer}</div>`;
+                    chatBody.innerHTML += `<div class="message bot-message text-danger">${data.answer}</div>`;
                 }
 
             } catch (error) {
                 typingIndicator.style.display = "none";
-                chatBody.innerHTML += `<div class="message bot-message text-danger">⚠️ Bağlantı hatası oluştu.</div>`;
+                chatBody.innerHTML += `<div class="message bot-message text-danger">Bağlantı hatası oluştu.</div>`;
                 console.error(error);
             } finally {
                 // 2. İŞLEM BİTİNCE BUTONU TEKRAR AÇ
@@ -166,6 +168,28 @@
     </script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Açık okuma oturumu sayaçları (sunucudan gelen başlangıç zamanına göre saniyede bir güncellenir)
+        (function () {
+            var sayaclar = document.querySelectorAll('[data-oturum-baslangic]');
+            if (!sayaclar.length) return;
+            function iki(n) { return (n < 10 ? '0' : '') + n; }
+            function guncelle() {
+                sayaclar.forEach(function (el) {
+                    var sn = Math.max(0, Math.floor((Date.now() - Number(el.dataset.oturumBaslangic)) / 1000));
+                    var s = Math.floor(sn / 3600), d = Math.floor((sn % 3600) / 60);
+                    el.textContent = (s > 0 ? iki(s) + ':' : '') + iki(d) + ':' + iki(sn % 60);
+                });
+            }
+            guncelle(); setInterval(guncelle, 1000);
+        })();
+        document.getElementById('temaBtn')?.addEventListener('click', function () {
+            var h = document.documentElement, koyu = h.getAttribute('data-theme') !== 'dark';
+            h.setAttribute('data-theme', koyu ? 'dark' : 'light');
+            h.setAttribute('data-bs-theme', koyu ? 'dark' : 'light');
+            try { localStorage.setItem('sa-tema', koyu ? 'dark' : 'light'); } catch (e) { }
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

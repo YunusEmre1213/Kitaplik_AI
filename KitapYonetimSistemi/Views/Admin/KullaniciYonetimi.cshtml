@@ -12,8 +12,8 @@
 </nav>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="page-title mb-0">👥 Kullanıcı Yönetimi</h1>
-    <a asp-action="Index" class="btn btn-secondary">⬅️ Dashboard</a>
+    <h1 class="page-title mb-0">Kullanıcı Yönetimi</h1>
+    <a asp-action="Index" class="btn btn-secondary">Dashboard</a>
 </div>
 
 @if (TempData["Mesaj"] != null)
@@ -42,7 +42,7 @@
             <div class="card @(isSelf ? "border-primary" : "")">
                 <div class="card-body">
                     <div class="text-center mb-3">
-                        <div style="font-size: 3rem;">👤</div>
+                        <div style="font-size: 3rem;"></div>
                         <h5 class="card-title mb-1">@kullanici.Email</h5>
                         @if (isSelf)
                         {
@@ -53,15 +53,15 @@
                     <div class="mb-2">
                         @if (kullanici.Rol == "Admin")
                         {
-                            <span class="badge bg-danger">🔧 Admin</span>
+                            <span class="badge bg-danger">Admin</span>
                         }
                         else if (kullanici.Rol == "User")
                         {
-                            <span class="badge bg-success">👤 User</span>
+                            <span class="badge bg-success">User</span>
                         }
                         else
                         {
-                            <span class="badge bg-secondary">❓ Rol Yok</span>
+                            <span class="badge bg-secondary">Rol Yok</span>
                         }
                     </div>
 
@@ -84,10 +84,10 @@
                     {
                         <div class="d-grid gap-2">
                             <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#rolModal@(kullanici.Id.GetHashCode())">
-                                🔄 Rol Değiştir
+                                Rol Değiştir
                             </button>
                             <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#silModal@(kullanici.Id.GetHashCode())">
-                                🗑️ Sil
+                                Sil
                             </button>
                         </div>
 
@@ -106,13 +106,13 @@
                                             <div class="form-check mb-2">
                                                 <input class="form-check-input" type="radio" name="yeniRol" value="User" id="user@(kullanici.Id.GetHashCode())" checked>
                                                 <label class="form-check-label" for="user@(kullanici.Id.GetHashCode())">
-                                                    👤 User (Normal Kullanıcı)
+                                                    User (Normal Kullanıcı)
                                                 </label>
                                             </div>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="radio" name="yeniRol" value="Admin" id="admin@(kullanici.Id.GetHashCode())">
                                                 <label class="form-check-label" for="admin@(kullanici.Id.GetHashCode())">
-                                                    🔧 Admin (Yönetici)
+                                                    Admin (Yönetici)
                                                 </label>
                                             </div>
                                         </div>
@@ -137,7 +137,7 @@
                                         <div class="modal-body">
                                             <input type="hidden" name="kullaniciId" value="@kullanici.Id" />
                                             <div class="alert alert-warning">
-                                                <strong>⚠️ DİKKAT!</strong> Bu işlem geri alınamaz!
+                                                <strong>DİKKAT!</strong> Bu işlem geri alınamaz!
                                             </div>
                                             <p><strong>@kullanici.Email</strong> kullanıcısını silmek istediğinize emin misiniz?</p>
                                             <ul>

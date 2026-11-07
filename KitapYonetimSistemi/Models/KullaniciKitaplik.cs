@@ -16,6 +16,7 @@ namespace KitapYonetimSistemi.Models
         // Okunan son sayfa ve ilerleme notları
         public int? MevcutSayfa { get; set; }
         public ICollection<OkumaGunlugu> Gunlukler { get; set; } = new List<OkumaGunlugu>();
+        public ICollection<OkumaOturumu> Oturumlar { get; set; } = new List<OkumaOturumu>();
 
         // Foreign Keys
         public string KullaniciId { get; set; } = string.Empty;

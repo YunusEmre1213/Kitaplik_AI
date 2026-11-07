@@ -4,9 +4,12 @@
     ViewData["Title"] = "Kitaplar";
 }
 
-<div class="katalog-ust">
-    <h1 class="page-title">Kitaplar</h1>
-    <span class="katalog-sayac">@Model.ToplamKayit.ToString("N0") kitap</span>
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Katalog</span>
+        <h1>Kitaplar</h1>
+    </div>
+    <span class="not">@Model.ToplamKayit.ToString("N0") kitap</span>
 </div>
 
 @if (TempData["Mesaj"] != null)
@@ -46,7 +49,7 @@
     </div>
     <div class="col-6 col-lg-2 d-flex gap-2">
         <button type="submit" class="btn btn-primary flex-grow-1">Ara</button>
-        <a asp-action="Index" class="btn btn-outline-secondary" title="Temizle">✕</a>
+        <a asp-action="Index" class="btn btn-outline-secondary" title="Temizle" aria-label="Filtreleri temizle">✕</a>
     </div>
 </form>
 
@@ -62,7 +65,7 @@
 {
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white">
-            <strong>🌐 Kataloğumuzda olmayan sonuçlar</strong>
+            <strong>Kataloğumuzda olmayan sonuçlar</strong>
             <small class="text-muted d-block">Dış kaynaklarda bulundu. Ekleyince kataloğa ve kitaplığınıza girer.</small>
         </div>
         <ul class="list-group list-group-flush">
@@ -108,11 +111,10 @@
                     @if (kitap.ToplamPuanSayisi > 0) { <span class="kitap-puan">★ @kitap.OrtalamaPuan.ToString("0.0")</span> }
                 </div>
                 <div class="kitap-eylemler">
-                    <a asp-controller="AiLibrary" asp-action="AnalizEt" asp-route-id="@kitap.Id"
-                       class="btn btn-sm btn-outline-primary" title="Yapay Zeka Analizi"
-                       onclick="document.getElementById('aiLoadingOverlay').style.display = 'flex';">AI</a>
-                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#kitapligaEkleModal"
-                            data-kitap-id="@kitap.Id" data-kitap-adi="@kitap.KitapAdi">Ekle</button>
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#kitapligaEkleModal"
+                            data-kitap-id="@kitap.Id" data-kitap-adi="@kitap.KitapAdi">+ Kitaplığa ekle</button>
+                    <a asp-controller="AiLibrary" asp-action="AnalizEt" asp-route-id="@kitap.Id" title="Yapay zekâ analizi"
+                       onclick="document.getElementById('aiLoadingOverlay').style.display = 'flex';">Analiz</a>
                 </div>
             </div>
         }
@@ -132,9 +134,9 @@
                         <div class="mb-3">
                             <label class="form-label">Okuma Durumu:</label>
                             <select name="okumaDurumu" class="form-select">
-                                <option value="1">📖 Okunacak</option>
-                                <option value="2">📕 Okuyorum</option>
-                                <option value="3">✅ Okundu</option>
+                                <option value="1">Okunacak</option>
+                                <option value="2">Okuyorum</option>
+                                <option value="3">Okundu</option>
                             </select>
                         </div>
                         <div class="form-check">
@@ -187,14 +189,14 @@
 else if (!string.IsNullOrWhiteSpace(Model.Arama) || !string.IsNullOrWhiteSpace(Model.Tur) || Model.Kapakli)
 {
     <div class="alert alert-warning text-center py-5">
-        <h4>🔍 Sonuç bulunamadı</h4>
+        <h4>Sonuç bulunamadı</h4>
         <p>Aramanızı değiştirmeyi veya filtreleri temizlemeyi deneyin.</p>
     </div>
 }
 else
 {
     <div class="alert alert-info text-center py-5">
-        <h4>📚 Henüz Kitap Yok</h4>
+        <h4>Henüz Kitap Yok</h4>
         <p>Admin henüz kitap eklememiş.</p>
     </div>
 }

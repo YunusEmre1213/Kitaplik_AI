@@ -12,7 +12,7 @@
         </ol>
     </nav>
 
-    <h1>👤 @ViewBag.KullaniciEmail</h1>
+    <h1>@ViewBag.KullaniciEmail</h1>
     <p class="text-muted">Bu kullanıcının yaptığı yorumlar (@Model.Count() yorum)</p>
 
     @if (TempData["Mesaj"] != null)
@@ -24,7 +24,7 @@
     }
 
     <div class="mb-3">
-        <a asp-action="YorumYonetimi" class="btn btn-secondary">⬅️ Tüm Yorumlara Dön</a>
+        <a asp-action="YorumYonetimi" class="btn btn-secondary">Tüm Yorumlara Dön</a>
     </div>
 
     @if (Model.Any())
@@ -36,17 +36,17 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="card-subtitle mb-2">
-                                📖 <a asp-action="KitapYorumlari" asp-route-kitapId="@yorum.KitapId">@yorum.KitapAdi</a>
+                                <a asp-action="KitapYorumlari" asp-route-kitapId="@yorum.KitapId">@yorum.KitapAdi</a>
                                 <small class="text-muted ms-2">@yorum.YorumTarihi.ToString("dd.MM.yyyy HH:mm")</small>
                             </h6>
                             <p class="card-text mt-3">@yorum.YorumMetni</p>
                         </div>
                         <div class="ms-3">
                             <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@yorum.KitapId" class="btn btn-sm btn-primary me-1" target="_blank">
-                                👁️
+                                
                             </a>
                             <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#silModal@(yorum.YorumId)">
-                                🗑️
+                                
                             </button>
                         </div>
                     </div>

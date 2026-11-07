@@ -5,7 +5,7 @@
 }
 
 <div class="container mt-4">
-    <h1>👥 Kullanıcı Kitaplıkları</h1>
+    <h1>Kullanıcı Kitaplıkları</h1>
     <p class="text-muted">Diğer kullanıcıların herkese açık olarak paylaştığı kitaplıklar</p>
 
     @if (Model.Any())
@@ -15,7 +15,7 @@
             <div class="card mb-4 shadow">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">
-                        👤 @grup.Key.UserName
+                        @grup.Key.UserName
                         <span class="badge bg-light text-dark">@grup.Count() kitap</span>
                     </h4>
                 </div>
@@ -28,8 +28,8 @@
                                     <div class="card-body">
                                         <h6 class="card-title">@kayit.Kitap.KitapAdi</h6>
                                         <p class="card-text">
-                                            <small class="text-muted">✍️ @kayit.Kitap.YazarAdi</small><br />
-                                            <small class="text-muted">📅 @kayit.Kitap.YayinYili</small>
+                                            <small class="text-muted">@kayit.Kitap.YazarAdi</small><br />
+                                            <small class="text-muted">@kayit.Kitap.YayinYili</small>
                                         </p>
                                         <a asp-action="Detay" asp-route-id="@kayit.KitapId" class="btn btn-sm btn-primary">
                                             Detay
@@ -54,7 +54,7 @@
     else
     {
         <div class="alert alert-info">
-            <h4>📚 Henüz Herkese Açık Kitaplık Yok</h4>
+            <h4>Henüz Herkese Açık Kitaplık Yok</h4>
             <p>Hiçbir kullanıcı henüz kitaplığını herkese açık olarak paylaşmamış.</p>
             <p>Siz kendi kitaplığınızı oluştururken "Diğer kullanıcılar görebilsin" seçeneğini işaretleyerek paylaşabilirsiniz.</p>
         </div>

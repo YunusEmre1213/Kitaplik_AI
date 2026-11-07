@@ -153,6 +153,31 @@ namespace KitapYonetimSistemi.Controllers
             {
                 ViewBag.KullaniciPuani = await KullaniciPuaniniGetir(kitap.Id, kullanici.Id);
             }
+
+            // Kenar notları: herkese açık olanlar ile kullanıcının kendi (gizli) notları
+            var kullaniciId = kullanici?.Id;
+            var notlar = await _context.KenarNotlari
+                .AsNoTracking()
+                .Include(n => n.Kullanici)
+                .Where(n => n.KitapId == kitap.Id && (n.HerkeseAcik || n.KullaniciId == kullaniciId))
+                .OrderBy(n => n.SayfaNo).ThenBy(n => n.Tarih)
+                .ToListAsync();
+
+            // Isı haritası yalnızca herkese açık işaretlerden oluşur (alıntılar + açık kenar notları)
+            var acikSayfalar = await _context.KenarNotlari
+                .Where(n => n.KitapId == kitap.Id && n.HerkeseAcik)
+                .Select(n => n.SayfaNo)
+                .ToListAsync();
+            acikSayfalar.AddRange(kitap.Alintilar?.Where(a => a.SayfaNo.HasValue).Select(a => a.SayfaNo!.Value) ?? Enumerable.Empty<int>());
+
+            ViewBag.KenarNotlari = new KenarNotlariViewModel
+            {
+                KitapId = kitap.Id,
+                KitapSayfaSayisi = kitap.SayfaSayisi,
+                KullaniciId = kullaniciId,
+                Notlar = notlar,
+                Isi = IsiHaritasi.Olustur(acikSayfalar, kitap.SayfaSayisi)
+            };
             return View(kitap);
         }
 
@@ -253,6 +278,11 @@ namespace KitapYonetimSistemi.Controllers
                 .Where(kk => kk.KullaniciId == kullanici.Id)
                 .OrderByDescending(kk => kk.EklenmeTarihi)
                 .ToListAsync();
+
+            ViewBag.AktifOturum = await _context.OkumaOturumlari
+                .AsNoTracking()
+                .Include(o => o.KullaniciKitaplik!).ThenInclude(kk => kk.Kitap)
+                .FirstOrDefaultAsync(o => o.Bitis == null && o.KullaniciKitaplik!.KullaniciId == kullanici.Id);
 
             return View(kitaplar);
         }
@@ -506,6 +536,17 @@ namespace KitapYonetimSistemi.Controllers
                 return RedirectToAction(nameof(Kitapligim));
             }
 
+            var bitirdi = IlerlemeUygula(kayit, sayfa, not);
+            TempData["Mesaj"] = bitirdi ? "Tebrikler, kitabı bitirdiniz!" : "İlerlemeniz kaydedildi!";
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Kitapligim));
+        }
+
+        // Sayfa ilerlemesini kitaplık kaydına işler ve günlüğe yazar. Kitap bu işlemle bittiyse true döner.
+        private bool IlerlemeUygula(KullaniciKitaplik kayit, int sayfa, string? not)
+        {
+            var toplamSayfa = kayit.Kitap?.SayfaSayisi;
             kayit.MevcutSayfa = sayfa;
 
             // İlk sayfa girilince okunacak kitap otomatik "Okuyorum" olur
@@ -516,16 +557,13 @@ namespace KitapYonetimSistemi.Controllers
             }
 
             // Son sayfaya gelince kitap otomatik "Okundu" olur
+            var bitirdi = false;
             if (toplamSayfa.HasValue && sayfa == toplamSayfa.Value && kayit.OkumaDurumu != OkumaDurumu.Okundu)
             {
                 kayit.OkumaDurumu = OkumaDurumu.Okundu;
                 kayit.OkumayaBaslamaTarihi ??= DateTime.Now;
                 kayit.OkumaBitisTarihi = DateTime.Now;
-                TempData["Mesaj"] = "Tebrikler, kitabı bitirdiniz! 🎉";
-            }
-            else
-            {
-                TempData["Mesaj"] = "İlerlemeniz kaydedildi!";
+                bitirdi = true;
             }
 
             _context.OkumaGunlukleri.Add(new OkumaGunlugu
@@ -535,9 +573,174 @@ namespace KitapYonetimSistemi.Controllers
                 Not = not,
                 Tarih = DateTime.Now
             });
+            return bitirdi;
+        }
+
+        // ----- Okuma oturumu (başlat / bitir / iptal) -----
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OturumBaslat(int kitaplikId)
+        {
+            var kullaniciId = _userManager.GetUserId(User)!;
+            var kayit = await _context.KullaniciKitapliklari
+                .FirstOrDefaultAsync(kk => kk.Id == kitaplikId && kk.KullaniciId == kullaniciId);
+
+            if (kayit == null)
+            {
+                TempData["Hata"] = "Kitaplık kaydı bulunamadı!";
+                return RedirectToAction(nameof(Kitapligim));
+            }
+
+            if (await _context.OkumaOturumlari.AnyAsync(o => o.Bitis == null && o.KullaniciKitaplik!.KullaniciId == kullaniciId))
+            {
+                TempData["Hata"] = "Zaten açık bir okuma oturumunuz var. Önce onu bitirin.";
+                return RedirectToAction(nameof(Kitapligim));
+            }
+
+            if (kayit.OkumaDurumu == OkumaDurumu.Okundu)
+            {
+                TempData["Hata"] = "Bu kitabı zaten bitirdiniz. Yeniden okumak için durumunu 'Okuyorum' yapın.";
+                return RedirectToAction(nameof(Kitapligim));
+            }
+
+            if (kayit.OkumaDurumu == OkumaDurumu.Okunacak)
+            {
+                kayit.OkumaDurumu = OkumaDurumu.Okuyorum;
+                kayit.OkumayaBaslamaTarihi ??= DateTime.Now;
+            }
+
+            _context.OkumaOturumlari.Add(new OkumaOturumu
+            {
+                KullaniciKitaplikId = kayit.Id,
+                Baslangic = DateTime.Now,
+                BaslangicSayfa = kayit.MevcutSayfa ?? 0
+            });
+            await _context.SaveChangesAsync();
+
+            TempData["Mesaj"] = "Okuma oturumu başladı. İyi okumalar!";
+            return RedirectToAction(nameof(Kitapligim));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OturumBitir(int oturumId, int sayfa)
+        {
+            var kullaniciId = _userManager.GetUserId(User)!;
+            var oturum = await _context.OkumaOturumlari
+                .Include(o => o.KullaniciKitaplik!).ThenInclude(kk => kk.Kitap)
+                .FirstOrDefaultAsync(o => o.Id == oturumId && o.Bitis == null && o.KullaniciKitaplik!.KullaniciId == kullaniciId);
+
+            if (oturum == null)
+            {
+                TempData["Hata"] = "Açık okuma oturumu bulunamadı!";
+                return RedirectToAction(nameof(Kitapligim));
+            }
+
+            var kayit = oturum.KullaniciKitaplik!;
+            var toplamSayfa = kayit.Kitap?.SayfaSayisi;
+            var baslangicSayfa = oturum.BaslangicSayfa ?? 0;
+            if (sayfa < baslangicSayfa || sayfa > 20000 || (toplamSayfa.HasValue && sayfa > toplamSayfa.Value))
+            {
+                TempData["Hata"] = toplamSayfa.HasValue
+                    ? $"Sayfa {baslangicSayfa} ile {toplamSayfa} arasında olmalıdır!"
+                    : $"Sayfa en az {baslangicSayfa} olmalıdır!";
+                return RedirectToAction(nameof(Kitapligim));
+            }
+
+            oturum.Bitis = DateTime.Now;
+            oturum.BitisSayfa = sayfa;
+
+            var dakika = (int)Math.Round(oturum.Dakika);
+            var bitirdi = false;
+            if (sayfa != (kayit.MevcutSayfa ?? 0))
+                bitirdi = IlerlemeUygula(kayit, sayfa, $"Okuma oturumu: {dakika} dk");
 
             await _context.SaveChangesAsync();
+
+            TempData["Mesaj"] = bitirdi
+                ? "Tebrikler, kitabı bitirdiniz!"
+                : $"Oturum kaydedildi: {dakika} dk, {sayfa - baslangicSayfa} sayfa.";
             return RedirectToAction(nameof(Kitapligim));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OturumIptal(int oturumId)
+        {
+            var kullaniciId = _userManager.GetUserId(User)!;
+            var oturum = await _context.OkumaOturumlari
+                .FirstOrDefaultAsync(o => o.Id == oturumId && o.Bitis == null && o.KullaniciKitaplik!.KullaniciId == kullaniciId);
+
+            if (oturum != null)
+            {
+                _context.OkumaOturumlari.Remove(oturum);
+                await _context.SaveChangesAsync();
+                TempData["Mesaj"] = "Okuma oturumu iptal edildi.";
+            }
+            return RedirectToAction(nameof(Kitapligim));
+        }
+
+        // Kenar notu ekle (kitabın bir sayfasına gizli ya da herkese açık not)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KenarNotuEkle(int kitapId, int sayfaNo, string metin, bool herkeseAcik = false)
+        {
+            metin = (metin ?? string.Empty).Trim();
+            var kitap = await _context.Kitaplar.AsNoTracking().Where(k => k.Id == kitapId).Select(k => new { k.SayfaSayisi }).FirstOrDefaultAsync();
+            if (kitap == null)
+                return NotFound();
+
+            var enFazlaSayfa = kitap.SayfaSayisi ?? 20000;
+            if (metin.Length == 0 || metin.Length > KenarNotu.EnFazlaUzunluk)
+            {
+                TempData["Hata"] = $"Not 1 ile {KenarNotu.EnFazlaUzunluk} karakter arasında olmalıdır!";
+            }
+            else if (sayfaNo < 1 || sayfaNo > enFazlaSayfa)
+            {
+                TempData["Hata"] = $"Sayfa numarası 1 ile {enFazlaSayfa} arasında olmalıdır!";
+            }
+            else
+            {
+                var kullaniciId = _userManager.GetUserId(User)!;
+                if (await _context.KenarNotlari.CountAsync(n => n.KitapId == kitapId && n.KullaniciId == kullaniciId) >= KenarNotu.KitapBasinaEnFazla)
+                {
+                    TempData["Hata"] = "Bu kitap için not sınırına ulaştınız.";
+                }
+                else
+                {
+                    _context.KenarNotlari.Add(new KenarNotu
+                    {
+                        KitapId = kitapId,
+                        KullaniciId = kullaniciId,
+                        SayfaNo = sayfaNo,
+                        Metin = metin,
+                        HerkeseAcik = herkeseAcik,
+                        Tarih = DateTime.Now
+                    });
+                    await _context.SaveChangesAsync();
+                    TempData["Mesaj"] = herkeseAcik ? "Notunuz herkese açık olarak eklendi!" : "Notunuz yalnızca size görünür olarak eklendi!";
+                }
+            }
+
+            return Redirect(Url.Action(nameof(Detay), new { id = kitapId }) + "#kenar-notlari");
+        }
+
+        // Kendi kenar notunu sil
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KenarNotuSil(int notId)
+        {
+            var kullaniciId = _userManager.GetUserId(User);
+            var not = await _context.KenarNotlari.FirstOrDefaultAsync(n => n.Id == notId && n.KullaniciId == kullaniciId);
+            if (not == null)
+                return NotFound();
+
+            _context.KenarNotlari.Remove(not);
+            await _context.SaveChangesAsync();
+
+            TempData["Mesaj"] = "Not silindi!";
+            return Redirect(Url.Action(nameof(Detay), new { id = not.KitapId }) + "#kenar-notlari");
         }
 
         // Alıntı ekle
@@ -571,6 +774,15 @@ namespace KitapYonetimSistemi.Controllers
 
             TempData["Mesaj"] = "Alıntınız eklendi!";
             return RedirectToAction(nameof(Detay), new { id = kitapId });
+        }
+
+        // Alıntıyı paylaşılabilir görsel karta çevirme sayfası (görsel tarayıcıda çizilir)
+        public async Task<IActionResult> AlintiKarti(int id)
+        {
+            var alinti = await _context.Alintilar.AsNoTracking().Include(a => a.Kitap).FirstOrDefaultAsync(a => a.Id == id);
+            if (alinti?.Kitap == null)
+                return NotFound();
+            return View(alinti);
         }
 
         // Kendi alıntısını sil
@@ -612,6 +824,96 @@ namespace KitapYonetimSistemi.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Detay), new { id = alinti.KitapId });
+        }
+
+        // Yıllık okuma özeti
+        public async Task<IActionResult> YilOzeti(int? yil)
+        {
+            var kullanici = await _userManager.GetUserAsync(User);
+            var kullaniciId = kullanici!.Id;
+
+            // Seçilebilecek yıllar: kitap bitirilen, günlük girilen ya da oturum yapılan yıllar
+            var yillar = new HashSet<int> { DateTime.Now.Year };
+            foreach (var t in await _context.KullaniciKitapliklari.Where(kk => kk.KullaniciId == kullaniciId && kk.OkumaBitisTarihi != null).Select(kk => kk.OkumaBitisTarihi!.Value).ToListAsync())
+                yillar.Add(t.Year);
+            foreach (var t in await _context.OkumaGunlukleri.Where(g => g.KullaniciKitaplik!.KullaniciId == kullaniciId).Select(g => g.Tarih).ToListAsync())
+                yillar.Add(t.Year);
+
+            var secilen = yil is >= 2000 and <= 2100 ? yil.Value : DateTime.Now.Year;
+            var baslangic = new DateTime(secilen, 1, 1);
+            var bitis = baslangic.AddYears(1);
+
+            var biten = await _context.KullaniciKitapliklari
+                .AsNoTracking()
+                .Include(kk => kk.Kitap!).ThenInclude(k => k.Kategoriler).ThenInclude(kat => kat.Kategori)
+                .Where(kk => kk.KullaniciId == kullaniciId && kk.OkumaDurumu == OkumaDurumu.Okundu
+                             && kk.OkumaBitisTarihi >= baslangic && kk.OkumaBitisTarihi < bitis)
+                .OrderBy(kk => kk.OkumaBitisTarihi)
+                .ToListAsync();
+
+            var model = new YilOzetiViewModel
+            {
+                Yil = secilen,
+                Yillar = yillar.OrderByDescending(y => y).ToList(),
+                Biten = biten,
+                SayfaSayisi = biten.Sum(kk => kk.Kitap?.SayfaSayisi ?? 0),
+                HedefKitapSayisi = await _context.OkumaHedefleri
+                    .Where(h => h.KullaniciId == kullaniciId && h.Yil == secilen)
+                    .Select(h => (int?)h.KitapSayisi).FirstOrDefaultAsync()
+            };
+
+            foreach (var kk in biten)
+                model.AylikDagilim[kk.OkumaBitisTarihi!.Value.Month - 1]++;
+
+            var kitaplar = biten.Where(kk => kk.Kitap != null).Select(kk => kk.Kitap!).ToList();
+            var sayfali = kitaplar.Where(k => k.SayfaSayisi > 0).ToList();
+            model.EnUzunKitap = sayfali.OrderByDescending(k => k.SayfaSayisi).FirstOrDefault();
+            model.EnKisaKitap = sayfali.Count > 1 ? sayfali.OrderBy(k => k.SayfaSayisi).FirstOrDefault() : null;
+            model.IlkKitap = kitaplar.FirstOrDefault();
+            model.SonKitap = kitaplar.Count > 1 ? kitaplar.LastOrDefault() : null;
+
+            // Türler: kitabın türü, yoksa ilk kategorisi
+            model.Turler = kitaplar
+                .Select(k => !string.IsNullOrWhiteSpace(k.Tur) ? k.Tur! : k.Kategoriler.Select(x => x.Kategori?.Ad).FirstOrDefault(a => !string.IsNullOrWhiteSpace(a)))
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .GroupBy(t => t!)
+                .Select(g => (Tur: g.Key, Sayi: g.Count()))
+                .OrderByDescending(x => x.Sayi).ThenBy(x => x.Tur)
+                .Take(3).ToList();
+
+            // En yüksek puan verdiğin kitap
+            var bitenIdler = kitaplar.Select(k => k.Id).ToList();
+            if (bitenIdler.Count > 0)
+            {
+                var puan = await _context.KitapPuanlari
+                    .Where(p => p.KullaniciId == kullaniciId && bitenIdler.Contains(p.KitapId))
+                    .OrderByDescending(p => p.Puan).ThenByDescending(p => p.PuanTarihi)
+                    .FirstOrDefaultAsync();
+                var puanliKitap = puan == null ? null : kitaplar.FirstOrDefault(k => k.Id == puan.KitapId);
+                if (puan != null && puanliKitap != null)
+                    model.EnYuksekPuanli = (puanliKitap, puan.Puan);
+            }
+
+            // Süre ve seri
+            var oturumlar = await _context.OkumaOturumlari
+                .AsNoTracking()
+                .Where(o => o.Bitis != null && o.Baslangic >= baslangic && o.Baslangic < bitis && o.KullaniciKitaplik!.KullaniciId == kullaniciId)
+                .Select(o => new { o.Baslangic, Bitis = o.Bitis!.Value })
+                .ToListAsync();
+            var oturumGirdileri = oturumlar.Select(o => new OturumGirdi(o.Baslangic, (o.Bitis - o.Baslangic).TotalMinutes)).ToList();
+            model.Dakika = (int)Math.Round(oturumGirdileri.Where(o => o.Dakika >= OkumaOturumu.EnAzDakika).Sum(o => o.Dakika));
+
+            var yilGunlukleri = await _context.OkumaGunlukleri
+                .AsNoTracking()
+                .Where(g => g.KullaniciKitaplik!.KullaniciId == kullaniciId && g.Tarih >= baslangic && g.Tarih < bitis)
+                .Select(g => new GunlukGirdi(g.KullaniciKitaplikId, g.Tarih, g.Sayfa))
+                .ToListAsync();
+            model.EnUzunSeri = OkumaRitmi.Hesapla(bitis.AddDays(-1), yilGunlukleri, oturumGirdileri, [], biten.Select(kk => kk.OkumaBitisTarihi!.Value)).EnUzunSeri;
+
+            model.AlintiSayisi = await _context.Alintilar.CountAsync(a => a.KullaniciId == kullaniciId && a.Tarih >= baslangic && a.Tarih < bitis);
+            model.KenarNotuSayisi = await _context.KenarNotlari.CountAsync(n => n.KullaniciId == kullaniciId && n.Tarih >= baslangic && n.Tarih < bitis);
+
+            return View(model);
         }
 
         // Okuma istatistikleri sayfası
@@ -693,6 +995,31 @@ namespace KitapYonetimSistemi.Controllers
                 .OrderByDescending(g => g.Tarih)
                 .Take(8)
                 .ToListAsync();
+
+            // Okuma ritmi: seri, günlük tempo, süre ve tahmini bitiş
+            var gunlukler = await _context.OkumaGunlukleri
+                .AsNoTracking()
+                .Where(g => g.KullaniciKitaplik!.KullaniciId == kullanici.Id)
+                .Select(g => new GunlukGirdi(g.KullaniciKitaplikId, g.Tarih, g.Sayfa))
+                .ToListAsync();
+
+            var kapaliOturumlar = await _context.OkumaOturumlari
+                .AsNoTracking()
+                .Where(o => o.Bitis != null && o.KullaniciKitaplik!.KullaniciId == kullanici.Id)
+                .Select(o => new { o.Baslangic, Bitis = o.Bitis!.Value })
+                .ToListAsync();
+            var oturumlar = kapaliOturumlar.Select(o => new OturumGirdi(o.Baslangic, (o.Bitis - o.Baslangic).TotalMinutes)).ToList();
+
+            var devamEdenler = istatistikler.SimdiOkuduklarim
+                .Select(kk => new DevamEdenKitap(kk.Id, kk.Kitap?.KitapAdi ?? "", kk.MevcutSayfa ?? 0, kk.Kitap?.SayfaSayisi))
+                .ToList();
+
+            var bitisTarihleri = await _context.KullaniciKitapliklari
+                .Where(kk => kk.KullaniciId == kullanici.Id && kk.OkumaDurumu == OkumaDurumu.Okundu && kk.OkumaBitisTarihi != null)
+                .Select(kk => kk.OkumaBitisTarihi!.Value)
+                .ToListAsync();
+
+            istatistikler.Ritim = OkumaRitmi.Hesapla(DateTime.Now, gunlukler, oturumlar, devamEdenler, bitisTarihleri);
 
             return View(istatistikler);
         }

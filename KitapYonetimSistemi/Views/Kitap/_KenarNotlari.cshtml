@@ -1,0 +1,93 @@
+@model KitapYonetimSistemi.Models.KenarNotlariViewModel
+
+@{
+    var giris = !string.IsNullOrEmpty(Model.KullaniciId);
+    string Ad(string? kullaniciAdi) => string.IsNullOrEmpty(kullaniciAdi) ? "okur" : kullaniciAdi.Split('@')[0];
+    var maks = Model.KitapSayfaSayisi ?? 20000;
+}
+
+<section class="kenar-bolum" id="kenar-notlari">
+    <div class="bolum-baslik">
+        <h2>Kenar notları</h2>
+        <span class="etiket">@Model.Isi.ToplamIsaret işaret</span>
+    </div>
+
+    @* Isı şeridi: okurların herkese açık alıntı ve notlarıyla işaretlediği sayfalar *@
+    @if (Model.Isi.ToplamIsaret > 0)
+    {
+        <div class="isi-serit" role="img" aria-label="Okurların işaretlediği sayfaların yoğunluğu">
+            @foreach (var d in Model.Isi.Dilimler)
+            {
+                <span class="isi-hucre seviye-@d.Seviye" title="@(d.Bas == d.Son ? $"s. {d.Bas}" : $"s. {d.Bas}-{d.Son}")@(d.Sayi > 0 ? $": {d.Sayi} işaret" : "")"></span>
+            }
+        </div>
+        <div class="isi-alt">
+            <span>1</span>
+            <span class="isi-enler">
+                En çok işaretlenen:
+                @string.Join(", ", Model.Isi.EnCokIsaretlenen.Select(e => $"s. {e.Sayfa} ({e.Sayi})"))
+            </span>
+            <span>@Model.Isi.ToplamSayfa</span>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">Henüz kimse bu kitabın sayfalarını işaretlememiş. İlk notu sen bırak; herkese açık notlar ve sayfa numaralı alıntılar burada ısı haritasına dönüşür.</p>
+    }
+
+    @if (Model.Notlar.Any())
+    {
+        <ul class="kenar-liste">
+            @foreach (var n in Model.Notlar)
+            {
+                var benim = n.KullaniciId == Model.KullaniciId;
+                <li>
+                    <span class="kenar-sayfa">s. @n.SayfaNo</span>
+                    <div class="kenar-icerik">
+                        <p>@n.Metin</p>
+                        <div class="kenar-alt">
+                            @if (benim)
+                            {
+                                <span>@(n.HerkeseAcik ? "Herkese açık" : "Yalnızca sen")</span>
+                            }
+                            else
+                            {
+                                <span>@Ad(n.Kullanici?.UserName)</span>
+                            }
+                            <span>@n.Tarih.ToString("dd.MM.yyyy")</span>
+                            @if (benim)
+                            {
+                                <form asp-action="KenarNotuSil" method="post" onsubmit="return confirm('Not silinsin mi?');" class="d-inline">
+                                    <input type="hidden" name="notId" value="@n.Id" />
+                                    <button type="submit" class="cikar-btn">Sil</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+
+    @if (giris)
+    {
+        <form asp-action="KenarNotuEkle" method="post" class="kenar-form">
+            <input type="hidden" name="kitapId" value="@Model.KitapId" />
+            <div class="row g-2">
+                <div class="col-4 col-md-2">
+                    <input type="number" name="sayfaNo" class="form-control" min="1" max="@maks" placeholder="Sayfa" required aria-label="Sayfa numarası" />
+                </div>
+                <div class="col-8 col-md-10">
+                    <input type="text" name="metin" class="form-control" maxlength="1000" placeholder="Bu sayfa için bir not bırak..." required aria-label="Not" />
+                </div>
+            </div>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" name="herkeseAcik" value="true" id="notHerkeseAcik" />
+                    <label class="form-check-label" for="notHerkeseAcik">Herkese açık olsun (ısı haritasına eklenir)</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Notu ekle</button>
+            </div>
+        </form>
+    }
+</section>

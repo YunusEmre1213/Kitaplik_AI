@@ -8,7 +8,7 @@
     @if (SignInManager.IsSignedIn(User))
     {
         <li class="nav-item">
-            <a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Hesabım"><i class="bi bi-person-circle me-1"></i>@User.Identity?.Name</a>
+            <a class="nav-link kullanici" asp-area="Identity" asp-page="/Account/Manage/Index" title="Hesabım">@User.Identity?.Name</a>
         </li>
         <li class="nav-item">
             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
@@ -22,7 +22,7 @@
             <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">Giriş Yap</a>
         </li>
         <li class="nav-item">
-            <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Register">Kayıt Ol</a>
+            <a class="btn btn-primary btn-sm ms-md-2" asp-area="Identity" asp-page="/Account/Register">Kayıt Ol</a>
         </li>
     }
 </ul>

@@ -1,4 +1,4 @@
-@model List<KitapYonetimSistemi.Services.DisKitapSonuc>
+﻿@model List<KitapYonetimSistemi.Services.DisKitapSonuc>
 
 @{
     ViewData["Title"] = "Dış Kaynaktan Kitap Ekle";
@@ -13,7 +13,7 @@
     </ol>
 </nav>
 
-<h1 class="page-title">🔎 Dış Kaynaktan Kitap Ekle</h1>
+<h1 class="page-title">Dış Kaynaktan Kitap Ekle</h1>
 <p class="text-muted">Kitap adı, yazar ya da ISBN ile arayın (Open Library, Google Books anahtarı tanımlıysa Google Books). Seçtiğiniz kitabın bilgileri ve kapağı otomatik gelir.</p>
 
 @if (TempData["Mesaj"] != null)
@@ -86,7 +86,7 @@
                                 <form asp-action="DisKaynakEkle" method="post">
                                     <input type="hidden" name="disKaynakId" value="@sonuc.DisKaynakId" />
                                     <input type="hidden" name="arama" value="@arama" />
-                                    <button type="submit" class="btn btn-sm btn-success">➕ Ekle</button>
+                                    <button type="submit" class="btn btn-sm btn-success">Ekle</button>
                                 </form>
                             }
                         </td>

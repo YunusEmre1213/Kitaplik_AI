@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace KitapYonetim.Importer;
@@ -159,8 +159,13 @@ public static class OlAyristirici
     // ---------- yardımcılar ----------
 
     // Eski kayıtlarda harfler "ayrık" saklanabilir (u + ayrı nokta işareti). Aramanın çalışması için NFC biçimine çevrilir.
-    private static string? Nfc(string? metin) =>
-        metin is null ? null : metin.Normalize(System.Text.NormalizationForm.FormC);
+    // Türkçe noktasız ı + birleşik işaret (örn. "mesı^hı^") NFC ile birleşemez; î/í/ĭ karşılığına çevrilir.
+    private static string? Nfc(string? metin)
+    {
+        if (metin is null) return null;
+        metin = metin.Replace("ı̂", "î").Replace("ı́", "í").Replace("ı̆", "ĭ");
+        return metin.Normalize(System.Text.NormalizationForm.FormC);
+    }
 
     private static string? Metin(JsonElement e, string ad) =>
         e.ValueKind == JsonValueKind.Object && e.TryGetProperty(ad, out var p) && p.ValueKind == JsonValueKind.String

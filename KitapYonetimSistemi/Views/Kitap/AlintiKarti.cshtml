@@ -1,0 +1,197 @@
+﻿@model KitapYonetimSistemi.Models.Alinti
+
+@{
+    ViewData["Title"] = "Alıntı kartı";
+    var kitap = Model.Kitap!;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Kitaplar</a></li>
+        <li class="breadcrumb-item"><a asp-action="Detay" asp-route-id="@kitap.Id">@kitap.KitapAdi</a></li>
+        <li class="breadcrumb-item active">Alıntı kartı</li>
+    </ol>
+</nav>
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Paylaş</span>
+        <h1>Alıntı kartı</h1>
+    </div>
+</div>
+
+<div class="kart-duzen">
+    <div class="kart-onizleme">
+        <canvas id="kartCanvas" aria-label="Alıntı kartı önizlemesi"></canvas>
+    </div>
+
+    <div class="kart-ayar">
+        <div class="mb-4">
+            <div class="etiket mb-2">Tema</div>
+            <div class="kart-secenek" id="temaSecenek">
+                <button type="button" class="aktif" data-tema="krem">Krem</button>
+                <button type="button" data-tema="bordo">Bordo</button>
+                <button type="button" data-tema="koyu">Koyu</button>
+            </div>
+        </div>
+        <div class="mb-4">
+            <div class="etiket mb-2">Boyut</div>
+            <div class="kart-secenek" id="boyutSecenek">
+                <button type="button" class="aktif" data-boyut="dikey">Dikey (4:5)</button>
+                <button type="button" data-boyut="kare">Kare (1:1)</button>
+                <button type="button" data-boyut="hikaye">Hikâye (9:16)</button>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-primary" id="indirBtn">PNG olarak indir</button>
+            <button type="button" class="btn btn-outline-secondary" id="paylasBtn" hidden>Paylaş</button>
+        </div>
+        <p class="text-muted small mt-3 mb-0">Kartta kullanıcı adı yer almaz; yalnızca alıntı, kitap adı, yazar ve sayfa numarası bulunur.</p>
+    </div>
+</div>
+
+<div id="kartVeri" hidden
+     data-metin="@Model.Metin"
+     data-kitap="@kitap.KitapAdi"
+     data-yazar="@kitap.YazarAdi"
+     data-sayfa="@(Model.SayfaNo?.ToString() ?? "")"></div>
+
+@section Scripts {
+    <script>
+    (function () {
+        var veri = document.getElementById('kartVeri').dataset;
+        var canvas = document.getElementById('kartCanvas');
+        var ctx = canvas.getContext('2d');
+
+        var TEMALAR = {
+            krem:  { bg: '#F4EFE6', ink: '#29251F', muted: '#6B6256', vurgu: '#783D36', altin: '#C6A66B' },
+            bordo: { bg: '#783D36', ink: '#F4EFE6', muted: '#D9C3BE', vurgu: '#F4EFE6', altin: '#C6A66B' },
+            koyu:  { bg: '#1B1713', ink: '#EDE5D6', muted: '#A69B89', vurgu: '#DE9A8D', altin: '#C6A66B' }
+        };
+        var BOYUTLAR = { dikey: [1080, 1350], kare: [1080, 1080], hikaye: [1080, 1920] };
+        var tema = 'krem', boyut = 'dikey';
+
+        function satirlaraBol(metin, genislik) {
+            var satirlar = [];
+            metin.split('\n').forEach(function (paragraf) {
+                var kelimeler = paragraf.split(/\s+/).filter(Boolean), satir = '';
+                if (kelimeler.length === 0) { satirlar.push(''); return; }
+                kelimeler.forEach(function (k) {
+                    var deneme = satir ? satir + ' ' + k : k;
+                    if (ctx.measureText(deneme).width > genislik && satir) { satirlar.push(satir); satir = k; }
+                    else satir = deneme;
+                });
+                satirlar.push(satir);
+            });
+            return satirlar;
+        }
+
+        function ciz() {
+            var b = BOYUTLAR[boyut], W = b[0], H = b[1], t = TEMALAR[tema];
+            canvas.width = W; canvas.height = H;
+            var kenar = 96, icGenislik = W - kenar * 2;
+
+            ctx.fillStyle = t.bg; ctx.fillRect(0, 0, W, H);
+
+            // üst: marka ve çift çizgi
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillStyle = t.muted;
+            ctx.font = '600 24px Inter, sans-serif';
+            if ('letterSpacing' in ctx) ctx.letterSpacing = '6px';
+            ctx.fillText('SATIR ARASI', kenar, kenar + 10);
+            if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+            ctx.fillStyle = t.altin;
+            ctx.fillRect(kenar, kenar + 34, icGenislik, 2);
+            ctx.globalAlpha = .55; ctx.fillRect(kenar, kenar + 42, icGenislik, 1); ctx.globalAlpha = 1;
+
+            // büyük tırnak işareti
+            ctx.fillStyle = t.altin;
+            ctx.font = '700 260px "Playfair Display", Georgia, serif';
+            ctx.fillText('“', kenar - 8, kenar + 300);
+
+            // alıntı metni: sığana kadar yazıyı küçült
+            var metin = veri.metin.trim();
+            if (metin.length > 700) metin = metin.slice(0, 697).trimEnd() + '…';
+            var ustY = kenar + 270, altY = H - 330, alan = altY - ustY, boy, satirlar, sat;
+            for (boy = 68; boy >= 28; boy -= 2) {
+                ctx.font = 'italic 400 ' + boy + 'px Lora, Georgia, serif';
+                satirlar = satirlaraBol(metin, icGenislik);
+                sat = Math.round(boy * 1.45);
+                if (satirlar.length * sat <= alan) break;
+            }
+            ctx.fillStyle = t.ink;
+            // Uzun (hikâye) boyutta kısa alıntılar boşlukta kalmasın diye dikey ortalanır
+            var ortala = boyut === 'hikaye' ? Math.max(0, (alan - satirlar.length * sat) / 2) : 0;
+            var y = ustY + ortala + sat * 0.8;
+            satirlar.forEach(function (s) { ctx.fillText(s, kenar, y); y += sat; });
+
+            // alt: kitap bilgisi
+            var altCizgiY = H - 250;
+            ctx.fillStyle = t.altin; ctx.fillRect(kenar, altCizgiY, icGenislik, 2);
+            ctx.fillStyle = t.ink;
+            ctx.font = '700 44px "Playfair Display", Georgia, serif';
+            var tumBaslik = satirlaraBol(veri.kitap, icGenislik);
+            var baslik = tumBaslik.slice(0, 2);
+            if (tumBaslik.length > 2) {
+                // Kısaltılan son satır, "…" ile birlikte kenar boşluğuna sığacak şekilde daraltılır
+                var son = baslik[1];
+                while (son.length > 1 && ctx.measureText(son + '…').width > icGenislik) son = son.slice(0, -1).trimEnd();
+                baslik[1] = son + '…';
+            }
+            var by = altCizgiY + 66;
+            baslik.forEach(function (s) { ctx.fillText(s, kenar, by); by += 54; });
+            ctx.fillStyle = t.muted;
+            ctx.font = '500 30px Inter, sans-serif';
+            var alt = veri.yazar || '';
+            if (veri.sayfa) alt += (alt ? '  ·  ' : '') + 's. ' + veri.sayfa;
+            ctx.fillText(alt, kenar, Math.min(by + 4, H - kenar + 20));
+        }
+
+        function hazirla() {
+            // Yazı tipleri yüklenmeden çizilirse yedek yazı tipi kullanılır
+            var yuklemeler = [
+                document.fonts.load('700 100px "Playfair Display"'),
+                document.fonts.load('italic 400 40px Lora'),
+                document.fonts.load('600 24px Inter'),
+                document.fonts.load('500 30px Inter')
+            ];
+            Promise.all(yuklemeler).catch(function () { }).then(ciz);
+        }
+
+        function secim(kapsayici, ozellik, uygula) {
+            document.getElementById(kapsayici).addEventListener('click', function (e) {
+                var d = e.target.closest('button'); if (!d) return;
+                this.querySelectorAll('button').forEach(function (x) { x.classList.remove('aktif'); });
+                d.classList.add('aktif'); uygula(d.dataset[ozellik]); ciz();
+            });
+        }
+        secim('temaSecenek', 'tema', function (v) { tema = v; });
+        secim('boyutSecenek', 'boyut', function (v) { boyut = v; });
+
+        function blob() { return new Promise(function (r) { canvas.toBlob(r, 'image/png'); }); }
+        var dosyaAdi = 'satir-arasi-alinti.png';
+
+        document.getElementById('indirBtn').addEventListener('click', function () {
+            blob().then(function (b) {
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(b); a.download = dosyaAdi; a.click();
+                setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+            });
+        });
+
+        var paylas = document.getElementById('paylasBtn');
+        if (navigator.canShare && navigator.share) {
+            paylas.hidden = false;
+            paylas.addEventListener('click', function () {
+                blob().then(function (b) {
+                    var dosya = new File([b], dosyaAdi, { type: 'image/png' });
+                    if (navigator.canShare({ files: [dosya] })) navigator.share({ files: [dosya], title: 'Satır Arası' }).catch(function () { });
+                });
+            });
+        }
+
+        hazirla();
+    })();
+    </script>
+}

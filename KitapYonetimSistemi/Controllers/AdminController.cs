@@ -64,11 +64,31 @@ namespace KitapYonetimSistemi.Controllers
         }
         // EKLE/DÜZENLE/SİL/LİSTELE
 
-        public async Task<IActionResult> KitapListesi()
+        public async Task<IActionResult> KitapListesi(string? arama, int sayfa = 1)
         {
-            var kitaplar = await _context.Kitaplar
-                .OrderByDescending(k => k.EklenmeTarihi)
+            const int sayfaBoyutu = 50;
+            var sorgu = _context.Kitaplar.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(arama))
+            {
+                arama = arama.Trim();
+                sorgu = sorgu.Where(k => k.KitapAdi.Contains(arama) || k.YazarAdi.Contains(arama));
+            }
+
+            var toplam = await sorgu.CountAsync();
+            var toplamSayfa = Math.Max(1, (int)Math.Ceiling(toplam / (double)sayfaBoyutu));
+            sayfa = Math.Clamp(sayfa, 1, toplamSayfa);
+
+            var kitaplar = await sorgu
+                .OrderByDescending(k => k.EklenmeTarihi).ThenByDescending(k => k.Id)
+                .Skip((sayfa - 1) * sayfaBoyutu)
+                .Take(sayfaBoyutu)
                 .ToListAsync();
+
+            ViewBag.Arama = arama;
+            ViewBag.Sayfa = sayfa;
+            ViewBag.ToplamSayfa = toplamSayfa;
+            ViewBag.Toplam = toplam;
             return View(kitaplar);
         }
 

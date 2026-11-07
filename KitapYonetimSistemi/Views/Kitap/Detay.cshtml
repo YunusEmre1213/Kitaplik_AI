@@ -21,43 +21,34 @@
 }
 
 <!-- Kitap Bilgileri -->
-<div class="card mb-4">
-    <div class="row g-0">
-        <div class="col-md-4">
-            <div class="p-4"><partial name="_Kapak" model='KapakModel.Of(Model, "lg")' /></div>
-        </div>
-        <div class="col-md-8">
-            <div class="card-body">
-                <h1 class="card-title text-primary">@Model.KitapAdi</h1>
-                <h5 class="card-subtitle mb-3 text-muted">Yazar: @Model.YazarAdi</h5>
-                <p><strong>Yayın Yılı:</strong> @Model.YayinYili</p>
-                @if (Model.SayfaSayisi.HasValue)
-                {
-                    <p><strong>Sayfa Sayısı:</strong> @Model.SayfaSayisi</p>
-                }
-                @if (!string.IsNullOrEmpty(Model.Tur))
-                {
-                    <p><strong>Tür:</strong> @Model.Tur</p>
-                }
-                <p><strong>Eklenme Tarihi:</strong> @Model.EklenmeTarihi.ToString("dd MMMM yyyy")</p>
-                <hr />
-                <h5>Açıklama:</h5>
-                @if (string.IsNullOrWhiteSpace(Model.Aciklama))
-                {
-                    <p class="text-muted fst-italic">Bu kitap için henüz bir açıklama eklenmemiş.</p>
-                }
-                else
-                {
-                    <p class="lead">@Model.Aciklama</p>
-                }
-            </div>
-        </div>
+<div class="detay-ust">
+    <div class="detay-kapak"><partial name="_Kapak" model='KapakModel.Of(Model, "lg")' /></div>
+    <div>
+        @if (!string.IsNullOrEmpty(Model.Tur)) { <span class="etiket">@Model.Tur</span> }
+        <h1 class="detay-baslik">@Model.KitapAdi</h1>
+        <p class="detay-yazar">@(string.IsNullOrWhiteSpace(Model.YazarAdi) ? "Yazar bilinmiyor" : Model.YazarAdi)</p>
+        <dl class="detay-bilgi">
+            @if (Model.YayinYili > 0) { <div><dt>Yayın yılı</dt><dd>@Model.YayinYili</dd></div> }
+            @if (Model.SayfaSayisi.HasValue) { <div><dt>Sayfa</dt><dd>@Model.SayfaSayisi</dd></div> }
+            @if (!string.IsNullOrEmpty(Model.Dil)) { <div><dt>Dil</dt><dd>@Model.Dil.ToUpperInvariant()</dd></div> }
+            @if (!string.IsNullOrEmpty(Model.Isbn13 ?? Model.Isbn10)) { <div><dt>ISBN</dt><dd>@(Model.Isbn13 ?? Model.Isbn10)</dd></div> }
+        </dl>
+        @if (string.IsNullOrWhiteSpace(Model.Aciklama))
+        {
+            <p class="text-muted fst-italic">Bu kitap için henüz bir açıklama eklenmemiş.</p>
+        }
+        else
+        {
+            <p class="detay-aciklama">@Model.Aciklama</p>
+        }
     </div>
 </div>
 
+<partial name="_KenarNotlari" model="(KenarNotlariViewModel)ViewBag.KenarNotlari" />
+
 <!-- Puan Sistemi -->
 <div class="card mb-4">
-    <div class="card-header bg-warning text-white">⭐ Kitap Puanı</div>
+    <div class="card-header bg-warning text-white">★ Kitap Puanı</div>
     <div class="card-body text-center">
         @if (Model.ToplamPuanSayisi > 0)
         {
@@ -67,7 +58,7 @@
                 {
                     if (i <= Math.Round(Model.OrtalamaPuan))
                     {
-                        <span>⭐</span>
+                        <span>★</span>
                     }
                     else
                     {
@@ -88,7 +79,7 @@
         <h5 class="mb-3">
             @if (ViewBag.KullaniciPuani != null)
             {
-                <span>Sizin Puanınız: @ViewBag.KullaniciPuani ⭐</span>
+                <span>Sizin Puanınız: @ViewBag.KullaniciPuani ★</span>
             }
             else
             {
@@ -105,7 +96,7 @@
                 {
                     <button type="button" class="btn btn-link p-0 text-decoration-none @(ViewBag.KullaniciPuani >= i ? "text-warning" : "text-secondary")"
                             style="font-size: 2.5rem;" onclick="setPuan(@i)">
-                        ⭐
+                        ★
                     </button>
                 }
             </div>
@@ -122,7 +113,7 @@
         .ToList();
 }
 <div class="card mb-4">
-    <div class="card-header">❝ Alıntılar (@alintilar.Count)</div>
+    <div class="card-header">Alıntılar (@alintilar.Count)</div>
     <div class="card-body">
         @if (TempData["Hata"] != null)
         {
@@ -137,18 +128,19 @@
                 <figure class="border-start border-4 border-warning ps-3 mb-4">
                     <blockquote class="blockquote mb-1" style="white-space: pre-line;">@alinti.Metin</blockquote>
                     <figcaption class="small text-muted">
-                        👤 @alinti.Kullanici?.UserName
+                        @(alinti.Kullanici?.UserName?.Split('@')[0])
                         @if (alinti.SayfaNo.HasValue)
                         {
                             <span> · s. @alinti.SayfaNo</span>
                         }
                         · @alinti.Tarih.ToString("dd.MM.yyyy")
                     </figcaption>
-                    <div class="d-flex gap-2 mt-2">
+                    <div class="d-flex gap-2 mt-2 align-items-center">
+                        <a asp-action="AlintiKarti" asp-route-id="@alinti.Id" class="btn btn-sm btn-outline-secondary">Kart yap</a>
                         <form asp-action="AlintiBegen" method="post">
                             <input type="hidden" name="alintiId" value="@alinti.Id" />
                             <button type="submit" class="btn btn-sm @(begendi ? "btn-danger" : "btn-outline-danger")">
-                                ❤ @alinti.Begeniler.Count
+                                ♥ @alinti.Begeniler.Count
                             </button>
                         </form>
                         @if (alinti.KullaniciId == mevcutKullaniciId)
@@ -189,7 +181,7 @@
 
 <!-- Yorumlar -->
 <div class="card mb-4">
-    <div class="card-header">💬 Yorumlar (@(Model.Yorumlar?.Count ?? 0))</div>
+    <div class="card-header">Yorumlar (@(Model.Yorumlar?.Count ?? 0))</div>
     <div class="card-body">
         @if (Model.Yorumlar != null && Model.Yorumlar.Any())
         {
@@ -197,13 +189,13 @@
             {
                 <div class="border-start border-4 border-primary ps-3 mb-3">
                     <h6 class="text-muted mb-2">
-                        👤 @yorum.Kullanici.UserName
+                        @yorum.Kullanici.UserName
                         <small>- @yorum.YorumTarihi.ToString("dd.MM.yyyy HH:mm")</small>
                     </h6>
                     @if (yorum.Spoiler)
                     {
                         <details>
-                            <summary class="text-warning">⚠️ Bu yorum spoiler içeriyor, görmek için tıklayın</summary>
+                            <summary class="text-warning">Bu yorum spoiler içeriyor, görmek için tıklayın</summary>
                             <p class="mb-0 mt-2">@yorum.YorumMetni</p>
                         </details>
                     }

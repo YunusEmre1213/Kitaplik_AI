@@ -1,48 +1,91 @@
-﻿@{
+﻿@model List<KitapYonetimSistemi.Models.Kitap>
+@{
     ViewData["Title"] = "Ana Sayfa";
     var girisli = User.Identity?.IsAuthenticated == true;
     var okur = User.IsInRole("User");
+    var raf = Model.Take(3).ToList();
 }
 
-<section class="ana-hero">
-    <h1>Okuduklarını düzenle,<br /><span>yenilerini keşfet.</span></h1>
-    <p>Kitaplığını kur, okuma hedeflerini takip et, düşüncelerini paylaş ve ruh haline göre kitap önerileri al.</p>
-    @if (!girisli)
+<section class="ana-giris">
+    <div>
+        <span class="etiket">Kişisel okuma defteri</span>
+        <h1>Okuduğun her kitap, bir <em>satır arası</em> bırakır.</h1>
+        <p>Kitaplığını kur, okuma hedeflerini ve notlarını sakla, ruh haline uygun yeni kitaplar bul.</p>
+        @if (!girisli)
+        {
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary px-4">Kayıt ol</a>
+                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-secondary px-4">Giriş yap</a>
+            </div>
+        }
+        else if (okur)
+        {
+            <a asp-controller="Kitap" asp-action="Index" class="btn btn-primary px-4">Kataloğa göz at</a>
+        }
+        else if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Admin" asp-action="Index" class="btn btn-primary px-4">Yönetim paneli</a>
+        }
+    </div>
+    @if (raf.Count > 0)
     {
-        <div class="d-flex justify-content-center gap-2">
-            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary px-4">Ücretsiz Başla</a>
-            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-secondary px-4">Giriş Yap</a>
+        <div class="ana-raf" aria-hidden="true">
+            @foreach (var k in raf)
+            {
+                <partial name="_Kapak" model='KapakModel.Of(k, "md")' />
+            }
         </div>
-    }
-    else if (okur)
-    {
-        <a asp-controller="Kitap" asp-action="Index" class="btn btn-primary px-4">Kitaplara Göz At</a>
-    }
-    else if (User.IsInRole("Admin"))
-    {
-        <a asp-controller="Admin" asp-action="Index" class="btn btn-primary px-4">Yönetim Paneline Git</a>
     }
 </section>
 
-<section class="ana-ozellikler">
-    <a class="ana-ozellik" asp-controller="Kitap" asp-action="Index">
-        <div class="ikon"><i class="bi bi-journal-album"></i></div>
-        <h5>Kataloğu keşfet</h5>
-        <p>Binlerce kitap arasında yazar, tür ve puana göre ara.</p>
-    </a>
-    <a class="ana-ozellik" asp-controller="Kitap" asp-action="Kitapligim">
-        <div class="ikon"><i class="bi bi-bookmarks"></i></div>
-        <h5>Kitaplığını kur</h5>
-        <p>Okunacak, okuyorum ve okundu listeleriyle ilerlemeni izle.</p>
-    </a>
-    <a class="ana-ozellik" asp-controller="AiLibrary" asp-action="RuhHali">
-        <div class="ikon"><i class="bi bi-stars"></i></div>
-        <h5>Ruh haline göre öneri</h5>
-        <p>Yapay zekâ, o anki modunla eşleşen kitapları önerir.</p>
-    </a>
-    <a class="ana-ozellik" asp-controller="Tartisma" asp-action="Index">
-        <div class="ikon"><i class="bi bi-chat-square-text"></i></div>
-        <h5>Tartışmalara katıl</h5>
-        <p>Diğer okurlarla kitaplar üzerine konuş, yorum yaz.</p>
-    </a>
+@if (Model.Count > 3)
+{
+    <section class="ana-bolum">
+        <div class="bolum-baslik">
+            <h2>Yeni eklenenler</h2>
+            @if (okur) { <a asp-controller="Kitap" asp-action="Index" class="etiket">Tümünü gör &rarr;</a> }
+        </div>
+        <div class="yeni-raf">
+            @foreach (var k in Model.Skip(3))
+            {
+                <div class="kitap-kart">
+                    @if (okur)
+                    {
+                        <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@k.Id" class="kitap-baglanti" title="@k.KitapAdi">
+                            <partial name="_Kapak" model='KapakModel.Of(k, "md")' />
+                            <div class="kitap-ad">@k.KitapAdi</div>
+                        </a>
+                    }
+                    else
+                    {
+                        <partial name="_Kapak" model='KapakModel.Of(k, "md")' />
+                        <div class="kitap-ad">@k.KitapAdi</div>
+                    }
+                    <div class="kitap-yazar">@k.YazarAdi</div>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+<section class="ana-bolum">
+    <div class="bolum-baslik"><h2>Neler yapabilirsin</h2></div>
+    <ol class="ana-liste">
+        <li>
+            <span class="no">01</span>
+            <div><h3><a asp-controller="Kitap" asp-action="Index">Kataloğu keşfet</a></h3><p>Yazara, türe ve puana göre kitap ara. Bulamadığın kitabı dış kaynaklardan ekle.</p></div>
+        </li>
+        <li>
+            <span class="no">02</span>
+            <div><h3><a asp-controller="Kitap" asp-action="Kitapligim">Kitaplığını kur</a></h3><p>Okunacak, okuyorum ve okundu listeleriyle ilerlemeni, sayfa notlarını ve alıntılarını tut.</p></div>
+        </li>
+        <li>
+            <span class="no">03</span>
+            <div><h3><a asp-controller="AiLibrary" asp-action="RuhHali">Ruh haline göre öneri al</a></h3><p>Nasıl hissettiğini yaz, sana uygun kitapları yapay zekâ listelesin.</p></div>
+        </li>
+        <li>
+            <span class="no">04</span>
+            <div><h3><a asp-controller="Tartisma" asp-action="Index">Tartışmalara katıl</a></h3><p>Diğer okurlarla kitaplar üzerine konuş, yorum yaz.</p></div>
+        </li>
+    </ol>
 </section>

@@ -1,21 +1,33 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using KitapYonetimSistemi.Models;
+using KitapYonetimSistemi.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace KitapYonetimSistemi.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
-        public IActionResult Index()
+        // Ana sayfada gösterilecek son eklenen kitaplar (kapaklı ve açıklamalı olanlar öne alınır)
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var yeniler = await _context.Kitaplar
+                .AsNoTracking()
+                .Where(k => k.KapakResmiUrl != null && k.KapakResmiUrl != "")
+                .OrderByDescending(k => k.Aciklama != "")
+                .ThenByDescending(k => k.Id)
+                .Take(8)
+                .ToListAsync();
+            return View(yeniler);
         }
 
         public IActionResult Privacy()

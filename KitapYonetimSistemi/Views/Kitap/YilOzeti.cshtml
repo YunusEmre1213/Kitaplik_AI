@@ -1,0 +1,139 @@
+﻿@model KitapYonetimSistemi.Models.YilOzetiViewModel
+
+@{
+    ViewData["Title"] = $"{Model.Yil} okuma özeti";
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    string Sure(int dk) => dk >= 60 ? $"{dk / 60} sa {dk % 60} dk" : $"{dk} dk";
+    var aylar = tr.DateTimeFormat.AbbreviatedMonthNames;
+    var enYuksekAy = Math.Max(1, Model.AylikDagilim.Max());
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Kitapligim">Kitaplığım</a></li>
+        <li class="breadcrumb-item"><a asp-action="OkumaIstatistiklerim">İstatistikler</a></li>
+        <li class="breadcrumb-item active">Yıl özeti</li>
+    </ol>
+</nav>
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Yıl özeti</span>
+        <h1>@Model.Yil okuma yılın</h1>
+    </div>
+    @if (Model.Yillar.Count > 1)
+    {
+        <div class="yil-secici">
+            @foreach (var y in Model.Yillar)
+            {
+                <a asp-action="YilOzeti" asp-route-yil="@y" class="@(y == Model.Yil ? "aktif" : "")">@y</a>
+            }
+        </div>
+    }
+</div>
+
+@if (Model.Bos)
+{
+    <p class="text-muted py-4">@Model.Yil yılında henüz bitirdiğin bir kitap ya da kaydedilmiş bir okuma oturumun yok. Kitapları bitirdikçe ve oturum başlattıkça bu sayfa dolar.</p>
+}
+else
+{
+    <section class="yil-gosterge">
+        <div>
+            <div class="yil-sayi">@Model.KitapSayisi</div>
+            <div class="stat-label">kitap bitirdin@(Model.HedefKitapSayisi.HasValue ? $" (hedef: {Model.HedefKitapSayisi})" : "")</div>
+        </div>
+        <div>
+            <div class="yil-sayi">@Model.SayfaSayisi.ToString("N0", tr)</div>
+            <div class="stat-label">sayfa</div>
+        </div>
+        <div>
+            <div class="yil-sayi">@(Model.Dakika > 0 ? (Model.Dakika / 60.0).ToString("0.#", tr) : "0")</div>
+            <div class="stat-label">saat kayıtlı okuma süresi</div>
+        </div>
+        <div>
+            <div class="yil-sayi">@Model.EnUzunSeri</div>
+            <div class="stat-label">gün en uzun seri</div>
+        </div>
+    </section>
+
+    @if (Model.KitapSayisi > 0)
+    {
+        <section class="ana-bolum">
+            <div class="bolum-baslik"><h2>Ay ay</h2><span class="etiket">En çok @aylar[Model.EnCokOkunanAy - 1] ayında bitirdin</span></div>
+            <div class="ritim-grafik" style="height: 90px;" role="img" aria-label="Aylara göre bitirilen kitaplar">
+                @for (var i = 0; i < 12; i++)
+                {
+                    var sayi = Model.AylikDagilim[i];
+                    <div class="ritim-sutun" title="@aylar[i]: @sayi kitap"><span class="@(sayi == 0 ? "bos" : "")" style="height: @(sayi == 0 ? 0 : Math.Max(8, sayi * 100 / enYuksekAy))%"></span></div>
+                }
+            </div>
+            <div class="ay-etiketleri">
+                @for (var i = 0; i < 12; i++) { <span>@aylar[i]</span> }
+            </div>
+        </section>
+
+        <section class="ana-bolum">
+            <div class="bolum-baslik"><h2>Öne çıkanlar</h2></div>
+            <ol class="ana-liste">
+                @if (Model.EnYuksekPuanli is { } puanli)
+                {
+                    <li><span class="no">@(puanli.Puan)/5</span><div><h3><a asp-action="Detay" asp-route-id="@puanli.Kitap.Id">@puanli.Kitap.KitapAdi</a></h3><p>En yüksek puan verdiğin kitap.</p></div></li>
+                }
+                @if (Model.EnUzunKitap is { } uzun)
+                {
+                    <li><span class="no">@uzun.SayfaSayisi</span><div><h3><a asp-action="Detay" asp-route-id="@uzun.Id">@uzun.KitapAdi</a></h3><p>Yılın en uzun kitabı, sayfa sayısıyla.</p></div></li>
+                }
+                @if (Model.EnKisaKitap is { } kisa)
+                {
+                    <li><span class="no">@kisa.SayfaSayisi</span><div><h3><a asp-action="Detay" asp-route-id="@kisa.Id">@kisa.KitapAdi</a></h3><p>Yılın en kısa kitabı.</p></div></li>
+                }
+                @if (Model.IlkKitap is { } ilk)
+                {
+                    <li><span class="no">ilk</span><div><h3><a asp-action="Detay" asp-route-id="@ilk.Id">@ilk.KitapAdi</a></h3><p>Yılın ilk bitirdiğin kitabı.</p></div></li>
+                }
+                @if (Model.SonKitap is { } son)
+                {
+                    <li><span class="no">son</span><div><h3><a asp-action="Detay" asp-route-id="@son.Id">@son.KitapAdi</a></h3><p>Şimdiye kadar bitirdiğin en son kitap.</p></div></li>
+                }
+            </ol>
+        </section>
+
+        @if (Model.Turler.Any())
+        {
+            <section class="ana-bolum">
+                <div class="bolum-baslik"><h2>En çok okuduğun türler</h2></div>
+                <ol class="ana-liste">
+                    @for (var i = 0; i < Model.Turler.Count; i++)
+                    {
+                        <li><span class="no">0@(i + 1)</span><div><h3>@Model.Turler[i].Tur</h3><p>@Model.Turler[i].Sayi kitap</p></div></li>
+                    }
+                </ol>
+            </section>
+        }
+    }
+
+    <section class="ana-bolum">
+        <div class="bolum-baslik"><h2>Satır aralarında</h2></div>
+        <p class="mb-0">Bu yıl <strong>@Model.AlintiSayisi</strong> alıntı paylaştın ve kitapların kenarına <strong>@Model.KenarNotuSayisi</strong> not düştün.</p>
+    </section>
+
+    @if (Model.KitapSayisi > 0)
+    {
+        <section class="ana-bolum">
+            <div class="bolum-baslik"><h2>Bitirdiğin kitaplar</h2></div>
+            <div class="yeni-raf">
+                @foreach (var kk in Model.Biten)
+                {
+                    <div class="kitap-kart">
+                        <a asp-action="Detay" asp-route-id="@kk.KitapId" class="kitap-baglanti" title="@kk.Kitap?.KitapAdi">
+                            <partial name="_Kapak" model='KapakModel.Of(kk.Kitap!, "md")' />
+                            <div class="kitap-ad">@kk.Kitap?.KitapAdi</div>
+                        </a>
+                        <div class="kitap-yazar">@kk.OkumaBitisTarihi?.ToString("d MMMM", tr)</div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+}

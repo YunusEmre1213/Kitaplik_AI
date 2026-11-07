@@ -53,6 +53,9 @@ try
     if (ayarlar.Asamalar.Contains("birlestir"))
         aktarici.Birlestir();
 
+    if (ayarlar.Asamalar.Contains("kapakkontrol"))
+        await new KapakKontrol(db, iptal.Token).CalistirAsync();
+
     if (ayarlar.Asamalar.Contains("zenginlestir"))
         await new Zenginlestirici(db, ayarlar, yapilandirma["GoogleBooks:ApiKey"], iptal.Token).CalistirAsync();
 

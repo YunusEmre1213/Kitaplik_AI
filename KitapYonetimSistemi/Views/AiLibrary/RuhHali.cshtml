@@ -1,4 +1,4 @@
-@model KitapYonetimSistemi.Models.RuhHaliViewModel
+﻿@model KitapYonetimSistemi.Models.RuhHaliViewModel
 
 @{
     ViewData["Title"] = "Ruh Haline Göre Öneri";
@@ -12,18 +12,19 @@
 }
 
 <div class="container py-4">
-    <div class="card border-0 shadow-sm overflow-hidden mb-4">
-        <div class="card-body p-5 text-center text-white" style="background: linear-gradient(135deg, #2c3170 0%, #151833 100%);">
-            <h1 class="fw-bold">🎭 Bugün Ne Okumak İstersin?</h1>
-            <p class="lead mb-0 opacity-75">Ruh halini ya da aradığın atmosferi anlat, sana uygun kitaplar önerelim.</p>
+    <div class="sayfa-baslik">
+        <div>
+            <span class="etiket">Yapay zekâ</span>
+            <h1>Bugün ne okumak istersin?</h1>
         </div>
+        <span class="not">Ruh halini ya da aradığın atmosferi anlat.</span>
     </div>
 
     <form asp-action="RuhHali" method="post" class="mb-3">
         <div class="input-group input-group-lg">
             <input type="text" name="mood" value="@Model.Mood" class="form-control" maxlength="300"
                    placeholder="Örn: Hüzünlü ama umut veren kısa bir roman" required />
-            <button type="submit" class="btn btn-primary" id="moodBtn">✨ Öner</button>
+            <button type="submit" class="btn btn-primary" id="moodBtn">Öner</button>
         </div>
     </form>
 

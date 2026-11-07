@@ -21,6 +21,8 @@ namespace KitapYonetimSistemi.Data
         public DbSet<OkumaGunlugu> OkumaGunlukleri { get; set; }
         public DbSet<Alinti> Alintilar { get; set; }
         public DbSet<AlintiBegeni> AlintiBegenileri { get; set; }
+        public DbSet<KenarNotu> KenarNotlari { get; set; }
+        public DbSet<OkumaOturumu> OkumaOturumlari { get; set; }
         public DbSet<Yazar> Yazarlar { get; set; }
         public DbSet<KitapYazar> KitapYazarlari { get; set; }
         public DbSet<Kategori> Kategoriler { get; set; }
@@ -204,6 +206,24 @@ namespace KitapYonetimSistemi.Data
                 .WithMany()
                 .HasForeignKey(a => a.KullaniciId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Okuma oturumları (kullanıcı, kitaplık kaydı üzerinden bilinir; tek silme zinciri)
+            builder.Entity<OkumaOturumu>(o =>
+            {
+                o.HasOne(x => x.KullaniciKitaplik).WithMany(k => k.Oturumlar).HasForeignKey(x => x.KullaniciKitaplikId).OnDelete(DeleteBehavior.Cascade);
+                o.HasIndex(x => new { x.KullaniciKitaplikId, x.Baslangic });
+                o.HasIndex(x => x.Bitis);
+            });
+
+            // Kenar notları
+            builder.Entity<KenarNotu>(n =>
+            {
+                n.Property(x => x.Metin).HasMaxLength(KenarNotu.EnFazlaUzunluk);
+                n.HasOne(x => x.Kitap).WithMany().HasForeignKey(x => x.KitapId).OnDelete(DeleteBehavior.Cascade);
+                n.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
+                n.HasIndex(x => new { x.KitapId, x.SayfaNo });
+                n.HasIndex(x => x.KullaniciId);
+            });
 
             builder.Entity<AlintiBegeni>()
                 .HasOne(b => b.Alinti)

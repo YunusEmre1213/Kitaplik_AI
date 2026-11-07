@@ -12,12 +12,11 @@
     </ol>
 </nav>
 
-<h1 class="page-title">📊 Okuma İstatistiklerim</h1>
+<h1 class="page-title">Okuma İstatistiklerim</h1>
 
 <div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="stat-card">
-            <div style="font-size: 2.5rem;">📖</div>
             <div class="stat-number">@Model.OkunacakSayisi</div>
             <div class="stat-label">Okunacak</div>
         </div>
@@ -25,7 +24,6 @@
 
     <div class="col-md-3">
         <div class="stat-card">
-            <div style="font-size: 2.5rem;">📕</div>
             <div class="stat-number">@Model.OkuyorumSayisi</div>
             <div class="stat-label">Okuyorum</div>
         </div>
@@ -33,7 +31,6 @@
 
     <div class="col-md-3">
         <div class="stat-card">
-            <div style="font-size: 2.5rem;">✅</div>
             <div class="stat-number">@Model.OkunduSayisi</div>
             <div class="stat-label">Okundu</div>
         </div>
@@ -41,16 +38,17 @@
 
     <div class="col-md-3">
         <div class="stat-card">
-            <div style="font-size: 2.5rem;">📚</div>
             <div class="stat-number">@Model.ToplamKitapSayisi</div>
             <div class="stat-label">Toplam</div>
         </div>
     </div>
 </div>
 
+<partial name="_OkumaRitmi" model="Model.Ritim" />
+
 <!-- Yıllık Okuma Hedefi -->
 <div class="card mb-4">
-    <div class="card-header">🎯 @Model.Yil Okuma Hedefi</div>
+    <div class="card-header">@Model.Yil Okuma Hedefi</div>
     <div class="card-body">
         @if (TempData["Mesaj"] != null)
         {
@@ -72,7 +70,7 @@
             </div>
             @if (Model.BuYilOkunanSayisi >= Model.HedefKitapSayisi)
             {
-                <p class="text-success mb-2">🎉 Hedefinize ulaştınız, tebrikler!</p>
+                <p class="text-success mb-2">Hedefinize ulaştınız, tebrikler!</p>
             }
             else if (Model.AylikGerekenKitap.HasValue)
             {
@@ -102,7 +100,7 @@
 
 <!-- İlerleme -->
 <div class="card mb-4">
-    <div class="card-header">🎯 Okuma İlerlemeniz</div>
+    <div class="card-header">Okuma İlerlemeniz</div>
     <div class="card-body">
         <div class="progress" style="height: 30px;">
             <div class="progress-bar bg-success" role="progressbar" style="width: @Model.OkunmaYuzdesi.ToString("0.0")%;"
@@ -120,7 +118,7 @@
     <!-- Şu An Okuduklarım -->
     <div class="col-lg-6">
         <div class="card mb-4">
-            <div class="card-header">📕 Şu An Okuduklarım (@Model.SimdiOkuduklarim.Count)</div>
+            <div class="card-header">Şu An Okuduklarım (@Model.SimdiOkuduklarim.Count)</div>
             <div class="card-body">
                 @if (Model.SimdiOkuduklarim.Any())
                 {
@@ -150,7 +148,7 @@
     <!-- Son Okuduklarım -->
     <div class="col-lg-6">
         <div class="card mb-4">
-            <div class="card-header">✅ Son Okuduklarım</div>
+            <div class="card-header">Son Okuduklarım</div>
             <div class="card-body">
                 @if (Model.SonOkunanKitaplar.Any())
                 {
@@ -182,7 +180,7 @@
 @if (Model.AylikOkumaSayilari.Any())
 {
     <div class="card mb-4">
-        <div class="card-header">📈 Aylık Okuma İstatistikleri</div>
+        <div class="card-header">Aylık Okuma İstatistikleri</div>
         <div class="card-body">
             <table class="table table-sm">
                 <thead>
@@ -212,7 +210,7 @@
 @if (Model.SonGunlukler.Any())
 {
     <div class="card mb-4">
-        <div class="card-header">📝 Okuma Günlüğüm</div>
+        <div class="card-header">Okuma Günlüğüm</div>
         <ul class="list-group list-group-flush">
             @foreach (var g in Model.SonGunlukler)
             {
@@ -223,7 +221,7 @@
                     </div>
                     @if (g.Sayfa.HasValue)
                     {
-                        <div class="small">📖 @g.Sayfa. sayfa</div>
+                        <div class="small">@g.Sayfa. sayfa</div>
                     }
                     @if (!string.IsNullOrEmpty(g.Not))
                     {

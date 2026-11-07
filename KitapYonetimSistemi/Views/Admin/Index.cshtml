@@ -4,7 +4,7 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<h1 class="page-title"> Admin Dashboard</h1>
+<div class="sayfa-baslik"><div><span class="etiket">Yönetim</span><h1>Panel</h1></div></div>
 
 @if (TempData["Mesaj"] != null)
 {
@@ -17,7 +17,7 @@
 <div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="stat-card">
-            <div style="font-size: 2.5rem;">📚</div>
+            <div style="font-size: 2.5rem;"></div>
             <div class="stat-number">@Model.ToplamKitapSayisi</div>
             <div class="stat-label">Toplam Kitap</div>
             <small class="text-muted">Bu ay: @Model.BuAyEklenenKitapSayisi</small>
@@ -26,7 +26,7 @@
 
     <div class="col-md-3">
         <div class="stat-card">
-            <div style="font-size: 2.5rem;">👥</div>
+            <div style="font-size: 2.5rem;"></div>
             <div class="stat-number">@Model.ToplamKullaniciSayisi</div>
             <div class="stat-label">Kullanıcı</div>
         </div>
@@ -34,7 +34,7 @@
 
     <div class="col-md-3">
         <div class="stat-card">
-            <div style="font-size: 2.5rem;">💬</div>
+            <div style="font-size: 2.5rem;"></div>
             <div class="stat-number">@Model.ToplamYorumSayisi</div>
             <div class="stat-label">Yorum</div>
         </div>
@@ -42,7 +42,7 @@
 
     <div class="col-md-3">
         <div class="stat-card">
-            <div style="font-size: 2.5rem;">📖</div>
+            <div style="font-size: 2.5rem;"></div>
             <div class="stat-number">@Model.ToplamKitaplikSayisi</div>
             <div class="stat-label">Kitaplık Kaydı</div>
         </div>
@@ -52,7 +52,7 @@
 <div class="card mb-4">
     <div class="card-header"> Hızlı İşlemler</div>
     <div class="card-body">
-        <a asp-action="KitapEkle" class="btn btn-primary me-2">➕ Yeni Kitap Ekle</a>
+        <a asp-action="KitapEkle" class="btn btn-primary me-2">Yeni Kitap Ekle</a>
         <a asp-action="KitapListesi" class="btn btn-secondary me-2"> Tüm Kitaplar</a>
         <a asp-action="KullaniciYonetimi" class="btn btn-success me-2"> Kullanıcılar</a>
         <a asp-action="YorumYonetimi" class="btn btn-warning"> Yorumlar</a>
@@ -86,7 +86,7 @@
     <!--En son eklenen kitaplar bölümü-->
     <div class="col-lg-6">
         <div class="card">
-            <div class="card-header">📚 Son Eklenen Kitaplar</div>
+            <div class="card-header">Son Eklenen Kitaplar</div>
             <div class="card-body">
                 @if (Model.SonEklenenKitaplar.Any())
                 {

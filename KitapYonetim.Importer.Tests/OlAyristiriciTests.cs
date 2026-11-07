@@ -1,4 +1,4 @@
-using KitapYonetim.Importer;
+﻿using KitapYonetim.Importer;
 using Xunit;
 
 namespace KitapYonetim.Importer.Tests;
@@ -93,6 +93,15 @@ public class OlAyristiriciTests
         var e = OlAyristirici.Edition(Satir("/type/edition", "/books/OL6M", json), Diller);
         Assert.Equal("Türk yazarlar", e!.Baslik);
         Assert.Contains('ü', e.Baslik);
+    }
+
+    [Fact]
+    public void Edition_NoktasizIVeSapka_SapkaliIyeCevrilir()
+    {
+        // Noktasız ı + birleşik düzeltme işareti ("Mesı^hı^"), NFC ile birleşmez
+        var json = "{\"title\": \"Mesı̂hı̂ dı̂vânı\", \"languages\": [{\"key\": \"/languages/tur\"}]}";
+        var e = OlAyristirici.Edition(Satir("/type/edition", "/books/OL7M", json), Diller);
+        Assert.Equal("Mesîhî dîvânı", e!.Baslik);
     }
 
     [Theory]

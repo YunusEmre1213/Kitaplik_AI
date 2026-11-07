@@ -1,0 +1,7 @@
+@model KitapYonetimSistemi.Models.OkumaOturumu
+
+<a class="oturum-cip" asp-controller="Kitap" asp-action="Kitapligim" asp-fragment="oturum"
+   title="Açık okuma oturumu: @Model.KullaniciKitaplik?.Kitap?.KitapAdi">
+    <span class="oturum-nokta" aria-hidden="true"></span>
+    <span class="oturum-sayac" data-oturum-baslangic="@(new DateTimeOffset(DateTime.SpecifyKind(Model.Baslangic, DateTimeKind.Local)).ToUnixTimeMilliseconds())">00:00</span>
+</a>
