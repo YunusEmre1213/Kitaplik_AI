@@ -81,6 +81,9 @@ public sealed partial class Zenginlestirici
                         }
                     }
                 }
+
+                if (aday.AciklamaGerek && aciklama == null)
+                    aciklama = await OpenLibraryAciklamaAsync(aday.Isbn);
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
@@ -162,6 +165,39 @@ public sealed partial class Zenginlestirici
         var adres = $"https://covers.openlibrary.org/b/isbn/{Uri.EscapeDataString(isbn)}-M.jpg?default=false";
         using var yanit = await _http.SendAsync(new HttpRequestMessage(HttpMethod.Head, adres), HttpCompletionOption.ResponseHeadersRead, _iptal);
         return yanit.IsSuccessStatusCode ? adres.Replace("?default=false", "") : null;
+    }
+
+    // Kotası olmayan yedek kaynak: ISBN -> baskı kaydı -> eser kaydı -> description
+    private async Task<string?> OpenLibraryAciklamaAsync(string isbn)
+    {
+        var d = await OlJsonAsync($"https://openlibrary.org/isbn/{Uri.EscapeDataString(isbn)}.json");
+        if (d == null) return null;
+        var ham = AciklamaOku(d.Value);
+        if (ham == null && d.Value.TryGetProperty("works", out var w) && w.ValueKind == JsonValueKind.Array && w.GetArrayLength() > 0
+            && w[0].TryGetProperty("key", out var k) && k.GetString() is { } anahtar)
+        {
+            var eser = await OlJsonAsync($"https://openlibrary.org{anahtar}.json");
+            if (eser != null) ham = AciklamaOku(eser.Value);
+        }
+        if (ham == null) return null;
+        var temiz = Temizle(ham);
+        return temiz.Length >= 20 ? (temiz.Length > 4000 ? temiz[..4000] : temiz) : null;
+    }
+
+    private async Task<JsonElement?> OlJsonAsync(string adres)
+    {
+        using var yanit = await _http.GetAsync(adres, _iptal);
+        if (!yanit.IsSuccessStatusCode) return null;
+        using var belge = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync(_iptal));
+        return belge.RootElement.Clone();
+    }
+
+    private static string? AciklamaOku(JsonElement e)
+    {
+        if (!e.TryGetProperty("description", out var d)) return null;
+        if (d.ValueKind == JsonValueKind.String) return d.GetString();
+        if (d.ValueKind == JsonValueKind.Object && d.TryGetProperty("value", out var v)) return v.GetString();
+        return null;
     }
 
     private sealed record GoogleSonuc(string? Kapak, string? Aciklama, bool KotaDoldu);

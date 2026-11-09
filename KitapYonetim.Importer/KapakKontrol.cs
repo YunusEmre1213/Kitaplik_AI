@@ -49,7 +49,7 @@ public sealed class KapakKontrol
 
         int islenen = 0, silinen = 0, hata = 0;
         var kilit = new object();
-        using var sinir = new SemaphoreSlim(8);
+        using var sinir = new SemaphoreSlim(3);
 
         var isler = liste.Select(async kayit =>
         {
