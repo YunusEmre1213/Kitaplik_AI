@@ -100,6 +100,31 @@
         }
     </div>
 
+    @{ var b = Model.Birakma; }
+    @if (b.Yeterli)
+    {
+        <div class="birakma-kutu">
+            <h3 class="tepki-baslik">Okurlar nerede bırakıyor?</h3>
+            <p>
+                Bu kitaba başlayıp bir sonuca varan @b.Karar okurun %@b.BitirmeYuzdesi'i bitirdi, @b.Birakan kişi yarıda bıraktı.
+                Bırakanların yarısı
+                @if (b.MedyanYuzde.HasValue)
+                {
+                    <text><strong>@b.MedyanSayfa. sayfadan</strong> (kitabın %@b.MedyanYuzde'si) önce bıraktı.</text>
+                }
+                else
+                {
+                    <text><strong>@b.MedyanSayfa. sayfadan</strong> önce bıraktı.</text>
+                }
+                @if (b.AsanlarinBitirmeYuzdesi.HasValue)
+                {
+                    <text> Bu sayfayı geçenlerin %@b.AsanlarinBitirmeYuzdesi'i kitabı bitirdi.</text>
+                }
+            </p>
+            <div class="tepki-ipucu">Son 30 gündür hiç okunmayan ve bitmemiş kitaplar "bırakılmış" sayılır. Yalnızca toplu sayılar gösterilir.</div>
+        </div>
+    }
+
     @if (Model.Notlar.Any())
     {
         <ul class="kenar-liste">

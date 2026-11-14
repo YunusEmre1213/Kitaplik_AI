@@ -60,6 +60,7 @@ namespace KitapYonetimSistemi.Models
         public List<KenarNotu> Notlar { get; set; } = new();
         public IsiHaritasi Isi { get; set; } = new();
         public TepkiHaritasi Tepki { get; set; } = new();
+        public BirakmaIstatistigi Birakma { get; set; } = BirakmaIstatistigi.Hesapla(Array.Empty<OkurDurumu>(), null, DateTime.Now);
         public int? OkuyucuSayfasi { get; set; }
         public bool Bitirdi { get; set; }
         public Dictionary<int, TepkiTuru> BenimTepkilerim { get; set; } = new();

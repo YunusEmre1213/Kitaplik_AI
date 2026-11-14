@@ -385,6 +385,8 @@ main { padding-top: 1.4rem; }
 .tepki-serit .isi-hucre.tepki-guldurdu, .tepki-nokta.tepki-guldurdu { background: #7a9a62; }
 .tepki-serit .isi-hucre.tepki-sikici, .tepki-nokta.tepki-sikici { background: #8d8577; }
 .tepki-serit .isi-hucre.tepki-kilitli { background: repeating-linear-gradient(135deg, var(--sa-surface) 0 3px, transparent 3px 6px); border: 1px solid var(--sa-line); }
+.birakma-kutu { margin-top: 1.8rem; padding: 1rem 1.2rem; background: var(--sa-paper); border: 1px solid var(--sa-line); border-radius: var(--sa-radius); }
+.birakma-kutu p { margin: 0; }
 .tepki-lejant { display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; font-size: .78rem; color: var(--sa-muted); margin-top: .5rem; }
 .tepki-nokta { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin-right: .35rem; vertical-align: -1px; }
 .tepki-ipucu { font-size: .78rem; color: var(--sa-muted); margin-top: .4rem; }

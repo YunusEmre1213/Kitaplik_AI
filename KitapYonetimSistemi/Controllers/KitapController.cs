@@ -206,6 +206,25 @@ namespace KitapYonetimSistemi.Controllers
             var kenarVm = (KenarNotlariViewModel)ViewBag.KenarNotlari;
             kenarVm.Tepki = TepkiHaritasi.Olustur(tumTepkiler.Select(t => (t.SayfaNo, t.Tur)), kitap.SayfaSayisi,
                 bitirdi ? int.MaxValue : (ilerleme?.MevcutSayfa ?? 0));
+            // Bırakma noktası: yalnızca toplu sayılar, kimin bıraktığı açığa çıkmaz
+            var okurKayitlari = await _context.KullaniciKitapliklari.AsNoTracking()
+                .Where(kk => kk.KitapId == kitap.Id && (kk.OkumaDurumu == OkumaDurumu.Okundu || (kk.OkumaDurumu == OkumaDurumu.Okuyorum && kk.MevcutSayfa > 0)))
+                .Select(kk => new
+                {
+                    kk.OkumaDurumu,
+                    Sayfa = kk.MevcutSayfa ?? 0,
+                    kk.EklenmeTarihi,
+                    kk.OkumayaBaslamaTarihi,
+                    SonGunluk = kk.Gunlukler.Max(g => (DateTime?)g.Tarih),
+                    SonOturum = kk.Oturumlar.Max(o => (DateTime?)o.Baslangic)
+                })
+                .ToListAsync();
+            kenarVm.Birakma = BirakmaIstatistigi.Hesapla(
+                okurKayitlari.Select(k => new OkurDurumu(
+                    k.Sayfa,
+                    k.OkumaDurumu == OkumaDurumu.Okundu,
+                    new[] { k.EklenmeTarihi, k.OkumayaBaslamaTarihi ?? DateTime.MinValue, k.SonGunluk ?? DateTime.MinValue, k.SonOturum ?? DateTime.MinValue }.Max())),
+                kitap.SayfaSayisi, DateTime.Now);
             kenarVm.BenimTepkilerim = tumTepkiler.Where(t => t.KullaniciId == kullaniciId).ToDictionary(t => t.SayfaNo, t => t.Tur);
             return View(kitap);
         }
