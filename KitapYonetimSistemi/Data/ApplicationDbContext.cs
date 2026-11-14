@@ -22,6 +22,7 @@ namespace KitapYonetimSistemi.Data
         public DbSet<Alinti> Alintilar { get; set; }
         public DbSet<AlintiBegeni> AlintiBegenileri { get; set; }
         public DbSet<KenarNotu> KenarNotlari { get; set; }
+        public DbSet<SayfaTepkisi> SayfaTepkileri { get; set; }
         public DbSet<OkumaOturumu> OkumaOturumlari { get; set; }
         public DbSet<Yazar> Yazarlar { get; set; }
         public DbSet<KitapYazar> KitapYazarlari { get; set; }
@@ -223,6 +224,14 @@ namespace KitapYonetimSistemi.Data
                 n.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
                 n.HasIndex(x => new { x.KitapId, x.SayfaNo });
                 n.HasIndex(x => x.KullaniciId);
+            });
+
+            // Sayfa tepkileri: kullanıcı başına sayfada tek tepki
+            builder.Entity<SayfaTepkisi>(t =>
+            {
+                t.HasOne(x => x.Kitap).WithMany().HasForeignKey(x => x.KitapId).OnDelete(DeleteBehavior.Cascade);
+                t.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
+                t.HasIndex(x => new { x.KitapId, x.KullaniciId, x.SayfaNo }).IsUnique();
             });
 
             builder.Entity<AlintiBegeni>()

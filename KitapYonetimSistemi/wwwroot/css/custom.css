@@ -377,6 +377,19 @@ main { padding-top: 1.4rem; }
 .isi-hucre.seviye-4 { background: var(--sa-accent); }
 .isi-alt { display: flex; justify-content: space-between; gap: 1rem; font-size: .78rem; color: var(--sa-muted); margin-top: .4rem; }
 .isi-enler { text-align: center; flex: 1; }
+/* Tepki haritası (duygu eğrisi) */
+.tepki-bolum { margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid var(--sa-line); }
+.tepki-baslik { font-family: var(--sa-display); font-size: 1.15rem; margin: 0 0 .7rem; display: flex; gap: .7rem; align-items: baseline; }
+.tepki-serit .isi-hucre.tepki-saskin, .tepki-nokta.tepki-saskin { background: #c9973a; }
+.tepki-serit .isi-hucre.tepki-aglatti, .tepki-nokta.tepki-aglatti { background: #5f7fa3; }
+.tepki-serit .isi-hucre.tepki-guldurdu, .tepki-nokta.tepki-guldurdu { background: #7a9a62; }
+.tepki-serit .isi-hucre.tepki-sikici, .tepki-nokta.tepki-sikici { background: #8d8577; }
+.tepki-serit .isi-hucre.tepki-kilitli { background: repeating-linear-gradient(135deg, var(--sa-surface) 0 3px, transparent 3px 6px); border: 1px solid var(--sa-line); }
+.tepki-lejant { display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; font-size: .78rem; color: var(--sa-muted); margin-top: .5rem; }
+.tepki-nokta { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin-right: .35rem; vertical-align: -1px; }
+.tepki-ipucu { font-size: .78rem; color: var(--sa-muted); margin-top: .4rem; }
+.tepki-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: 1rem; }
+.tepki-form .form-control { width: 6.5rem; }
 .kenar-liste { list-style: none; padding: 0; margin: 1.4rem 0 0; }
 .kenar-liste li { display: grid; grid-template-columns: 4rem 1fr; gap: 1rem; padding: .85rem 0; border-top: 1px solid var(--sa-line); }
 .kenar-sayfa { font-family: var(--sa-display); font-style: italic; font-size: 1.15rem; color: var(--sa-gold-text); }

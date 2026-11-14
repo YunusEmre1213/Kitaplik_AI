@@ -59,5 +59,9 @@ namespace KitapYonetimSistemi.Models
         public string? KullaniciId { get; set; }
         public List<KenarNotu> Notlar { get; set; } = new();
         public IsiHaritasi Isi { get; set; } = new();
+        public TepkiHaritasi Tepki { get; set; } = new();
+        public int? OkuyucuSayfasi { get; set; }
+        public bool Bitirdi { get; set; }
+        public Dictionary<int, TepkiTuru> BenimTepkilerim { get; set; } = new();
     }
 }

@@ -193,9 +193,20 @@ namespace KitapYonetimSistemi.Controllers
                 KitapSayfaSayisi = kitap.SayfaSayisi,
                 KullaniciId = kullaniciId,
                 Notlar = notlar,
-                Isi = IsiHaritasi.Olustur(acikSayfalar, kitap.SayfaSayisi)
+                Isi = IsiHaritasi.Olustur(acikSayfalar, kitap.SayfaSayisi),
+                OkuyucuSayfasi = ilerleme?.MevcutSayfa,
+                Bitirdi = bitirdi
             };
 
+            // Tepki haritası: okurun ulaştığı sayfanın ötesi spoiler olmaması için kilitli
+            var tumTepkiler = await _context.SayfaTepkileri.AsNoTracking()
+                .Where(t => t.KitapId == kitap.Id)
+                .Select(t => new { t.SayfaNo, t.Tur, t.KullaniciId })
+                .ToListAsync();
+            var kenarVm = (KenarNotlariViewModel)ViewBag.KenarNotlari;
+            kenarVm.Tepki = TepkiHaritasi.Olustur(tumTepkiler.Select(t => (t.SayfaNo, t.Tur)), kitap.SayfaSayisi,
+                bitirdi ? int.MaxValue : (ilerleme?.MevcutSayfa ?? 0));
+            kenarVm.BenimTepkilerim = tumTepkiler.Where(t => t.KullaniciId == kullaniciId).ToDictionary(t => t.SayfaNo, t => t.Tur);
             return View(kitap);
         }
 
@@ -749,6 +760,45 @@ namespace KitapYonetimSistemi.Controllers
             }
 
             return Redirect(Url.Action(nameof(Detay), new { id = kitapId }) + "#kenar-notlari");
+        }
+
+        // Okuduğun bir sayfaya tepki bırak; aynı tepkiye tekrar basmak geri alır, farklısı değiştirir
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TepkiVer(int kitapId, int sayfaNo, TepkiTuru tur)
+        {
+            var kitap = await _context.Kitaplar.AsNoTracking().Where(k => k.Id == kitapId).Select(k => new { k.SayfaSayisi }).FirstOrDefaultAsync();
+            if (kitap == null)
+                return NotFound();
+
+            var kullaniciId = _userManager.GetUserId(User)!;
+            var ilerleme = await _context.KullaniciKitapliklari.AsNoTracking()
+                .Where(kk => kk.KullaniciId == kullaniciId && kk.KitapId == kitapId)
+                .Select(kk => new { kk.MevcutSayfa, kk.OkumaDurumu })
+                .FirstOrDefaultAsync();
+            var ulasilan = ilerleme?.OkumaDurumu == OkumaDurumu.Okundu ? int.MaxValue : (ilerleme?.MevcutSayfa ?? 0);
+
+            if (!Enum.IsDefined(tur) || sayfaNo < 1 || sayfaNo > (kitap.SayfaSayisi ?? 20000))
+                TempData["Hata"] = "Tepki eklenemedi!";
+            else if (sayfaNo > ulasilan)
+                TempData["Hata"] = "Henüz okumadığınız bir sayfaya tepki bırakamazsınız. Kitaplığınızda ilerlemenizi güncelleyin.";
+            else
+            {
+                var mevcut = await _context.SayfaTepkileri.FirstOrDefaultAsync(t => t.KitapId == kitapId && t.KullaniciId == kullaniciId && t.SayfaNo == sayfaNo);
+                if (mevcut == null)
+                    _context.SayfaTepkileri.Add(new SayfaTepkisi { KitapId = kitapId, KullaniciId = kullaniciId, SayfaNo = sayfaNo, Tur = tur, Tarih = DateTime.Now });
+                else if (mevcut.Tur == tur)
+                    _context.SayfaTepkileri.Remove(mevcut);
+                else
+                {
+                    mevcut.Tur = tur;
+                    mevcut.Tarih = DateTime.Now;
+                }
+                await _context.SaveChangesAsync();
+                TempData["Mesaj"] = "Tepkiniz kaydedildi!";
+            }
+
+            return Redirect(Url.Action(nameof(Detay), new { id = kitapId }) + "#tepki-haritasi");
         }
 
         // Kendi kenar notunu sil

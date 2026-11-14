@@ -35,6 +35,71 @@
         <p class="text-muted">Henüz kimse bu kitabın sayfalarını işaretlememiş. İlk notu sen bırak; herkese açık notlar ve sayfa numaralı alıntılar burada ısı haritasına dönüşür.</p>
     }
 
+    @* Tepki haritası: duygusal eğri. Okurun ulaştığı sayfanın ötesi spoiler olmaması için kilitli. *@
+    @{
+        (string Emoji, string Ad) TepkiBilgi(TepkiTuru t) => t switch
+        {
+            TepkiTuru.Saskin => ("😮", "Şaşırdım"),
+            TepkiTuru.Aglatti => ("😢", "Ağlattı"),
+            TepkiTuru.Guldurdu => ("😄", "Güldürdü"),
+            _ => ("😴", "Sıkıcı")
+        };
+        var tepki = Model.Tepki;
+    }
+    <div class="tepki-bolum" id="tepki-haritasi">
+        <h3 class="tepki-baslik">Duygu eğrisi <span class="etiket">@tepki.ToplamTepki tepki</span></h3>
+        @if (tepki.Dilimler.Count > 0)
+        {
+            <div class="isi-serit tepki-serit" role="img" aria-label="Okurların sayfalara bıraktığı duygu tepkileri">
+                @foreach (var d in tepki.Dilimler)
+                {
+                    var sayfaMetni = d.Bas == d.Son ? $"s. {d.Bas}" : $"s. {d.Bas}-{d.Son}";
+                    if (d.Kilitli)
+                    {
+                        <span class="isi-hucre tepki-kilitli" title="@sayfaMetni: okuyunca açılır"></span>
+                    }
+                    else
+                    {
+                        <span class="isi-hucre @(d.Baskin.HasValue ? "tepki-" + d.Baskin.Value.ToString().ToLowerInvariant() : "")"
+                              title="@sayfaMetni@(d.Baskin.HasValue ? ": " + string.Join(", ", d.Sayilar.OrderByDescending(x => x.Value).Select(x => $"{TepkiBilgi(x.Key).Ad} {x.Value}")) : "")"></span>
+                    }
+                }
+            </div>
+            <div class="tepki-ipucu">
+                @if (Model.Bitirdi)
+                {
+                    <span>Kitabı bitirdin, tüm eğri açık.</span>
+                }
+                else if (Model.OkuyucuSayfasi.HasValue)
+                {
+                    <span>Spoiler olmaması için yalnızca @Model.OkuyucuSayfasi. sayfaya kadar olan tepkiler görünür.</span>
+                }
+                else
+                {
+                    <span>Kitaplığında ilerlemeni girince, okuduğun kısma kadar olan tepkiler açılır.</span>
+                }
+            </div>
+        }
+        <div class="tepki-lejant">
+            @foreach (var t in Enum.GetValues<TepkiTuru>())
+            {
+                <span><i class="tepki-nokta tepki-@t.ToString().ToLowerInvariant()"></i>@TepkiBilgi(t).Ad</span>
+            }
+        </div>
+        @if (giris)
+        {
+            <form asp-action="TepkiVer" method="post" class="tepki-form">
+                <input type="hidden" name="kitapId" value="@Model.KitapId" />
+                <input type="number" name="sayfaNo" class="form-control" min="1" max="@(Model.Bitirdi ? maks : Math.Min(maks, Math.Max(1, Model.OkuyucuSayfasi ?? 1)))" value="@(Model.OkuyucuSayfasi)" placeholder="Sayfa" required aria-label="Tepki sayfası" />
+                @foreach (var t in Enum.GetValues<TepkiTuru>())
+                {
+                    <button type="submit" name="tur" value="@((int)t)" class="btn btn-outline-secondary btn-sm" title="@TepkiBilgi(t).Ad">@TepkiBilgi(t).Emoji @TepkiBilgi(t).Ad</button>
+                }
+            </form>
+            <div class="tepki-ipucu">Yalnızca okuduğun sayfalara tepki bırakabilirsin. Aynı tepkiye tekrar basarsan geri alınır.</div>
+        }
+    </div>
+
     @if (Model.Notlar.Any())
     {
         <ul class="kenar-liste">

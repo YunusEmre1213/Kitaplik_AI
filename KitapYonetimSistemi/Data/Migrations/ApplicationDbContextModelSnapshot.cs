@@ -592,6 +592,40 @@ namespace KitapYonetimSistemi.Data.Migrations
                     b.ToTable("OkumaOturumlari");
                 });
 
+            modelBuilder.Entity("KitapYonetimSistemi.Models.SayfaTepkisi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("KitapId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("KullaniciId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("SayfaNo")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Tarih")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Tur")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KullaniciId");
+
+                    b.HasIndex("KitapId", "KullaniciId", "SayfaNo")
+                        .IsUnique();
+
+                    b.ToTable("SayfaTepkileri");
+                });
+
             modelBuilder.Entity("KitapYonetimSistemi.Models.Tartisma", b =>
                 {
                     b.Property<int>("Id")
@@ -1038,6 +1072,25 @@ namespace KitapYonetimSistemi.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("KullaniciKitaplik");
+                });
+
+            modelBuilder.Entity("KitapYonetimSistemi.Models.SayfaTepkisi", b =>
+                {
+                    b.HasOne("KitapYonetimSistemi.Models.Kitap", "Kitap")
+                        .WithMany()
+                        .HasForeignKey("KitapId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KitapYonetimSistemi.Data.ApplicationUser", "Kullanici")
+                        .WithMany()
+                        .HasForeignKey("KullaniciId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Kitap");
+
+                    b.Navigation("Kullanici");
                 });
 
             modelBuilder.Entity("KitapYonetimSistemi.Models.Tartisma", b =>
