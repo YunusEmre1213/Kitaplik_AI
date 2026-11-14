@@ -170,6 +170,23 @@ namespace KitapYonetimSistemi.Controllers
                 .ToListAsync();
             acikSayfalar.AddRange(kitap.Alintilar?.Where(a => a.SayfaNo.HasValue).Select(a => a.SayfaNo!.Value) ?? Enumerable.Empty<int>());
 
+            // Sayfa kapılı yorumlar: okuyucunun ilerlemesine göre kilitli ya da açık
+            var ilerleme = kullaniciId == null ? null : await _context.KullaniciKitapliklari
+                .AsNoTracking()
+                .Where(kk => kk.KullaniciId == kullaniciId && kk.KitapId == kitap.Id)
+                .Select(kk => new { kk.MevcutSayfa, kk.OkumaDurumu })
+                .FirstOrDefaultAsync();
+            var bitirdi = ilerleme?.OkumaDurumu == OkumaDurumu.Okundu;
+            ViewBag.OkuyucuSayfasi = ilerleme?.MevcutSayfa;
+            ViewBag.YorumGorunumleri = (kitap.Yorumlar ?? new List<Yorum>())
+                .OrderByDescending(y => y.YorumTarihi)
+                .Select(y => new YorumGorunumu
+                {
+                    Yorum = y,
+                    Kilitli = !YorumGorunurluk.Acik(y.SayfaNo, y.KullaniciId == kullaniciId, bitirdi, ilerleme?.MevcutSayfa)
+                })
+                .ToList();
+
             ViewBag.KenarNotlari = new KenarNotlariViewModel
             {
                 KitapId = kitap.Id,
@@ -178,13 +195,14 @@ namespace KitapYonetimSistemi.Controllers
                 Notlar = notlar,
                 Isi = IsiHaritasi.Olustur(acikSayfalar, kitap.SayfaSayisi)
             };
+
             return View(kitap);
         }
 
         // Yorum ekleme
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> YorumEkle(int kitapId, string yorumMetni, bool spoiler = false)
+        public async Task<IActionResult> YorumEkle(int kitapId, string yorumMetni, bool spoiler = false, int? sayfaNo = null)
         {
             if (string.IsNullOrWhiteSpace(yorumMetni))
             {
@@ -198,6 +216,12 @@ namespace KitapYonetimSistemi.Controllers
                 return RedirectToAction("Detay", new { id = kitapId });
             }
 
+            if (sayfaNo is < 1 or > 20000)
+            {
+                TempData["Hata"] = "Sayfa numarası geçersiz!";
+                return RedirectToAction("Detay", new { id = kitapId });
+            }
+
             var kullanici = await _userManager.GetUserAsync(User);
 
             var yorum = new Yorum
@@ -206,7 +230,8 @@ namespace KitapYonetimSistemi.Controllers
                 KullaniciId = kullanici.Id,
                 YorumMetni = yorumMetni.Trim(),
                 YorumTarihi = DateTime.Now,
-                Spoiler = spoiler
+                Spoiler = spoiler,
+                SayfaNo = sayfaNo
             };
 
             _context.Yorumlar.Add(yorum);

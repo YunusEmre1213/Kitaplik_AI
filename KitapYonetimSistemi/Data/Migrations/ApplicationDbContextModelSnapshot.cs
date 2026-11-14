@@ -686,6 +686,9 @@ namespace KitapYonetimSistemi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int?>("SayfaNo")
+                        .HasColumnType("int");
+
                     b.Property<bool>("Spoiler")
                         .HasColumnType("bit");
 

@@ -183,16 +183,32 @@
 <div class="card mb-4">
     <div class="card-header">Yorumlar (@(Model.Yorumlar?.Count ?? 0))</div>
     <div class="card-body">
-        @if (Model.Yorumlar != null && Model.Yorumlar.Any())
+        @{
+            var gorunumler = (List<YorumGorunumu>)ViewBag.YorumGorunumleri;
+            int? okuyucuSayfasi = ViewBag.OkuyucuSayfasi;
+        }
+        @if (gorunumler.Any())
         {
-            @foreach (var yorum in Model.Yorumlar.OrderByDescending(y => y.YorumTarihi))
+            @foreach (var g in gorunumler)
             {
+                var yorum = g.Yorum;
                 <div class="border-start border-4 border-primary ps-3 mb-3">
                     <h6 class="text-muted mb-2">
                         @yorum.Kullanici.UserName
                         <small>- @yorum.YorumTarihi.ToString("dd.MM.yyyy HH:mm")</small>
+                        @if (yorum.SayfaNo.HasValue)
+                        {
+                            <span class="badge text-bg-secondary ms-1">s. @yorum.SayfaNo</span>
+                        }
                     </h6>
-                    @if (yorum.Spoiler)
+                    @if (g.Kilitli)
+                    {
+                        <p class="mb-0 text-muted fst-italic">
+                            🔒 Bu yorum @yorum.SayfaNo. sayfadan sonrasını okuyanlar için.
+                            @(okuyucuSayfasi.HasValue ? $"Siz {okuyucuSayfasi}. sayfadasınız." : "Kitaplığınızda ilerlemenizi girerek açabilirsiniz.")
+                        </p>
+                    }
+                    else if (yorum.Spoiler)
                     {
                         <details>
                             <summary class="text-warning">Bu yorum spoiler içeriyor, görmek için tıklayın</summary>
@@ -222,6 +238,10 @@
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" name="spoiler" value="true" id="spoilerCheck" />
                 <label class="form-check-label" for="spoilerCheck">Bu yorum spoiler içeriyor</label>
+            </div>
+            <div class="mb-3" style="max-width:320px">
+                <input type="number" name="sayfaNo" class="form-control" min="1" max="20000" placeholder="Sayfa no (isteğe bağlı)" />
+                <div class="form-text">Doldurursanız yorum yalnızca o sayfaya ulaşmış okuyuculara açılır.</div>
             </div>
             <button type="submit" class="btn btn-primary">Yorum Gönder</button>
             <a asp-action="Index" class="btn btn-secondary">Kitaplara Dön</a>

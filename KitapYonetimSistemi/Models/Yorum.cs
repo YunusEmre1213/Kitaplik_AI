@@ -11,6 +11,9 @@ namespace KitapYonetimSistemi.Models
         // Yorum kitabın içeriğini açık ediyorsa işaretlenir, okuyucu tıklayınca görür
         public bool Spoiler { get; set; }
 
+        // Doluysa yorum yalnızca bu sayfaya (ve ötesine) ulaşmış okuyuculara açılır
+        public int? SayfaNo { get; set; }
+
         // Foreign Keys
         public int KitapId { get; set; }
         public Kitap? Kitap { get; set; }
