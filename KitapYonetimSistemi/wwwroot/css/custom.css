@@ -461,3 +461,5 @@ main { padding-top: 1.4rem; }
 .oda-cubuk span { display: block; height: 100%; background: var(--sa-muted); }
 .oda-cubuk span.ben { background: var(--sa-accent); }
 .oda-ilerleme { max-width: 24rem; }
+.birakma-nedenler { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; gap: .25rem; }
+.birakma-nedenler li { display: flex; justify-content: space-between; border-bottom: 1px solid var(--sa-line); padding: .2rem 0; font-size: .9rem; }

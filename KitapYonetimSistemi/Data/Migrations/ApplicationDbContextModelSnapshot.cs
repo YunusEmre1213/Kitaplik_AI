@@ -479,6 +479,12 @@ namespace KitapYonetimSistemi.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("BirakmaNedeni")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("BirakmaTarihi")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("EklenmeTarihi")
                         .HasColumnType("datetime2");
 

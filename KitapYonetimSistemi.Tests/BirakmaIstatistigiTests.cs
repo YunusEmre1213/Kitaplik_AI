@@ -59,4 +59,35 @@ public class BirakmaIstatistigiTests
         var s = BirakmaIstatistigi.Hesapla(new[] { new OkurDurumu(0, false, Simdi.AddDays(-90)) }, 300, Simdi);
         Assert.Equal(0, s.Birakan);
     }
+
+    [Fact]
+    public void AcikBirakanHemenBirakmisSayilir()
+    {
+        var okurlar = new[] { new OkurDurumu(80, false, Simdi.AddDays(-1), true), Okuyan(40) };
+        var s = BirakmaIstatistigi.Hesapla(okurlar, 300, Simdi);
+        Assert.Equal(1, s.Birakan);
+        Assert.Equal(1, s.DevamEden);
+    }
+
+    [Fact]
+    public void BitirenAcikBirakmaIsaretiTasisaBileBitirenSayilir()
+    {
+        var s = BirakmaIstatistigi.Hesapla(new[] { new OkurDurumu(300, true, Simdi, true, BirakmaNedeni.Yavas) }, 300, Simdi);
+        Assert.Equal(1, s.Bitiren);
+        Assert.Equal(0, s.Birakan);
+        Assert.Empty(s.Nedenler);
+    }
+
+    [Fact]
+    public void NedenlerSayilirVeAzsaGosterilmez()
+    {
+        OkurDurumu B(BirakmaNedeni? n) => new(50, false, Simdi.AddDays(-2), true, n);
+        var az = BirakmaIstatistigi.Hesapla(new[] { B(BirakmaNedeni.Yavas), B(BirakmaNedeni.Yavas) }, 300, Simdi);
+        Assert.False(az.NedenYeterli);
+
+        var cok = BirakmaIstatistigi.Hesapla(new[] { B(BirakmaNedeni.Yavas), B(BirakmaNedeni.Yavas), B(BirakmaNedeni.Agir), B(null) }, 300, Simdi);
+        Assert.True(cok.NedenYeterli);
+        Assert.Equal(3, cok.NedenToplami);
+        Assert.Equal((BirakmaNedeni.Yavas, 2), cok.Nedenler[0]);
+    }
 }

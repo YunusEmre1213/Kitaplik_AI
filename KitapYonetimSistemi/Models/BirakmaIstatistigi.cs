@@ -1,7 +1,8 @@
 namespace KitapYonetimSistemi.Models
 {
     // Bir okurun kitaptaki durumu: kaçıncı sayfada, bitirdi mi, en son ne zaman okudu
-    public record OkurDurumu(int Sayfa, bool Bitirdi, DateTime SonEtkinlik);
+    // AcikBirakti: okur "bıraktım" dedi (30 gün beklenmez); Neden: verdiyse sebebi
+    public record OkurDurumu(int Sayfa, bool Bitirdi, DateTime SonEtkinlik, bool AcikBirakti = false, BirakmaNedeni? Neden = null);
 
     // Okurların bu kitabı nerede bıraktığına dair anonim, toplu istatistik.
     // "Bırakan" = bitirmemiş, ilerlemesi olan ve son 30 gündür (BirakmaGunu) hiç okumamış okur.
@@ -18,6 +19,12 @@ namespace KitapYonetimSistemi.Models
         public int? MedyanYuzde { get; init; }
         // Medyan sayfaya ulaşanların kaçta kaçı bitirdi (yüzde)
         public int? AsanlarinBitirmeYuzdesi { get; init; }
+        // Bırakma nedenleri (yalnızca neden belirtenler); en çok seçilenden başlar
+        public List<(BirakmaNedeni Neden, int Sayi)> Nedenler { get; init; } = new();
+        public int NedenToplami => Nedenler.Sum(n => n.Sayi);
+        // Tek tek kişiyi ele vermemek için en az bu kadar neden varken gösterilir
+        public const int EnAzNeden = 3;
+        public bool NedenYeterli => NedenToplami >= EnAzNeden;
 
         public int Karar => Bitiren + Birakan;
         public bool Yeterli => Karar >= EnAzKarar && Birakan > 0;
@@ -27,7 +34,7 @@ namespace KitapYonetimSistemi.Models
         {
             var liste = okurlar.Where(o => o.Bitirdi || o.Sayfa > 0).ToList();
             var bitiren = liste.Where(o => o.Bitirdi).ToList();
-            var birakan = liste.Where(o => !o.Bitirdi && (simdi - o.SonEtkinlik).TotalDays >= BirakmaGunu).ToList();
+            var birakan = liste.Where(o => !o.Bitirdi && (o.AcikBirakti || (simdi - o.SonEtkinlik).TotalDays >= BirakmaGunu)).ToList();
             var devam = liste.Count - bitiren.Count - birakan.Count;
 
             int? medyan = null, yuzde = null, asan = null;
@@ -50,7 +57,12 @@ namespace KitapYonetimSistemi.Models
                 DevamEden = devam,
                 MedyanSayfa = medyan,
                 MedyanYuzde = yuzde,
-                AsanlarinBitirmeYuzdesi = asan
+                AsanlarinBitirmeYuzdesi = asan,
+                Nedenler = birakan.Where(o => o.Neden.HasValue)
+                    .GroupBy(o => o.Neden!.Value)
+                    .Select(g => (g.Key, g.Count()))
+                    .OrderByDescending(x => x.Item2).ThenBy(x => x.Key)
+                    .ToList()
             };
         }
     }

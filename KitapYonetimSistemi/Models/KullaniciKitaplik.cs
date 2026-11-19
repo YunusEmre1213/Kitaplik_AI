@@ -13,6 +13,10 @@ namespace KitapYonetimSistemi.Models
         public DateTime? OkumayaBaslamaTarihi { get; set; }
         public DateTime? OkumaBitisTarihi { get; set; }
 
+        // Okur kitabı bilerek bıraktıysa neden ve tarih (okumaya devam edince temizlenir)
+        public BirakmaNedeni? BirakmaNedeni { get; set; }
+        public DateTime? BirakmaTarihi { get; set; }
+
         // Okunan son sayfa ve ilerleme notları
         public int? MevcutSayfa { get; set; }
         public ICollection<OkumaGunlugu> Gunlukler { get; set; } = new List<OkumaGunlugu>();

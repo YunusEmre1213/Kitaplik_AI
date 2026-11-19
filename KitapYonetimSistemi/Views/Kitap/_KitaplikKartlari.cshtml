@@ -24,6 +24,10 @@
 
                 <div class="kitap-meta">
                     <span class="durum durum-@durum.ToLowerInvariant()">@durum</span>
+                    @if (kayit.BirakmaTarihi.HasValue && kayit.OkumaDurumu == OkumaDurumu.Okuyorum)
+                    {
+                        <span class="text-muted">Yarım bırakıldı</span>
+                    }
                     @if (kayit.OkumaDurumu == OkumaDurumu.Okuyorum && toplam.HasValue)
                     {
                         <span>@mevcut / @toplam sayfa</span>
@@ -59,6 +63,21 @@
                                 <button type="submit" class="btn btn-outline-secondary">Kaydet</button>
                             </div>
                             <input type="text" name="not" class="form-control form-control-sm" maxlength="500" placeholder="Not (isteğe bağlı)" />
+                        </form>
+                    }
+
+                    @if (kayit.OkumaDurumu == OkumaDurumu.Okuyorum && mevcut > 0 && !kayit.BirakmaTarihi.HasValue)
+                    {
+                        <form asp-action="KitabiBirak" method="post" class="mb-2" onsubmit="return confirm('Bu kitabı yarım bırakmak istiyor musun? Devam etmek istersen ilerleme girmen yeterli.');">
+                            <input type="hidden" name="kitaplikId" value="@kayit.Id" />
+                            <select name="neden" class="form-select form-select-sm mb-1" aria-label="Bırakma nedeni">
+                                <option value="">Neden bıraktın? (isteğe bağlı)</option>
+                                @foreach (var n in Enum.GetValues<BirakmaNedeni>())
+                                {
+                                    <option value="@((int)n)">@BirakmaNedeniMetni.Etiket(n)</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">Yarım bıraktım</button>
                         </form>
                     }
 

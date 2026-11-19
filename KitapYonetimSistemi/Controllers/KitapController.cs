@@ -228,6 +228,8 @@ namespace KitapYonetimSistemi.Controllers
                     Sayfa = kk.MevcutSayfa ?? 0,
                     kk.EklenmeTarihi,
                     kk.OkumayaBaslamaTarihi,
+                    kk.BirakmaNedeni,
+                    kk.BirakmaTarihi,
                     SonGunluk = kk.Gunlukler.Max(g => (DateTime?)g.Tarih),
                     SonOturum = kk.Oturumlar.Max(o => (DateTime?)o.Baslangic)
                 })
@@ -236,7 +238,8 @@ namespace KitapYonetimSistemi.Controllers
                 okurKayitlari.Select(k => new OkurDurumu(
                     k.Sayfa,
                     k.OkumaDurumu == OkumaDurumu.Okundu,
-                    new[] { k.EklenmeTarihi, k.OkumayaBaslamaTarihi ?? DateTime.MinValue, k.SonGunluk ?? DateTime.MinValue, k.SonOturum ?? DateTime.MinValue }.Max())),
+                    new[] { k.EklenmeTarihi, k.OkumayaBaslamaTarihi ?? DateTime.MinValue, k.SonGunluk ?? DateTime.MinValue, k.SonOturum ?? DateTime.MinValue }.Max(),
+                    k.BirakmaTarihi.HasValue, k.BirakmaNedeni)),
                 kitap.SayfaSayisi, DateTime.Now);
             kenarVm.BenimTepkilerim = tumTepkiler.Where(t => t.KullaniciId == kullaniciId).ToDictionary(t => t.SayfaNo, t => t.Tur);
             return View(kitap);
@@ -465,6 +468,9 @@ namespace KitapYonetimSistemi.Controllers
 
             var eskiDurum = kayit.OkumaDurumu;
             kayit.OkumaDurumu = yeniDurum;
+            // Durum elle değişince eski "bıraktım" işareti geçersizdir
+            kayit.BirakmaNedeni = null;
+            kayit.BirakmaTarihi = null;
 
             // Durum değişikliklerine göre tarihleri güncelle
             if (yeniDurum == OkumaDurumu.Okuyorum && eskiDurum != OkumaDurumu.Okuyorum)
@@ -616,11 +622,42 @@ namespace KitapYonetimSistemi.Controllers
             return Don();
         }
 
+        // "Bıraktım": okuyan kitabı bilerek bırakır ve isteğe bağlı neden verir. Okumaya devam edince işaret kalkar.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KitabiBirak(int kitaplikId, BirakmaNedeni? neden)
+        {
+            var kullaniciId = _userManager.GetUserId(User)!;
+            var kayit = await _context.KullaniciKitapliklari
+                .FirstOrDefaultAsync(kk => kk.Id == kitaplikId && kk.KullaniciId == kullaniciId);
+            if (kayit == null)
+            {
+                TempData["Hata"] = "Kitaplık kaydı bulunamadı!";
+                return RedirectToAction(nameof(Kitapligim));
+            }
+
+            if (kayit.OkumaDurumu != OkumaDurumu.Okuyorum || (kayit.MevcutSayfa ?? 0) <= 0)
+            {
+                TempData["Hata"] = "Yalnızca okumaya başladığın bir kitabı bırakabilirsin.";
+                return RedirectToAction(nameof(Kitapligim));
+            }
+
+            kayit.BirakmaNedeni = neden.HasValue && Enum.IsDefined(neden.Value) ? neden : null;
+            kayit.BirakmaTarihi = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            TempData["Mesaj"] = "Kitap yarım bırakıldı olarak işaretlendi. İstediğin zaman ilerleme girip devam edebilirsin.";
+            return RedirectToAction(nameof(Kitapligim));
+        }
+
         // Sayfa ilerlemesini kitaplık kaydına işler ve günlüğe yazar. Kitap bu işlemle bittiyse true döner.
         private bool IlerlemeUygula(KullaniciKitaplik kayit, int sayfa, string? not)
         {
             var toplamSayfa = kayit.Kitap?.SayfaSayisi;
             kayit.MevcutSayfa = sayfa;
+            // Okumaya devam eden kitabı bırakmış sayılmaz
+            kayit.BirakmaNedeni = null;
+            kayit.BirakmaTarihi = null;
 
             // İlk sayfa girilince okunacak kitap otomatik "Okuyorum" olur
             if (kayit.OkumaDurumu == OkumaDurumu.Okunacak && sayfa > 0)

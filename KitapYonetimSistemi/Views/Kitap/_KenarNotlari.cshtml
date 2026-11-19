@@ -121,7 +121,16 @@
                     <text> Bu sayfayı geçenlerin %@b.AsanlarinBitirmeYuzdesi'i kitabı bitirdi.</text>
                 }
             </p>
-            <div class="tepki-ipucu">Son 30 gündür hiç okunmayan ve bitmemiş kitaplar "bırakılmış" sayılır. Yalnızca toplu sayılar gösterilir.</div>
+            @if (b.NedenYeterli)
+            {
+                <ul class="birakma-nedenler">
+                    @foreach (var (neden, sayi) in b.Nedenler)
+                    {
+                        <li><span>@BirakmaNedeniMetni.Etiket(neden)</span><strong>%@((int)Math.Round(sayi * 100.0 / b.NedenToplami))</strong></li>
+                    }
+                </ul>
+            }
+            <div class="tepki-ipucu">Bırakanlar kendileri "bıraktım" dediğinde ya da son 30 gündür hiç okunmayan ve bitmemiş kitaplar "bırakılmış" sayılır. Yalnızca toplu sayılar gösterilir.</div>
         </div>
     }
 
