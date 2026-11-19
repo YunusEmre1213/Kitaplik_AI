@@ -24,6 +24,9 @@ namespace KitapYonetimSistemi.Data
         public DbSet<KenarNotu> KenarNotlari { get; set; }
         public DbSet<SayfaTepkisi> SayfaTepkileri { get; set; }
         public DbSet<OkumaOturumu> OkumaOturumlari { get; set; }
+        public DbSet<OkumaOdasi> OkumaOdalari { get; set; }
+        public DbSet<OdaUyesi> OdaUyeleri { get; set; }
+        public DbSet<OdaMesaji> OdaMesajlari { get; set; }
         public DbSet<Yazar> Yazarlar { get; set; }
         public DbSet<KitapYazar> KitapYazarlari { get; set; }
         public DbSet<Kategori> Kategoriler { get; set; }
@@ -232,6 +235,32 @@ namespace KitapYonetimSistemi.Data
                 t.HasOne(x => x.Kitap).WithMany().HasForeignKey(x => x.KitapId).OnDelete(DeleteBehavior.Cascade);
                 t.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
                 t.HasIndex(x => new { x.KitapId, x.KullaniciId, x.SayfaNo }).IsUnique();
+            });
+
+            // Ortak okuma odaları: oluşturan için NoAction (çoklu silme zinciri olmasın), üyelik ve mesajlar kullanıcıyla silinir
+            builder.Entity<OkumaOdasi>(o =>
+            {
+                o.Property(x => x.Ad).HasMaxLength(OkumaOdasi.AdUzunlugu).IsRequired();
+                o.Property(x => x.Kod).HasMaxLength(OkumaOdasi.KodUzunlugu).IsRequired();
+                o.HasIndex(x => x.Kod).IsUnique();
+                o.HasOne(x => x.Kitap).WithMany().HasForeignKey(x => x.KitapId).OnDelete(DeleteBehavior.Cascade);
+                o.HasOne(x => x.Olusturan).WithMany().HasForeignKey(x => x.OlusturanId).OnDelete(DeleteBehavior.NoAction);
+            });
+
+            builder.Entity<OdaUyesi>(u =>
+            {
+                u.HasOne(x => x.Oda).WithMany(o => o.Uyeler).HasForeignKey(x => x.OdaId).OnDelete(DeleteBehavior.Cascade);
+                u.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
+                u.HasIndex(x => new { x.OdaId, x.KullaniciId }).IsUnique();
+                u.HasIndex(x => x.KullaniciId);
+            });
+
+            builder.Entity<OdaMesaji>(m =>
+            {
+                m.Property(x => x.Metin).HasMaxLength(OdaMesaji.EnFazlaUzunluk);
+                m.HasOne(x => x.Oda).WithMany(o => o.Mesajlar).HasForeignKey(x => x.OdaId).OnDelete(DeleteBehavior.Cascade);
+                m.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
+                m.HasIndex(x => new { x.OdaId, x.Tarih });
             });
 
             builder.Entity<AlintiBegeni>()

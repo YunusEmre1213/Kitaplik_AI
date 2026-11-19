@@ -441,3 +441,23 @@ main { padding-top: 1.4rem; }
 .yil-sayi + .stat-label { margin-top: .6rem; }
 .ay-etiketleri { display: flex; gap: 3px; font-size: .68rem; color: var(--sa-muted); margin-top: .35rem; text-transform: uppercase; letter-spacing: .06em; }
 .ay-etiketleri span { flex: 1; text-align: center; }
+
+/* Zaman kapsülü ve ortak okuma odaları */
+.kapsul-kilitli .kapsul-metin { color: var(--sa-muted); font-style: italic; }
+.oda-ac { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin: 0 0 1.5rem; }
+.oda-ac .form-control { max-width: 18rem; }
+.oda-katil { max-width: 28rem; margin: 1rem 0 1.5rem; }
+.oda-liste { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: .75rem; }
+.oda-kart { display: block; padding: .9rem 1.1rem; background: var(--sa-paper); border: 1px solid var(--sa-line); border-radius: var(--sa-radius); text-decoration: none; color: var(--sa-ink); }
+.oda-kart:hover { border-color: var(--sa-accent); }
+.oda-ad { display: block; font-family: var(--sa-display); font-size: 1.15rem; }
+.oda-alt { color: var(--sa-muted); font-size: .875rem; }
+.oda-kod { text-align: right; }
+.oda-kod strong { display: block; font-family: ui-monospace, Consolas, monospace; font-size: 1.4rem; letter-spacing: .12em; color: var(--sa-accent); }
+.oda-bolum { margin: 2rem 0; }
+.oda-uyeler { list-style: none; padding: 0; margin: 0 0 1rem; display: grid; gap: .8rem; }
+.oda-uye-ust { display: flex; justify-content: space-between; font-size: .95rem; margin-bottom: .25rem; }
+.oda-cubuk { height: 8px; background: var(--sa-surface); border-radius: 4px; overflow: hidden; }
+.oda-cubuk span { display: block; height: 100%; background: var(--sa-muted); }
+.oda-cubuk span.ben { background: var(--sa-accent); }
+.oda-ilerleme { max-width: 24rem; }

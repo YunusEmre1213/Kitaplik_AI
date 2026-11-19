@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -187,8 +187,21 @@ namespace KitapYonetimSistemi.Controllers
                 })
                 .ToList();
 
+            // Zaman kapsülü: açılmamış notların metni sunucuda silinir, görünüme sızmaz
+            var kilitliNotlar = new HashSet<int>();
+            var simdi = DateTime.Now;
+            foreach (var n in notlar)
+            {
+                if (!KapsulKurali.Acik(n.KapsulBitinceAc, n.KapsulAcilisTarihi, bitirdi, simdi))
+                {
+                    n.Metin = string.Empty;
+                    kilitliNotlar.Add(n.Id);
+                }
+            }
+
             ViewBag.KenarNotlari = new KenarNotlariViewModel
             {
+                KilitliNotlar = kilitliNotlar,
                 KitapId = kitap.Id,
                 KitapSayfaSayisi = kitap.SayfaSayisi,
                 KullaniciId = kullaniciId,
@@ -561,8 +574,13 @@ namespace KitapYonetimSistemi.Controllers
         // Okuma ilerlemesini (sayfa) güncelle ve isteğe bağlı günlük notu ekle
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> IlerlemeGuncelle(int kitaplikId, int sayfa, string? not)
+        public async Task<IActionResult> IlerlemeGuncelle(int kitaplikId, int sayfa, string? not, int? odaId = null)
         {
+            // Okuma odasından gelindiyse işlem sonrası odaya dönülür
+            IActionResult Don() => odaId.HasValue
+                ? RedirectToAction("Detay", "Oda", new { id = odaId.Value })
+                : RedirectToAction(nameof(Kitapligim));
+
             var kullaniciId = _userManager.GetUserId(User)!;
 
             var kayit = await _context.KullaniciKitapliklari
@@ -572,7 +590,7 @@ namespace KitapYonetimSistemi.Controllers
             if (kayit == null)
             {
                 TempData["Hata"] = "Kitaplık kaydı bulunamadı!";
-                return RedirectToAction(nameof(Kitapligim));
+                return Don();
             }
 
             var toplamSayfa = kayit.Kitap?.SayfaSayisi;
@@ -581,21 +599,21 @@ namespace KitapYonetimSistemi.Controllers
                 TempData["Hata"] = toplamSayfa.HasValue
                     ? $"Sayfa 0 ile {toplamSayfa} arasında olmalıdır!"
                     : "Geçersiz sayfa numarası!";
-                return RedirectToAction(nameof(Kitapligim));
+                return Don();
             }
 
             not = string.IsNullOrWhiteSpace(not) ? null : not.Trim();
             if (not != null && not.Length > 500)
             {
                 TempData["Hata"] = "Not en fazla 500 karakter olabilir!";
-                return RedirectToAction(nameof(Kitapligim));
+                return Don();
             }
 
             var bitirdi = IlerlemeUygula(kayit, sayfa, not);
             TempData["Mesaj"] = bitirdi ? "Tebrikler, kitabı bitirdiniz!" : "İlerlemeniz kaydedildi!";
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Kitapligim));
+            return Don();
         }
 
         // Sayfa ilerlemesini kitaplık kaydına işler ve günlüğe yazar. Kitap bu işlemle bittiyse true döner.
@@ -739,7 +757,7 @@ namespace KitapYonetimSistemi.Controllers
         // Kenar notu ekle (kitabın bir sayfasına gizli ya da herkese açık not)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> KenarNotuEkle(int kitapId, int sayfaNo, string metin, bool herkeseAcik = false)
+        public async Task<IActionResult> KenarNotuEkle(int kitapId, int sayfaNo, string metin, bool herkeseAcik = false, string? kapsul = null)
         {
             metin = (metin ?? string.Empty).Trim();
             var kitap = await _context.Kitaplar.AsNoTracking().Where(k => k.Id == kitapId).Select(k => new { k.SayfaSayisi }).FirstOrDefaultAsync();
@@ -764,6 +782,11 @@ namespace KitapYonetimSistemi.Controllers
                 }
                 else
                 {
+                    var (bitinceAc, acilis) = KapsulKurali.Coz(kapsul, DateTime.Now);
+                    var kapsulMu = KapsulKurali.KapsulMu(bitinceAc, acilis);
+                    // Kapsül notları yalnızca yazarın geleceğine yazılır, herkese açık olamaz
+                    if (kapsulMu) herkeseAcik = false;
+
                     _context.KenarNotlari.Add(new KenarNotu
                     {
                         KitapId = kitapId,
@@ -771,10 +794,13 @@ namespace KitapYonetimSistemi.Controllers
                         SayfaNo = sayfaNo,
                         Metin = metin,
                         HerkeseAcik = herkeseAcik,
+                        KapsulBitinceAc = bitinceAc,
+                        KapsulAcilisTarihi = acilis,
                         Tarih = DateTime.Now
                     });
                     await _context.SaveChangesAsync();
-                    TempData["Mesaj"] = herkeseAcik ? "Notunuz herkese açık olarak eklendi!" : "Notunuz yalnızca size görünür olarak eklendi!";
+                    TempData["Mesaj"] = kapsulMu ? "Zaman kapsülün mühürlendi. Açılış vakti gelince görünecek!"
+                        : herkeseAcik ? "Notunuz herkese açık olarak eklendi!" : "Notunuz yalnızca size görünür olarak eklendi!";
                 }
             }
 

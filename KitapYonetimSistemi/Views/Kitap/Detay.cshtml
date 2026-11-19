@@ -44,6 +44,15 @@
     </div>
 </div>
 
+@if (User.IsInRole("User"))
+{
+    <form asp-controller="Oda" asp-action="Olustur" method="post" class="oda-ac">
+        <input type="hidden" name="kitapId" value="@Model.Id" />
+        <input type="text" name="ad" class="form-control form-control-sm" maxlength="80" placeholder="Oda adı (isteğe bağlı)" aria-label="Oda adı" />
+        <button type="submit" class="btn btn-outline-secondary btn-sm">Arkadaşlarınla birlikte oku</button>
+    </form>
+}
+
 <partial name="_KenarNotlari" model="(KenarNotlariViewModel)ViewBag.KenarNotlari" />
 
 <!-- Puan Sistemi -->

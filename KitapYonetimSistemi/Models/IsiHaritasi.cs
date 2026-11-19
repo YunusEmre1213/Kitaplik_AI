@@ -62,6 +62,7 @@ namespace KitapYonetimSistemi.Models
         public TepkiHaritasi Tepki { get; set; } = new();
         public BirakmaIstatistigi Birakma { get; set; } = BirakmaIstatistigi.Hesapla(Array.Empty<OkurDurumu>(), null, DateTime.Now);
         public int? OkuyucuSayfasi { get; set; }
+        public HashSet<int> KilitliNotlar { get; set; } = new();
         public bool Bitirdi { get; set; }
         public Dictionary<int, TepkiTuru> BenimTepkilerim { get; set; } = new();
     }

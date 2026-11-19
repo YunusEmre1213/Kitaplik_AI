@@ -1,0 +1,49 @@
+@model IEnumerable<KitapYonetimSistemi.Models.OkumaOdasi>
+
+@{
+    ViewData["Title"] = "Okuma odaları";
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Birlikte oku</span>
+        <h1>Okuma odaları</h1>
+        <span class="not">Aynı kitabı arkadaşlarınla oku, geride kalanlara spoiler vermeden sohbet et.</span>
+    </div>
+</div>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["Hata"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<form asp-action="Katil" method="post" class="oda-katil">
+    <label class="form-label" for="odaKod">Davet kodun var mı?</label>
+    <div class="input-group">
+        <input type="text" id="odaKod" name="kod" class="form-control" maxlength="8" placeholder="8 haneli kod" autocomplete="off" style="text-transform:uppercase" required />
+        <button type="submit" class="btn btn-primary">Odaya katıl</button>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <p class="text-muted mt-4">Henüz bir odan yok. Bir kitabın sayfasındaki "Birlikte oku" düğmesiyle oda açabilir ya da davet koduyla katılabilirsin.</p>
+}
+else
+{
+    <ul class="oda-liste">
+        @foreach (var o in Model)
+        {
+            <li>
+                <a asp-action="Detay" asp-route-id="@o.Id" class="oda-kart">
+                    <span class="oda-ad">@o.Ad</span>
+                    <span class="oda-alt">@o.Kitap?.KitapAdi · @o.Uyeler.Count kişi</span>
+                </a>
+            </li>
+        }
+    </ul>
+}

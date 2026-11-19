@@ -1,0 +1,120 @@
+@model KitapYonetimSistemi.Models.OdaViewModel
+
+@{
+    ViewData["Title"] = Model.Oda.Ad;
+    var toplam = Model.KitapSayfaSayisi ?? 0;
+    var maks = Model.KitapSayfaSayisi ?? 20000;
+    int Yuzde(OdaUyeGorunumu u) => u.Bitirdi ? 100 : toplam > 0 ? Math.Min(100, u.Sayfa * 100 / toplam) : 0;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Okuma odaları</a></li>
+        <li class="breadcrumb-item active">@Model.Oda.Ad</li>
+    </ol>
+</nav>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["Hata"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Birlikte oku</span>
+        <h1>@Model.Oda.Ad</h1>
+        <span class="not"><a asp-controller="Kitap" asp-action="Detay" asp-route-id="@Model.Oda.KitapId">@Model.Oda.Kitap?.KitapAdi</a> · @(Model.Oda.Kitap?.YazarAdi)</span>
+    </div>
+    <div class="oda-kod" title="Arkadaşlarına bu kodu ver">
+        <span class="etiket">Davet kodu</span>
+        <strong>@Model.Oda.Kod</strong>
+    </div>
+</div>
+
+<section class="oda-bolum">
+    <h2>Okuma ilerlemesi</h2>
+    <ul class="oda-uyeler">
+        @foreach (var u in Model.Uyeler)
+        {
+            <li>
+                <div class="oda-uye-ust">
+                    <span>@u.Ad@(u.Ben ? " (sen)" : "")</span>
+                    <span class="text-muted">@(u.Bitirdi ? "Bitirdi" : toplam > 0 ? $"s. {u.Sayfa} / {toplam}" : $"s. {u.Sayfa}")</span>
+                </div>
+                <div class="oda-cubuk" role="img" aria-label="@u.Ad ilerlemesi %@Yuzde(u)"><span class="@(u.Ben ? "ben" : "")" style="width:@(Yuzde(u))%"></span></div>
+            </li>
+        }
+    </ul>
+
+    @if (Model.KitaplikId.HasValue)
+    {
+        <form asp-controller="Kitap" asp-action="IlerlemeGuncelle" method="post" class="oda-ilerleme">
+            <input type="hidden" name="kitaplikId" value="@Model.KitaplikId" />
+            <input type="hidden" name="odaId" value="@Model.Oda.Id" />
+            <label class="form-label" for="odaSayfa">Şu an kaçıncı sayfadasın?</label>
+            <div class="input-group">
+                <input type="number" id="odaSayfa" name="sayfa" class="form-control" min="0" max="@maks" value="@Model.BenimSayfam" required />
+                <button type="submit" class="btn btn-outline-secondary">Güncelle</button>
+            </div>
+        </form>
+    }
+</section>
+
+<section class="oda-bolum" id="mesajlar">
+    <h2>Oda sohbeti</h2>
+    <p class="tepki-ipucu">Mesajlar yazıldığı andaki sayfana bağlanır. Senden ilerideki bir mesaj, o sayfaya gelene kadar kilitli kalır.</p>
+
+    @if (!Model.Mesajlar.Any())
+    {
+        <p class="text-muted">Henüz mesaj yok. İlk mesajı sen yaz.</p>
+    }
+    else
+    {
+        <ul class="kenar-liste">
+            @foreach (var m in Model.Mesajlar)
+            {
+                <li>
+                    <span class="kenar-sayfa">@(m.SayfaNo > 0 ? $"s. {m.SayfaNo}" : "—")</span>
+                    <div class="kenar-icerik @(m.Kilitli ? "kapsul-kilitli" : "")">
+                        @if (m.Kilitli)
+                        {
+                            <p class="kapsul-metin">🔒 @m.Ad senden ilerde; @m.SayfaNo. sayfaya gelince açılır.</p>
+                        }
+                        else
+                        {
+                            <p>@m.Metin</p>
+                        }
+                        <div class="kenar-alt">
+                            <span>@m.Ad</span>
+                            <span>@m.Tarih.ToString("dd.MM.yyyy HH:mm")</span>
+                            @if (m.Benim)
+                            {
+                                <form asp-action="MesajSil" method="post" onsubmit="return confirm('Mesaj silinsin mi?');" class="d-inline">
+                                    <input type="hidden" name="mesajId" value="@m.Id" />
+                                    <button type="submit" class="cikar-btn">Sil</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+
+    <form asp-action="MesajGonder" method="post" class="kenar-form">
+        <input type="hidden" name="odaId" value="@Model.Oda.Id" />
+        <div class="input-group">
+            <input type="text" name="metin" class="form-control" maxlength="1000" placeholder="@(Model.Bitirdim ? "Kitabı bitirdin, her şeyi yazabilirsin..." : $"s. {Model.BenimSayfam} için bir şeyler yaz...")" required aria-label="Mesaj" />
+            <button type="submit" class="btn btn-primary">Gönder</button>
+        </div>
+    </form>
+</section>
+
+<form asp-action="Ayril" method="post" onsubmit="return confirm('Odadan ayrılmak istediğine emin misin?');" class="mt-4">
+    <input type="hidden" name="odaId" value="@Model.Oda.Id" />
+    <button type="submit" class="cikar-btn">Odadan ayrıl</button>
+</form>

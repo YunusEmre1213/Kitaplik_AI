@@ -14,6 +14,10 @@ namespace KitapYonetimSistemi.Models
         public bool HerkeseAcik { get; set; }
         public DateTime Tarih { get; set; }
 
+        // Zaman kapsülü: not yazarına bile kilitli kalır; kitap bitince ve/veya tarih gelince açılır
+        public bool KapsulBitinceAc { get; set; }
+        public DateTime? KapsulAcilisTarihi { get; set; }
+
         public int KitapId { get; set; }
         public Kitap? Kitap { get; set; }
 

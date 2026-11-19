@@ -131,14 +131,22 @@
             @foreach (var n in Model.Notlar)
             {
                 var benim = n.KullaniciId == Model.KullaniciId;
+                var kilitli = Model.KilitliNotlar.Contains(n.Id);
                 <li>
                     <span class="kenar-sayfa">s. @n.SayfaNo</span>
-                    <div class="kenar-icerik">
-                        <p>@n.Metin</p>
+                    <div class="kenar-icerik @(kilitli ? "kapsul-kilitli" : "")">
+                        @if (kilitli)
+                        {
+                            <p class="kapsul-metin">🔒 Zaman kapsülü: @(n.KapsulBitinceAc && n.KapsulAcilisTarihi.HasValue ? $"kitabı bitirince ya da {n.KapsulAcilisTarihi:dd.MM.yyyy} tarihinde açılır" : n.KapsulBitinceAc ? "kitabı bitirince açılır" : $"{n.KapsulAcilisTarihi:dd.MM.yyyy} tarihinde açılır")</p>
+                        }
+                        else
+                        {
+                            <p>@n.Metin</p>
+                        }
                         <div class="kenar-alt">
                             @if (benim)
                             {
-                                <span>@(n.HerkeseAcik ? "Herkese açık" : "Yalnızca sen")</span>
+                                <span>@(n.KapsulBitinceAc || n.KapsulAcilisTarihi.HasValue ? "Kapsül" : n.HerkeseAcik ? "Herkese açık" : "Yalnızca sen")</span>
                             }
                             else
                             {
@@ -172,9 +180,17 @@
                 </div>
             </div>
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
-                <div class="form-check mb-0">
-                    <input class="form-check-input" type="checkbox" name="herkeseAcik" value="true" id="notHerkeseAcik" />
-                    <label class="form-check-label" for="notHerkeseAcik">Herkese açık olsun (ısı haritasına eklenir)</label>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" name="herkeseAcik" value="true" id="notHerkeseAcik" />
+                        <label class="form-check-label" for="notHerkeseAcik">Herkese açık olsun (ısı haritasına eklenir)</label>
+                    </div>
+                    <select name="kapsul" class="form-select form-select-sm w-auto" aria-label="Zaman kapsülü" title="Zaman kapsülü: notu bugünden gizleyip geleceğe bırak">
+                        <option value="yok">Hemen göster</option>
+                        <option value="bitince">🔒 Kitabı bitirince aç</option>
+                        <option value="6ay">🔒 6 ay sonra aç</option>
+                        <option value="1yil">🔒 1 yıl sonra aç</option>
+                    </select>
                 </div>
                 <button type="submit" class="btn btn-primary btn-sm">Notu ekle</button>
             </div>
