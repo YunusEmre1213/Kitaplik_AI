@@ -1,0 +1,45 @@
+@model KitapYonetimSistemi.Models.RuhHaliHaritasi
+
+@{
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    var enCok = Model.BaslangicDagilimi.Count == 0 ? 1 : Model.BaslangicDagilimi.Max(x => x.Sayi);
+}
+
+<section class="ritim-bolum ruh-bolum">
+    <div class="bolum-baslik">
+        <h2>Okuma ruh halin</h2>
+        <span class="etiket">@Model.ToplamOturum oturum</span>
+    </div>
+
+    @if (!Model.Yeterli)
+    {
+        <p class="text-muted">Okuma oturumunu başlatırken ve bitirirken ruh halini seçersen burada örüntülerini görürsün. En az @RuhHaliHaritasi.EnAzOturum oturum gerekir; şimdilik @Model.ToplamOturum.</p>
+    }
+    else
+    {
+        <ul class="ruh-dagilim">
+            @foreach (var (ruh, sayi) in Model.BaslangicDagilimi)
+            {
+                <li>
+                    <span class="ruh-ad">@OkumaRuhHaliMetni.Emoji(ruh) @OkumaRuhHaliMetni.Etiket(ruh)</span>
+                    <span class="ruh-cubuk"><span style="width:@(sayi * 100 / enCok)%"></span></span>
+                    <span class="ruh-sayi">@sayi</span>
+                </li>
+            }
+        </ul>
+        <ul class="ruh-icgoru">
+            @if (Model.CiftliOturum >= RuhHaliHaritasi.EnAzKalip)
+            {
+                <li>Başı ve sonu işaretli @Model.CiftliOturum oturumun %@Model.IyilesenYuzde'inde okuduktan sonra ruh halin başlangıca göre daha iyiydi.</li>
+            }
+            @if (Model.EnIyiZaman != null)
+            {
+                <li>Okuma sonrası en iyi hissettiğin vakit: <strong>@Model.EnIyiZaman</strong>.</li>
+            }
+            @foreach (var (ruh, tur) in Model.RuhVeTur)
+            {
+                <li>@OkumaRuhHaliMetni.Etiket(ruh).ToLower(tr) başladığında en çok <strong>@tur</strong> okuyorsun.</li>
+            }
+        </ul>
+    }
+</section>

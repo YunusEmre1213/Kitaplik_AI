@@ -12,6 +12,9 @@ namespace KitapYonetimSistemi.Models
         public DateTime? Bitis { get; set; }
         public int? BaslangicSayfa { get; set; }
         public int? BitisSayfa { get; set; }
+        // İsteğe bağlı: oturumun başında ve sonunda okurun ruh hali
+        public OkumaRuhHali? RuhHaliBasi { get; set; }
+        public OkumaRuhHali? RuhHaliSonu { get; set; }
 
         public int KullaniciKitaplikId { get; set; }
         public KullaniciKitaplik? KullaniciKitaplik { get; set; }

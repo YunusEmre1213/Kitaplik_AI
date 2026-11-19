@@ -690,7 +690,7 @@ namespace KitapYonetimSistemi.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> OturumBaslat(int kitaplikId)
+        public async Task<IActionResult> OturumBaslat(int kitaplikId, OkumaRuhHali? ruhHali = null)
         {
             var kullaniciId = _userManager.GetUserId(User)!;
             var kayit = await _context.KullaniciKitapliklari
@@ -724,7 +724,8 @@ namespace KitapYonetimSistemi.Controllers
             {
                 KullaniciKitaplikId = kayit.Id,
                 Baslangic = DateTime.Now,
-                BaslangicSayfa = kayit.MevcutSayfa ?? 0
+                BaslangicSayfa = kayit.MevcutSayfa ?? 0,
+                RuhHaliBasi = ruhHali.HasValue && Enum.IsDefined(ruhHali.Value) ? ruhHali : null
             });
             await _context.SaveChangesAsync();
 
@@ -734,7 +735,7 @@ namespace KitapYonetimSistemi.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> OturumBitir(int oturumId, int sayfa)
+        public async Task<IActionResult> OturumBitir(int oturumId, int sayfa, OkumaRuhHali? ruhHali = null)
         {
             var kullaniciId = _userManager.GetUserId(User)!;
             var oturum = await _context.OkumaOturumlari
@@ -760,6 +761,7 @@ namespace KitapYonetimSistemi.Controllers
 
             oturum.Bitis = DateTime.Now;
             oturum.BitisSayfa = sayfa;
+            oturum.RuhHaliSonu = ruhHali.HasValue && Enum.IsDefined(ruhHali.Value) ? ruhHali : null;
 
             var dakika = (int)Math.Round(oturum.Dakika);
             var bitirdi = false;
@@ -1177,6 +1179,14 @@ namespace KitapYonetimSistemi.Controllers
                 .ToListAsync();
 
             istatistikler.Ritim = OkumaRitmi.Hesapla(DateTime.Now, gunlukler, oturumlar, devamEdenler, bitisTarihleri);
+
+            // Ruh hali haritası: oturum başı/sonu ruh halleri ve okunan tür
+            var ruhOturumlari = await _context.OkumaOturumlari
+                .AsNoTracking()
+                .Where(o => o.Bitis != null && (o.RuhHaliBasi != null || o.RuhHaliSonu != null) && o.KullaniciKitaplik!.KullaniciId == kullanici.Id)
+                .Select(o => new RuhHaliOturumu(o.Baslangic, o.RuhHaliBasi, o.RuhHaliSonu, o.KullaniciKitaplik!.Kitap!.Tur))
+                .ToListAsync();
+            istatistikler.RuhHali = RuhHaliHaritasi.Hesapla(ruhOturumlari);
 
             return View(istatistikler);
         }

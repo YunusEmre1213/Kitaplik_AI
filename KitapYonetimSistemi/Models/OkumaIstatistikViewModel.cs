@@ -18,6 +18,7 @@
         public int BuYilOkunanSayfa { get; set; }
         public List<OkumaGunlugu> SonGunlukler { get; set; } = new();
         public OkumaRitmi Ritim { get; set; } = new();
+        public RuhHaliHaritasi RuhHali { get; set; } = new();
 
         public double HedefYuzdesi => HedefKitapSayisi > 0
             ? Math.Min(100, (double)BuYilOkunanSayisi / HedefKitapSayisi.Value * 100)

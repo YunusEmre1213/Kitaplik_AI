@@ -1,0 +1,66 @@
+@model KitapYonetimSistemi.Controllers.IceAktarSonucu
+
+@{
+    ViewData["Title"] = "Kitaplığı içe aktar";
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Kitaplık</span>
+        <h1>Kitaplığı içe aktar</h1>
+        <span class="not">Başka bir yerdeki kitap listeni CSV dosyasıyla Satır Arası'na taşı.</span>
+    </div>
+</div>
+
+@if (Model.Hata != null)
+{
+    <div class="alert alert-danger">@Model.Hata</div>
+}
+
+@if (Model.Denendi && Model.Hata == null)
+{
+    <section class="ice-sonuc">
+        <h2>Aktarım tamamlandı</h2>
+        <ul>
+            <li><strong>@Model.Eklenen</strong> kitap kitaplığına eklendi@(Model.PuanlananSayisi > 0 ? $" ({Model.PuanlananSayisi} puan dahil)" : "").</li>
+            @if (Model.ZatenVar > 0) { <li>@Model.ZatenVar kitap zaten kitaplığındaydı, dokunulmadı.</li> }
+            @if (Model.Bulunamayan.Count > 0) { <li>@Model.Bulunamayan.Count kitap katalogda bulunamadı.</li> }
+            @if (Model.BosAtlanan > 0) { <li>@Model.BosAtlanan satırda kitap adı olmadığı için atlandı.</li> }
+            @if (Model.Kirpildi) { <li>Dosya çok uzun; yalnızca ilk @KitaplikCsv.EnFazlaSatir satır işlendi. Kalanı için dosyayı bölüp tekrar yükle.</li> }
+        </ul>
+        <a asp-controller="Kitap" asp-action="Kitapligim" class="btn btn-primary btn-sm">Kitaplığıma git</a>
+
+        @if (Model.Bulunamayan.Count > 0)
+        {
+            <details class="mt-3">
+                <summary>Bulunamayan kitaplar (@Model.Bulunamayan.Count)</summary>
+                <ul class="ice-bulunamayan">
+                    @foreach (var b in Model.Bulunamayan.Take(300))
+                    {
+                        <li>@b</li>
+                    }
+                </ul>
+                @if (Model.Bulunamayan.Count > 300) { <p class="text-muted small">İlk 300 tanesi gösteriliyor.</p> }
+            </details>
+        }
+    </section>
+}
+
+<form asp-action="Index" method="post" enctype="multipart/form-data" class="ice-form">
+    <label class="form-label" for="dosya">CSV dosyası</label>
+    <div class="input-group">
+        <input type="file" id="dosya" name="dosya" class="form-control" accept=".csv,text/csv" required />
+        <button type="submit" class="btn btn-primary">İçe aktar</button>
+    </div>
+</form>
+
+<section class="ice-yardim">
+    <h2>Nasıl hazırlanır?</h2>
+    <ul>
+        <li><strong>Goodreads:</strong> My Books sayfasında "Import and export" bölümünden "Export Library" ile indirdiğin dosya olduğu gibi yüklenir.</li>
+        <li><strong>Kitapyurdu ve diğerleri:</strong> Kitapyurdu'nun hazır bir dışa aktarma özelliğini bilmiyoruz. Listeni Excel ya da Google Sheets'te hazırlayıp CSV olarak kaydedebilirsin.</li>
+        <li>İlk satır başlık olmalı. Tanınan sütunlar: <em>Kitap Adı</em> (zorunlu), <em>Yazar</em>, <em>ISBN</em>, <em>Puan</em> (1-5), <em>Durum</em> (Okundu / Okuyorum / Okunacak) ve <em>Okunma Tarihi</em>. İngilizce karşılıkları (Title, Author, My Rating, Exclusive Shelf, Date Read) da kabul edilir.</li>
+        <li>Kitaplar önce ISBN'e, yoksa ad ve yazara göre katalogda aranır. Katalogda olmayan kitaplar eklenmez, sonunda liste halinde gösterilir.</li>
+        <li>Kitaplığında zaten olan kitaplara ve verdiğin puanlara dokunulmaz. Eklenen kitaplar yalnızca sana görünür olur.</li>
+    </ul>
+</section>

@@ -698,6 +698,12 @@ namespace KitapYonetimSistemi.Data.Migrations
                     b.Property<int>("KullaniciKitaplikId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("RuhHaliBasi")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RuhHaliSonu")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Bitis");

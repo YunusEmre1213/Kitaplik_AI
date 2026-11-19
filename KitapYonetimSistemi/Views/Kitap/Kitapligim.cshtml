@@ -15,6 +15,7 @@
             <span id="btnText">Yapay zekâdan öneri al</span>
             <span id="loadingSpinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
         </a>
+        <a asp-controller="IceAktar" asp-action="Index" class="btn btn-outline-secondary">İçe aktar</a>
         <a asp-action="OkumaIstatistiklerim" class="btn btn-outline-secondary">İstatistikler</a>
     </div>
 </div>
@@ -49,6 +50,13 @@
         <form asp-action="OturumBitir" method="post" class="oturum-form">
             <input type="hidden" name="oturumId" value="@aktif.Id" />
             <label class="form-label" for="oturumSayfa">Şu an kaçıncı sayfadasın?</label>
+            <div class="ruh-secim mb-2" role="group" aria-label="Şimdi nasıl hissediyorsun? (isteğe bağlı)">
+                <span class="text-muted small me-1">Şimdi nasılsın?</span>
+                @foreach (var r in Enum.GetValues<OkumaRuhHali>())
+                {
+                    <label title="@OkumaRuhHaliMetni.Etiket(r)"><input type="radio" name="ruhHali" value="@((int)r)" /><span>@OkumaRuhHaliMetni.Emoji(r)</span></label>
+                }
+            </div>
             <div class="input-group">
                 <input type="number" id="oturumSayfa" name="sayfa" class="form-control" min="@(aktif.BaslangicSayfa ?? 0)" max="@(toplamSayfa ?? 20000)" value="@(aktif.BaslangicSayfa ?? 0)" required />
                 <button type="submit" class="btn btn-primary">Oturumu bitir</button>

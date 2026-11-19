@@ -47,6 +47,12 @@
                 {
                     <form asp-action="OturumBaslat" method="post" class="mt-2">
                         <input type="hidden" name="kitaplikId" value="@kayit.Id" />
+                        <div class="ruh-secim" role="group" aria-label="Şu an nasıl hissediyorsun? (isteğe bağlı)">
+                            @foreach (var r in Enum.GetValues<OkumaRuhHali>())
+                            {
+                                <label title="@OkumaRuhHaliMetni.Etiket(r)"><input type="radio" name="ruhHali" value="@((int)r)" /><span>@OkumaRuhHaliMetni.Emoji(r)</span></label>
+                            }
+                        </div>
                         <button type="submit" class="oturum-baslat">Okumaya başla</button>
                     </form>
                 }
