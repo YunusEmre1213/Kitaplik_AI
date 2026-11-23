@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using KitapYonetimSistemi.Models;
 using KitapYonetimSistemi.Data;
+using KitapYonetimSistemi.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,16 +12,27 @@ namespace KitapYonetimSistemi.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly BugunServisi _bugun;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, BugunServisi bugun, UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _context = context;
+            _bugun = bugun;
+            _userManager = userManager;
         }
 
-        // Ana sayfada gösterilecek son eklenen kitaplar (kapaklı ve açıklamalı olanlar öne alınır)
+        // Okur için "Bugün" ekranı; ziyaretçi ve yönetici için tanıtım sayfası (son eklenen kitaplar)
         public async Task<IActionResult> Index()
         {
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("User"))
+            {
+                var kullaniciId = _userManager.GetUserId(User)!;
+                var vm = await _bugun.HazirlaAsync(kullaniciId, User.Identity.Name, DateTime.Now);
+                return View("Bugun", vm);
+            }
+
             var yeniler = await _context.Kitaplar
                 .AsNoTracking()
                 .Where(k => k.KapakResmiUrl != null && k.KapakResmiUrl != "")

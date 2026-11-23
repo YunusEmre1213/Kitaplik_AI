@@ -1,0 +1,221 @@
+@model KitapYonetimSistemi.Models.BugunViewModel
+
+@{
+    ViewData["Title"] = "Bugün";
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    var simdi = DateTime.Now;
+    string Goreli(DateTime t)
+    {
+        var fark = simdi - t;
+        if (fark.TotalMinutes < 60) return $"{Math.Max(1, (int)fark.TotalMinutes)} dk önce";
+        if (fark.TotalHours < 24) return $"{(int)fark.TotalHours} saat önce";
+        return $"{(int)fark.TotalDays} gün önce";
+    }
+}
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["Hata"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<div class="sayfa-baslik bugun-baslik">
+    <div>
+        <span class="etiket">@simdi.ToString("d MMMM dddd", tr)</span>
+        <h1>@Model.Selam, @Model.Ad</h1>
+    </div>
+    <div class="bugun-ozet">
+        @if (Model.Seri > 0)
+        {
+            <span class="durum-cip" title="Üst üste okuduğun gün sayısı">@Model.Seri günlük seri</span>
+        }
+        @if (Model.BugunOkundu)
+        {
+            <span class="text-muted">Bugün @(Model.BugunSayfa > 0 ? $"{Model.BugunSayfa} sayfa" : "okudun")@(Model.BugunDakika > 0 ? $" · {Model.BugunDakika} dk" : "")</span>
+        }
+        else
+        {
+            <span class="text-muted">@(Model.Seri > 0 ? "Bugün okursan serin sürer." : "Bugün henüz okumadın.")</span>
+        }
+    </div>
+</div>
+
+@if (Model.AktifOturumKitap != null)
+{
+    <a asp-controller="Kitap" asp-action="Kitapligim" asp-fragment="oturum" class="sezon-panel bugun-oturum">
+        <div><span class="etiket">Açık oturum</span><div class="oturum-baslik">@Model.AktifOturumKitap kitabını okuyorsun</div></div>
+        <span class="btn btn-primary btn-sm">Oturuma git</span>
+    </a>
+}
+
+@* Zaman kapsülü: yakın zamanda açıldı *@
+@foreach (var k in Model.Kapsuller)
+{
+    <section class="bugun-kapsul">
+        <span class="etiket">Zaman kapsülün açıldı</span>
+        <blockquote class="oneri-not">"@k.Metin"<footer>@k.Yazildi.ToString("d MMMM yyyy", tr) tarihinde, <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@k.KitapId" asp-fragment="kenar-notlari">@k.KitapAdi</a> kitabının @k.SayfaNo. sayfasına yazmıştın</footer></blockquote>
+    </section>
+}
+
+@if (Model.Bos)
+{
+    <section class="ikiz-izin">
+        <h2>Okuma defterini başlat</h2>
+        <p class="text-muted">Henüz okuduğun bir kitap, katıldığın bir sezon ya da odan yok. Buradan başlayabilirsin:</p>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-controller="Kitap" asp-action="Index" class="btn btn-primary">Kitaplara göz at</a>
+            <a asp-controller="IceAktar" asp-action="Index" class="btn btn-outline-secondary">Kitap listeni içe aktar</a>
+            <a asp-controller="Sezon" asp-action="Index" class="btn btn-outline-secondary">Bir sezona katıl</a>
+        </div>
+    </section>
+}
+
+@if (Model.Okuyorlar.Any())
+{
+    <section class="ana-bolum">
+        <div class="bolum-baslik">
+            <h2>Şimdi okuduklarım</h2>
+            <a asp-controller="Kitap" asp-action="Kitapligim" class="etiket">Tüm rafım &rarr;</a>
+        </div>
+        <div class="yeni-raf">
+            @foreach (var kayit in Model.Okuyorlar)
+            {
+                var toplam = kayit.Kitap!.SayfaSayisi;
+                var mevcut = kayit.MevcutSayfa ?? 0;
+                var yuzde = toplam > 0 ? Math.Min(100, mevcut * 100 / toplam.Value) : 0;
+                <div class="kitap-kart">
+                    <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@kayit.KitapId" class="kitap-baglanti" title="@kayit.Kitap.KitapAdi">
+                        <partial name="_Kapak" model='KapakModel.Of(kayit.Kitap, "md")' />
+                        <div class="kitap-ad">@kayit.Kitap.KitapAdi</div>
+                    </a>
+                    <div class="kitap-meta"><span>@(toplam.HasValue ? $"{mevcut} / {toplam} sayfa" : $"{mevcut}. sayfa")</span></div>
+                    @if (toplam.HasValue)
+                    {
+                        <div class="ince-ilerleme" role="progressbar" aria-valuenow="@yuzde" aria-valuemin="0" aria-valuemax="100"><span style="width: @yuzde%"></span></div>
+                    }
+                    <form asp-controller="Kitap" asp-action="IlerlemeGuncelle" method="post" class="bugun-sayfa-form">
+                        <input type="hidden" name="kitaplikId" value="@kayit.Id" />
+                        <input type="hidden" name="donus" value="bugun" />
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="sayfa" class="form-control" min="0" max="@(toplam ?? 20000)" value="@mevcut" aria-label="Kaçıncı sayfadasın" required />
+                            <button type="submit" class="btn btn-outline-secondary" title="Sayfanı kaydet">Kaydet</button>
+                        </div>
+                    </form>
+                    @if (Model.AktifOturumKitap == null)
+                    {
+                        <form asp-controller="Kitap" asp-action="OturumBaslat" method="post" class="mt-2">
+                            <input type="hidden" name="kitaplikId" value="@kayit.Id" />
+                            <button type="submit" class="oturum-baslat">Okumaya başla</button>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@if (Model.Sezonlar.Any())
+{
+    <section class="ana-bolum">
+        <div class="bolum-baslik">
+            <h2>Sezonlarım</h2>
+            <a asp-controller="Sezon" asp-action="Index" class="etiket">Tüm sezonlar &rarr;</a>
+        </div>
+        <ul class="oda-liste">
+            @foreach (var s in Model.Sezonlar)
+            {
+                <li>
+                    <a asp-controller="Sezon" asp-action="Detay" asp-route-id="@s.SezonId" asp-fragment="@(s.Gorev.Durum == SezonGorevDurumu.Gorev ? $"bolum-{s.Gorev.Bolum}" : null)" class="oda-kart">
+                        <span class="oda-ad">@s.Ad</span>
+                        <span class="oda-alt">
+                            @switch (s.Gorev.Durum)
+                            {
+                                case SezonGorevDurumu.Gorev:
+                                    <text><strong>Bugün: @s.Gorev.Bolum. bölüm</strong> · s. @s.SayfaBasi–@s.SayfaSonu@(s.Gorev.Geride > 1 ? $" · {s.Gorev.Geride} bölüm geride" : "")</text>
+                                    break;
+                                case SezonGorevDurumu.Tamam:
+                                    <text>Bugünkü bölümü okudun ✓ · sıradaki bölüm yarın</text>
+                                    break;
+                                default:
+                                    <text>@s.Baslangic.ToString("d MMMM", tr) tarihinde başlıyor · @s.BolumSayisi bölüm</text>
+                                    break;
+                            }
+                        </span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@if (Model.Odalar.Any())
+{
+    <section class="ana-bolum">
+        <div class="bolum-baslik">
+            <h2>Okuma odalarım</h2>
+            <a asp-controller="Oda" asp-action="Index" class="etiket">Tüm odalar &rarr;</a>
+        </div>
+        <ul class="oda-liste">
+            @foreach (var o in Model.Odalar)
+            {
+                <li>
+                    <a asp-controller="Oda" asp-action="Detay" asp-route-id="@o.OdaId" class="oda-kart">
+                        <span class="oda-ad">@o.Ad</span>
+                        <span class="oda-alt">
+                            @o.KitapAdi ·
+                            @if (o.IlerideKisi > 0) { <text>@o.IlerideKisi kişi senden ilerde (en ilerisi s. @o.EnIlerideSayfa)</text> }
+                            else { <text>odada en önde sensin</text> }
+                            @if (o.SonMesajTarihi.HasValue) { <text> · son mesaj @o.SonMesajYazari, @Goreli(o.SonMesajTarihi.Value)</text> }
+                        </span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@if (Model.Oneriler.Any())
+{
+    <section class="ana-bolum">
+        <div class="bolum-baslik">
+            <h2>Önerilerin ilerliyor</h2>
+            <a asp-controller="Oneri" asp-action="Index" class="etiket">Zincirlerim &rarr;</a>
+        </div>
+        <ul class="oda-liste">
+            @foreach (var o in Model.Oneriler)
+            {
+                <li>
+                    <a asp-controller="Oneri" asp-action="Detay" asp-route-id="@o.OneriId" class="oda-kart">
+                        <span class="oda-ad">@o.KabulEden önerini kabul etti</span>
+                        <span class="oda-alt">@o.KitapAdi · @Goreli(o.Tarih)</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@if (Model.Yeniler.Count > 0)
+{
+    <section class="ana-bolum">
+        <div class="bolum-baslik">
+            <h2>Yeni eklenenler</h2>
+            <a asp-controller="Kitap" asp-action="Index" class="etiket">Tümünü gör &rarr;</a>
+        </div>
+        <div class="yeni-raf">
+            @foreach (var k in Model.Yeniler)
+            {
+                <div class="kitap-kart">
+                    <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@k.Id" class="kitap-baglanti" title="@k.KitapAdi">
+                        <partial name="_Kapak" model='KapakModel.Of(k, "md")' />
+                        <div class="kitap-ad">@k.KitapAdi</div>
+                    </a>
+                    <div class="kitap-yazar">@k.YazarAdi</div>
+                </div>
+            }
+        </div>
+    </section>
+}

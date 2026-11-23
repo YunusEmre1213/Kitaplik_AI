@@ -597,12 +597,14 @@ namespace KitapYonetimSistemi.Controllers
         // Okuma ilerlemesini (sayfa) güncelle ve isteğe bağlı günlük notu ekle
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> IlerlemeGuncelle(int kitaplikId, int sayfa, string? not, int? odaId = null)
+        public async Task<IActionResult> IlerlemeGuncelle(int kitaplikId, int sayfa, string? not, int? odaId = null, string? donus = null)
         {
-            // Okuma odasından gelindiyse işlem sonrası odaya dönülür
+            // Okuma odasından ya da "Bugün" ekranından gelindiyse işlem sonrası oraya dönülür
             IActionResult Don() => odaId.HasValue
                 ? RedirectToAction("Detay", "Oda", new { id = odaId.Value })
-                : RedirectToAction(nameof(Kitapligim));
+                : donus == "bugun"
+                    ? RedirectToAction("Index", "Home")
+                    : RedirectToAction(nameof(Kitapligim));
 
             var kullaniciId = _userManager.GetUserId(User)!;
 
