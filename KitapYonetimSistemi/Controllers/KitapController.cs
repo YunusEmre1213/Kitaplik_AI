@@ -178,6 +178,23 @@ namespace KitapYonetimSistemi.Controllers
                 .FirstOrDefaultAsync();
             var bitirdi = ilerleme?.OkumaDurumu == OkumaDurumu.Okundu;
             ViewBag.OkuyucuSayfasi = ilerleme?.MevcutSayfa;
+            ViewBag.KitaplikDurumu = ilerleme?.OkumaDurumu;
+
+            // Bu kitapta henüz bitmemiş okuma sezonları ("Birlikte oku" bölümünde katılabilsin diye)
+            var simdiSezon = DateTime.Now;
+            var sezonlar = await _context.OkumaSezonlari.AsNoTracking()
+                .Include(s => s.Uyeler)
+                .Where(s => s.KitapId == kitap.Id)
+                .ToListAsync();
+            ViewBag.AcikSezonlar = sezonlar
+                .Select(s => new { Sezon = s, Takvim = new SezonTakvimi(s.Baslangic, s.GunSayisi, kitap.SayfaSayisi ?? 1) })
+                .Where(x => x.Takvim.Durum(simdiSezon) != SezonDurumu.Bitti)
+                .OrderBy(x => x.Sezon.Baslangic)
+                .Select(x => new KitapSezonOzeti(
+                    x.Sezon.Id, x.Sezon.Ad, x.Sezon.Uyeler.Count, x.Sezon.Baslangic,
+                    x.Takvim.Durum(simdiSezon) == SezonDurumu.Yaklasan, x.Takvim.BugunBolum(simdiSezon), x.Takvim.BolumSayisi,
+                    x.Sezon.Uyeler.Any(u => u.KullaniciId == kullaniciId)))
+                .ToList();
             ViewBag.YorumGorunumleri = (kitap.Yorumlar ?? new List<Yorum>())
                 .OrderByDescending(y => y.YorumTarihi)
                 .Select(y => new YorumGorunumu
@@ -253,19 +270,19 @@ namespace KitapYonetimSistemi.Controllers
             if (string.IsNullOrWhiteSpace(yorumMetni))
             {
                 TempData["Hata"] = "Yorum boş olamaz!";
-                return RedirectToAction("Detay", new { id = kitapId });
+                return RedirectToAction("Detay", "Kitap", new { id = kitapId }, "yorumlar");
             }
 
             if (yorumMetni.Length > 2000 || !await _context.Kitaplar.AnyAsync(k => k.Id == kitapId))
             {
                 TempData["Hata"] = "Yorum eklenemedi!";
-                return RedirectToAction("Detay", new { id = kitapId });
+                return RedirectToAction("Detay", "Kitap", new { id = kitapId }, "yorumlar");
             }
 
             if (sayfaNo is < 1 or > 20000)
             {
                 TempData["Hata"] = "Sayfa numarası geçersiz!";
-                return RedirectToAction("Detay", new { id = kitapId });
+                return RedirectToAction("Detay", "Kitap", new { id = kitapId }, "yorumlar");
             }
 
             var kullanici = await _userManager.GetUserAsync(User);
@@ -284,7 +301,7 @@ namespace KitapYonetimSistemi.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Mesaj"] = "Yorumunuz başarıyla eklendi!";
-            return RedirectToAction("Detay", new { id = kitapId });
+            return RedirectToAction("Detay", "Kitap", new { id = kitapId }, "yorumlar");
         }
 
         // Kitaplığıma ekle
@@ -880,13 +897,13 @@ namespace KitapYonetimSistemi.Controllers
             if (metin.Length == 0 || metin.Length > Alinti.EnFazlaUzunluk)
             {
                 TempData["Hata"] = $"Alıntı 1 ile {Alinti.EnFazlaUzunluk} karakter arasında olmalıdır!";
-                return RedirectToAction(nameof(Detay), new { id = kitapId });
+                return RedirectToAction(nameof(Detay), "Kitap", new { id = kitapId }, "alintilar");
             }
 
             if (sayfaNo is < 1 or > 20000 || !await _context.Kitaplar.AnyAsync(k => k.Id == kitapId))
             {
                 TempData["Hata"] = "Alıntı eklenemedi!";
-                return RedirectToAction(nameof(Detay), new { id = kitapId });
+                return RedirectToAction(nameof(Detay), "Kitap", new { id = kitapId }, "alintilar");
             }
 
             _context.Alintilar.Add(new Alinti
@@ -900,7 +917,7 @@ namespace KitapYonetimSistemi.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Mesaj"] = "Alıntınız eklendi!";
-            return RedirectToAction(nameof(Detay), new { id = kitapId });
+            return RedirectToAction(nameof(Detay), "Kitap", new { id = kitapId }, "alintilar");
         }
 
         // Alıntıyı paylaşılabilir görsel karta çevirme sayfası (görsel tarayıcıda çizilir)
@@ -927,7 +944,7 @@ namespace KitapYonetimSistemi.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Mesaj"] = "Alıntı silindi!";
-            return RedirectToAction(nameof(Detay), new { id = alinti.KitapId });
+            return RedirectToAction(nameof(Detay), "Kitap", new { id = alinti.KitapId }, "alintilar");
         }
 
         // Alıntıyı beğen / beğenmekten vazgeç
@@ -950,7 +967,7 @@ namespace KitapYonetimSistemi.Controllers
                 _context.AlintiBegenileri.Remove(begeni);
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Detay), new { id = alinti.KitapId });
+            return RedirectToAction(nameof(Detay), "Kitap", new { id = alinti.KitapId }, "alintilar");
         }
 
         // Yıllık okuma özeti

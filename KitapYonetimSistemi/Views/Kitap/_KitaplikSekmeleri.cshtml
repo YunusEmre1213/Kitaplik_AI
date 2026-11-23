@@ -1,0 +1,13 @@
+@* Kitaplığım bölümünün ortak sekmeleri. Model: "raf", "istatistik", "yil" ya da "iceaktar" *@
+@model string
+
+@{
+    string Sinif(string ad) => Model == ad ? "nav-link active" : "nav-link";
+}
+
+<nav class="kitaplik-sekme-baglanti" aria-label="Kitaplığım bölümleri">
+    <a class="@Sinif("raf")" asp-controller="Kitap" asp-action="Kitapligim">Raf</a>
+    <a class="@Sinif("istatistik")" asp-controller="Kitap" asp-action="OkumaIstatistiklerim">İstatistikler</a>
+    <a class="@Sinif("yil")" asp-controller="Kitap" asp-action="YilOzeti">Yıl özeti</a>
+    <a class="@Sinif("iceaktar")" asp-controller="IceAktar" asp-action="Index">İçe aktar</a>
+</nav>

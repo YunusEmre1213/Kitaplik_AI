@@ -4,15 +4,16 @@
     ViewData["Title"] = "Okuma İstatistiklerim";
 }
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-action="Index">Kitaplar</a></li>
-        <li class="breadcrumb-item"><a asp-action="Kitapligim">Kitaplığım</a></li>
-        <li class="breadcrumb-item active">İstatistiklerim</li>
-    </ol>
-</nav>
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Kişisel</span>
+        <h1>Kitaplığım</h1>
+    </div>
+</div>
 
-<h1 class="page-title">Okuma İstatistiklerim</h1>
+<partial name="_KitaplikSekmeleri" model='"istatistik"' />
+
+<h2 class="alt-baslik">Okuma istatistiklerim</h2>
 
 <div class="row g-4 mb-4">
     <div class="col-md-3">

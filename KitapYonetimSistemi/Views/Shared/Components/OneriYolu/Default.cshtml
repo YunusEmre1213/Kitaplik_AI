@@ -1,16 +1,6 @@
 @model KitapYonetimSistemi.Components.OneriYoluModel
 
-<section class="oneri-yolu">
-    @if (Model.Yol.Count > 0)
-    {
-        <p class="zincir-yol">Bu kitap sana şöyle ulaştı: <strong>@string.Join(" → ", Model.Yol) → sen</strong></p>
-    }
-    <details class="sezon-ac">
-        <summary>Birine öner</summary>
-        <form asp-controller="Oneri" asp-action="Olustur" method="post" class="sezon-form">
-            <input type="hidden" name="kitapId" value="@Model.KitapId" />
-            <input type="text" name="not" class="form-control form-control-sm" maxlength="300" placeholder="Kişisel notun: neden okumalı?" aria-label="Öneri notu" style="min-width:18rem" />
-            <button type="submit" class="btn btn-outline-secondary btn-sm">Öneri bağlantısı oluştur</button>
-        </form>
-    </details>
-</section>
+@if (Model.Yol.Count > 0)
+{
+    <p class="zincir-yol">Bu kitap sana şöyle ulaştı: <strong>@string.Join(" → ", Model.Yol) → sen</strong></p>
+}

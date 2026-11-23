@@ -16,7 +16,15 @@
 <body>
     @{
         var kontrolcu = ViewContext.RouteData.Values["controller"]?.ToString();
+        var eylem = ViewContext.RouteData.Values["action"]?.ToString();
         string Aktif(string ad) => string.Equals(kontrolcu, ad, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+        // Kitaplığım: raf, istatistikler, yıl özeti ve içe aktar aynı bölümün sekmeleri
+        var kitaplikEylemleri = new[] { "Kitapligim", "OkumaIstatistiklerim", "YilOzeti" };
+        var kitaplikAktif = (string.Equals(kontrolcu, "Kitap", StringComparison.OrdinalIgnoreCase) && kitaplikEylemleri.Contains(eylem, StringComparer.OrdinalIgnoreCase))
+            || string.Equals(kontrolcu, "IceAktar", StringComparison.OrdinalIgnoreCase);
+        var kitaplarAktif = string.Equals(kontrolcu, "Kitap", StringComparison.OrdinalIgnoreCase) && !kitaplikAktif;
+        var toplulukKontrolcular = new[] { "Sezon", "Oda", "Oneri", "Tartisma", "Ikiz" };
+        var toplulukAktif = toplulukKontrolcular.Contains(kontrolcu, StringComparer.OrdinalIgnoreCase);
     }
     <header>
         <nav class="navbar navbar-expand-md sa-nav">
@@ -36,14 +44,19 @@
                         }
                         @if (User.IsInRole("User"))
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Kitap" asp-action="Index">Kitaplar</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Kitap" asp-action="Kitapligim">Kitaplığım</a></li>
-                            <li class="nav-item"><a class="nav-link @Aktif("Oneri")" asp-controller="Oneri" asp-action="Index">Öneriler</a></li>
-                            <li class="nav-item"><a class="nav-link @Aktif("Sezon")" asp-controller="Sezon" asp-action="Index">Sezonlar</a></li>
-                            <li class="nav-item"><a class="nav-link @Aktif("Oda")" asp-controller="Oda" asp-action="Index">Okuma Odaları</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Kitap" asp-action="OkumaIstatistiklerim">İstatistikler</a></li>
-                            <li class="nav-item"><a class="nav-link @Aktif("AiLibrary")" asp-controller="AiLibrary" asp-action="RuhHali">Ruh Halim</a></li>
-                            <li class="nav-item"><a class="nav-link @Aktif("Tartisma")" asp-controller="Tartisma" asp-action="Index">Tartışmalar</a></li>
+                            <li class="nav-item"><a class="nav-link @(kitaplarAktif || Aktif("AiLibrary") != "" ? "active" : "")" asp-controller="Kitap" asp-action="Index">Kitaplar</a></li>
+                            <li class="nav-item"><a class="nav-link @(kitaplikAktif ? "active" : "")" asp-controller="Kitap" asp-action="Kitapligim">Kitaplığım</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle @(toplulukAktif ? "active" : "")" href="#" id="toplulukMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Topluluk</a>
+                                <ul class="dropdown-menu" aria-labelledby="toplulukMenu">
+                                    <li><a class="dropdown-item @Aktif("Sezon")" asp-controller="Sezon" asp-action="Index">Sezonlar<small>Dizi gibi birlikte okuma</small></a></li>
+                                    <li><a class="dropdown-item @Aktif("Oda")" asp-controller="Oda" asp-action="Index">Okuma odaları<small>Arkadaşlarınla aynı kitap</small></a></li>
+                                    <li><a class="dropdown-item @Aktif("Oneri")" asp-controller="Oneri" asp-action="Index">Öneri zincirleri<small>Kitabın kimden kime gittiği</small></a></li>
+                                    <li><a class="dropdown-item @Aktif("Ikiz")" asp-controller="Ikiz" asp-action="Index">Okuma ikizi<small>Aynı sayfalarda hisseden okurlar</small></a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li><a class="dropdown-item @Aktif("Tartisma")" asp-controller="Tartisma" asp-action="Index">Tartışmalar<small>Genel sohbet</small></a></li>
+                                </ul>
+                            </li>
                         }
                     </ul>
                     @await Component.InvokeAsync("AktifOturum")

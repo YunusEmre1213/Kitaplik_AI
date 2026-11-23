@@ -9,7 +9,16 @@
         <span class="etiket">Katalog</span>
         <h1>Kitaplar</h1>
     </div>
-    <span class="not">@Model.ToplamKayit.ToString("N0") kitap</span>
+    <div class="d-flex align-items-center gap-3">
+        <span class="not">@Model.ToplamKayit.ToString("N0") kitap</span>
+        <div class="dropdown">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Yapay zekâ ile öner</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" asp-controller="AiLibrary" asp-action="RuhHali">Moduma göre<small>Ruh halini anlat, sana kitap seçsin</small></a></li>
+                <li><a class="dropdown-item" asp-controller="AiLibrary" asp-action="Index" data-ai-throttle>Okuduklarıma göre<small>Kitaplığına bakıp öneri hazırlar</small></a></li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 @if (TempData["Mesaj"] != null)
@@ -208,6 +217,22 @@ else
 </div>
 
 @section Scripts {
+    <script>
+        // Yapay zekâ önerisi pahalı bir çağrı: art arda tıklamayı 10 saniyeyle sınırla
+        document.querySelectorAll('[data-ai-throttle]').forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                var now = Date.now();
+                var son = 0;
+                try { son = Number(localStorage.getItem('lastAiRequestTime')) || 0; } catch (x) { }
+                if (son && now - son < 10000) {
+                    e.preventDefault();
+                    alert('Çok hızlı işlem yapıyorsun! Lütfen ' + Math.ceil((10000 - (now - son)) / 1000) + ' saniye bekle.');
+                    return;
+                }
+                try { localStorage.setItem('lastAiRequestTime', now); } catch (x) { }
+            });
+        });
+    </script>
     <script>
         document.getElementById('kitapligaEkleModal')?.addEventListener('show.bs.modal', function (e) {
             var d = e.relatedTarget.dataset;

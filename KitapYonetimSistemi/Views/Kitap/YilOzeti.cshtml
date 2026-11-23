@@ -8,18 +8,19 @@
     var enYuksekAy = Math.Max(1, Model.AylikDagilim.Max());
 }
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-action="Kitapligim">Kitaplığım</a></li>
-        <li class="breadcrumb-item"><a asp-action="OkumaIstatistiklerim">İstatistikler</a></li>
-        <li class="breadcrumb-item active">Yıl özeti</li>
-    </ol>
-</nav>
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Kişisel</span>
+        <h1>Kitaplığım</h1>
+    </div>
+</div>
+
+<partial name="_KitaplikSekmeleri" model='"yil"' />
 
 <div class="sayfa-baslik">
     <div>
         <span class="etiket">Yıl özeti</span>
-        <h1>@Model.Yil okuma yılın</h1>
+        <h2 class="alt-baslik mb-0">@Model.Yil okuma yılın</h2>
     </div>
     @if (Model.Yillar.Count > 1)
     {

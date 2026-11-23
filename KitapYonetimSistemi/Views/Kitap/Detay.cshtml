@@ -3,6 +3,25 @@
 
 @{
     ViewData["Title"] = Model.KitapAdi;
+    var kenar = (KenarNotlariViewModel)ViewBag.KenarNotlari;
+    var mevcutKullaniciId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var uye = User.IsInRole("User");
+    var alintilar = (Model.Alintilar ?? new List<KitapYonetimSistemi.Models.Alinti>())
+        .OrderByDescending(a => a.Begeniler.Count)
+        .ThenByDescending(a => a.Tarih)
+        .ToList();
+    var gorunumler = (List<YorumGorunumu>)ViewBag.YorumGorunumleri;
+    int? okuyucuSayfasi = ViewBag.OkuyucuSayfasi;
+    OkumaDurumu? kitaplikDurumu = ViewBag.KitaplikDurumu;
+    var acikSezonlar = (List<KitapSezonOzeti>)ViewBag.AcikSezonlar;
+    var puanSayisi = Model.ToplamPuanSayisi;
+    var durumMetni = kitaplikDurumu switch
+    {
+        OkumaDurumu.Okunacak => "Okunacak",
+        OkumaDurumu.Okuyorum => okuyucuSayfasi is > 0 && Model.SayfaSayisi.HasValue ? $"Okuyorum · {okuyucuSayfasi}/{Model.SayfaSayisi}" : "Okuyorum",
+        OkumaDurumu.Okundu => "Okundu",
+        _ => null
+    };
 }
 
 <nav aria-label="breadcrumb">
@@ -19,8 +38,15 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Hata"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
-<!-- Kitap Bilgileri -->
+<!-- Kitap bilgileri ve eylemler -->
 <div class="detay-ust">
     <div class="detay-kapak"><partial name="_Kapak" model='KapakModel.Of(Model, "lg")' /></div>
     <div>
@@ -41,238 +67,304 @@
         {
             <p class="detay-aciklama">@Model.Aciklama</p>
         }
+
+        @if (uye)
+        {
+            <div class="detay-eylem">
+                @if (durumMetni != null)
+                {
+                    <a asp-action="Kitapligim" class="durum-cip" title="Kitaplığına git">@durumMetni</a>
+                }
+                else
+                {
+                    <form asp-action="KitapligaEkleYeni" method="post" class="d-inline">
+                        <input type="hidden" name="kitapId" value="@Model.Id" />
+                        <input type="hidden" name="herkesGorebilir" value="false" />
+                        <input type="hidden" name="okumaDurumu" value="1" />
+                        <button type="submit" class="btn btn-primary btn-sm">Kitaplığıma ekle</button>
+                    </form>
+                }
+
+                <a href="#genel" class="puan-ozet" onclick="sekmeGoster('genel')" title="Puanla">
+                    <span class="yildiz dolu">★</span>
+                    @if (puanSayisi > 0) { <text>@Model.OrtalamaPuan.ToString("0.0") <span class="text-muted">(@puanSayisi)</span></text> }
+                    else { <span class="text-muted">Puanla</span> }
+                </a>
+
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Birlikte oku</button>
+                    <ul class="dropdown-menu">
+                        <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalOda">Okuma odası aç<small>Arkadaşlarınla ilerlemeni paylaş</small></button></li>
+                        <li>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalSezon" disabled="@(!(Model.SayfaSayisi is > 0))">Sezon başlat<small>Dizi gibi, günlük bölümlerle</small></button>
+                        </li>
+                        <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalOneri">Birine öner<small>Kişisel notla bağlantı gönder</small></button></li>
+                    </ul>
+                </div>
+            </div>
+        }
     </div>
 </div>
-
-@if (User.IsInRole("User"))
-{
-    <form asp-controller="Oda" asp-action="Olustur" method="post" class="oda-ac">
-        <input type="hidden" name="kitapId" value="@Model.Id" />
-        <input type="text" name="ad" class="form-control form-control-sm" maxlength="80" placeholder="Oda adı (isteğe bağlı)" aria-label="Oda adı" />
-        <button type="submit" class="btn btn-outline-secondary btn-sm">Arkadaşlarınla birlikte oku</button>
-    </form>
-
-    @if (Model.SayfaSayisi is > 0)
-    {
-        <details class="sezon-ac">
-            <summary>Dizi gibi okuma: sezon başlat</summary>
-            <form asp-controller="Sezon" asp-action="Olustur" method="post" class="sezon-form">
-                <input type="hidden" name="kitapId" value="@Model.Id" />
-                <input type="text" name="ad" class="form-control form-control-sm" maxlength="80" placeholder="Sezon adı (isteğe bağlı)" aria-label="Sezon adı" />
-                <label>Başlangıç <input type="date" name="baslangic" class="form-control form-control-sm" value="@DateTime.Now:yyyy-MM-dd" min="@DateTime.Now:yyyy-MM-dd" required /></label>
-                <label>Gün sayısı <input type="number" name="gunSayisi" class="form-control form-control-sm" value="21" min="5" max="90" required /></label>
-                <button type="submit" class="btn btn-outline-secondary btn-sm">Sezonu aç</button>
-            </form>
-        </details>
-    }
-}
 
 @await Component.InvokeAsync("OneriYolu", new { kitapId = Model.Id })
 
-<partial name="_KenarNotlari" model="(KenarNotlariViewModel)ViewBag.KenarNotlari" />
+<!-- Sekmeler -->
+<ul class="nav kitaplik-sekme mb-3" id="kitapSekmeleri" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#genel" type="button" role="tab">Genel</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#notlar" type="button" role="tab">Notlar ve duygu @if (kenar.Isi.ToplamIsaret + kenar.Tepki.ToplamTepki > 0) { <span class="sayac">@(kenar.Isi.ToplamIsaret + kenar.Tepki.ToplamTepki)</span> }</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#alintilar" type="button" role="tab">Alıntılar <span class="sayac">@alintilar.Count</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#yorumlar" type="button" role="tab">Yorumlar <span class="sayac">@(Model.Yorumlar?.Count ?? 0)</span></button></li>
+</ul>
 
-<!-- Puan Sistemi -->
-<div class="card mb-4">
-    <div class="card-header bg-warning text-white">★ Kitap Puanı</div>
-    <div class="card-body text-center">
-        @if (Model.ToplamPuanSayisi > 0)
-        {
-            <h2 class="display-4 text-warning">@Model.OrtalamaPuan.ToString("0.0")</h2>
-            <div style="font-size: 2rem; color: #ffc107;">
-                @for (int i = 1; i <= 5; i++)
+<div class="tab-content">
+    <!-- Genel: puan ve açık sezonlar -->
+    <div class="tab-pane fade show active" id="genel" role="tabpanel">
+        <section class="puan-blok">
+            <div class="puan-ortalama">
+                @if (puanSayisi > 0)
                 {
-                    if (i <= Math.Round(Model.OrtalamaPuan))
+                    <div class="puan-sayi">@Model.OrtalamaPuan.ToString("0.0")</div>
+                    <div class="puan-yildizlar-sabit" aria-hidden="true">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <span class="yildiz @(i <= Math.Round(Model.OrtalamaPuan) ? "dolu" : "")">★</span>
+                        }
+                    </div>
+                    <div class="text-muted small">@puanSayisi kişi puanladı</div>
+                }
+                else
+                {
+                    <div class="puan-sayi bos">–</div>
+                    <div class="text-muted small">Henüz puanlanmadı. İlk puanı sen ver.</div>
+                }
+            </div>
+
+            <div class="puan-sen">
+                <div class="mb-1">
+                    @if (ViewBag.KullaniciPuani != null)
                     {
-                        <span>★</span>
+                        <span>Senin puanın: <strong>@ViewBag.KullaniciPuani ★</strong></span>
                     }
                     else
                     {
-                        <span style="color: var(--sa-line);">☆</span>
+                        <span>Bu kitaba puan ver</span>
                     }
-                }
+                </div>
+                <form asp-action="PuanVer" method="post" id="ratingForm">
+                    <input type="hidden" name="kitapId" value="@Model.Id" />
+                    <input type="hidden" name="puan" id="puanInput" value="@(ViewBag.KullaniciPuani ?? 0)" />
+                    <div class="puan-yildizlar">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <button type="button" class="yildiz-btn @(ViewBag.KullaniciPuani >= i ? "dolu" : "")" onclick="setPuan(@i)" aria-label="@i yıldız">★</button>
+                        }
+                    </div>
+                </form>
             </div>
-            <p class="text-muted">@Model.ToplamPuanSayisi kişi puanladı</p>
-        }
-        else
-        {
-            <h4 class="text-muted">Henüz puanlanmadı</h4>
-            <p>İlk puanı siz verin!</p>
-        }
+        </section>
 
-        <hr />
-
-        <h5 class="mb-3">
-            @if (ViewBag.KullaniciPuani != null)
+        <section class="acik-sezonlar">
+            <h2 class="sezon-grup">Bu kitapta açık sezonlar</h2>
+            @if (!acikSezonlar.Any())
             {
-                <span>Sizin Puanınız: @ViewBag.KullaniciPuani ★</span>
+                <p class="text-muted">Şu an bu kitap için açık bir sezon yok. "Birlikte oku" menüsünden bir tane başlatabilirsin.</p>
             }
             else
             {
-                <span>Bu kitaba puan verin:</span>
+                <ul class="oda-liste">
+                    @foreach (var s in acikSezonlar)
+                    {
+                        <li>
+                            <a asp-controller="Sezon" asp-action="Detay" asp-route-id="@s.Id" class="oda-kart">
+                                <span class="oda-ad">@s.Ad</span>
+                                <span class="oda-alt">
+                                    @s.UyeSayisi okur · @s.BolumSayisi bölüm ·
+                                    @(s.Yaklasan ? $"{s.Baslangic:dd.MM.yyyy} tarihinde başlıyor" : $"bugün {s.BugunBolum}. bölüm")
+                                    @(s.Uye ? " · katıldın" : "")
+                                </span>
+                            </a>
+                        </li>
+                    }
+                </ul>
             }
-        </h5>
-
-        <form asp-action="PuanVer" method="post" id="ratingForm" class="d-inline">
-            <input type="hidden" name="kitapId" value="@Model.Id" />
-            <input type="hidden" name="puan" id="puanInput" value="@(ViewBag.KullaniciPuani ?? 0)" />
-
-            <div style="font-size: 2.5rem;">
-                @for (int i = 1; i <= 5; i++)
-                {
-                    <button type="button" class="btn btn-link p-0 text-decoration-none @(ViewBag.KullaniciPuani >= i ? "text-warning" : "text-secondary")"
-                            style="font-size: 2.5rem;" onclick="setPuan(@i)">
-                        ★
-                    </button>
-                }
-            </div>
-        </form>
+        </section>
     </div>
-</div>
 
-<!-- Alıntılar -->
-@{
-    var mevcutKullaniciId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    var alintilar = (Model.Alintilar ?? new List<KitapYonetimSistemi.Models.Alinti>())
-        .OrderByDescending(a => a.Begeniler.Count)
-        .ThenByDescending(a => a.Tarih)
-        .ToList();
-}
-<div class="card mb-4">
-    <div class="card-header">Alıntılar (@alintilar.Count)</div>
-    <div class="card-body">
-        @if (TempData["Hata"] != null)
-        {
-            <div class="alert alert-danger">@TempData["Hata"]</div>
-        }
+    <!-- Kenar notları, duygu eğrisi, bırakma noktası -->
+    <div class="tab-pane fade" id="notlar" role="tabpanel">
+        <partial name="_KenarNotlari" model="kenar" />
+    </div>
 
-        @if (alintilar.Any())
-        {
-            @foreach (var alinti in alintilar)
+    <!-- Alıntılar -->
+    <div class="tab-pane fade" id="alintilar" role="tabpanel">
+        <section class="sekme-bolum">
+            @if (alintilar.Any())
             {
-                var begendi = alinti.Begeniler.Any(b => b.KullaniciId == mevcutKullaniciId);
-                <figure class="border-start border-4 border-warning ps-3 mb-4">
-                    <blockquote class="blockquote mb-1" style="white-space: pre-line;">@alinti.Metin</blockquote>
-                    <figcaption class="small text-muted">
-                        @(alinti.Kullanici?.UserName?.Split('@')[0])
-                        @if (alinti.SayfaNo.HasValue)
-                        {
-                            <span> · s. @alinti.SayfaNo</span>
-                        }
-                        · @alinti.Tarih.ToString("dd.MM.yyyy")
-                    </figcaption>
-                    <div class="d-flex gap-2 mt-2 align-items-center">
-                        <a asp-action="AlintiKarti" asp-route-id="@alinti.Id" class="btn btn-sm btn-outline-secondary">Kart yap</a>
-                        <form asp-action="AlintiBegen" method="post">
-                            <input type="hidden" name="alintiId" value="@alinti.Id" />
-                            <button type="submit" class="btn btn-sm @(begendi ? "btn-danger" : "btn-outline-danger")">
-                                ♥ @alinti.Begeniler.Count
-                            </button>
-                        </form>
-                        @if (alinti.KullaniciId == mevcutKullaniciId)
-                        {
-                            <form asp-action="AlintiSil" method="post" onsubmit="return confirm('Alıntı silinsin mi?');">
+                @foreach (var alinti in alintilar)
+                {
+                    var begendi = alinti.Begeniler.Any(b => b.KullaniciId == mevcutKullaniciId);
+                    <figure class="alinti-kutu">
+                        <blockquote style="white-space: pre-line;">@alinti.Metin</blockquote>
+                        <figcaption class="small text-muted">
+                            @(alinti.Kullanici?.UserName?.Split('@')[0])
+                            @if (alinti.SayfaNo.HasValue)
+                            {
+                                <span> · s. @alinti.SayfaNo</span>
+                            }
+                            · @alinti.Tarih.ToString("dd.MM.yyyy")
+                        </figcaption>
+                        <div class="d-flex gap-2 mt-2 align-items-center">
+                            <a asp-action="AlintiKarti" asp-route-id="@alinti.Id" class="btn btn-sm btn-outline-secondary">Kart yap</a>
+                            <form asp-action="AlintiBegen" method="post">
                                 <input type="hidden" name="alintiId" value="@alinti.Id" />
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Sil</button>
+                                <button type="submit" class="btn btn-sm @(begendi ? "btn-danger" : "btn-outline-danger")">♥ @alinti.Begeniler.Count</button>
                             </form>
+                            @if (alinti.KullaniciId == mevcutKullaniciId)
+                            {
+                                <form asp-action="AlintiSil" method="post" onsubmit="return confirm('Alıntı silinsin mi?');">
+                                    <input type="hidden" name="alintiId" value="@alinti.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Sil</button>
+                                </form>
+                            }
+                        </div>
+                    </figure>
+                }
+            }
+            else
+            {
+                <p class="text-muted">Henüz alıntı paylaşılmamış. İlk alıntıyı sen ekle!</p>
+            }
+
+            <h3 class="sekme-alt-baslik">Alıntı ekle</h3>
+            <form asp-action="AlintiEkle" method="post">
+                <input type="hidden" name="kitapId" value="@Model.Id" />
+                <div class="mb-2">
+                    <textarea name="metin" class="form-control" rows="3" maxlength="1000" placeholder="Kitaptan etkilendiğin bir bölüm..." required></textarea>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <input type="number" name="sayfaNo" class="form-control" min="1" max="20000" placeholder="Sayfa no (isteğe bağlı)" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">Alıntıyı paylaş</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <!-- Yorumlar -->
+    <div class="tab-pane fade" id="yorumlar" role="tabpanel">
+        <section class="sekme-bolum">
+            @if (gorunumler.Any())
+            {
+                @foreach (var g in gorunumler)
+                {
+                    var yorum = g.Yorum;
+                    <div class="yorum-kutu">
+                        <h6 class="text-muted mb-2">
+                            @yorum.Kullanici.UserName
+                            <small>· @yorum.YorumTarihi.ToString("dd.MM.yyyy HH:mm")</small>
+                            @if (yorum.SayfaNo.HasValue)
+                            {
+                                <span class="badge text-bg-secondary ms-1">s. @yorum.SayfaNo</span>
+                            }
+                        </h6>
+                        @if (g.Kilitli)
+                        {
+                            <p class="mb-0 text-muted fst-italic">
+                                🔒 Bu yorum @yorum.SayfaNo. sayfadan sonrasını okuyanlar için.
+                                @(okuyucuSayfasi.HasValue ? $"Sen {okuyucuSayfasi}. sayfadasın." : "Kitaplığında ilerlemeni girerek açabilirsin.")
+                            </p>
+                        }
+                        else if (yorum.Spoiler)
+                        {
+                            <details>
+                                <summary class="text-muted">Bu yorum spoiler içeriyor, görmek için tıkla</summary>
+                                <p class="mb-0 mt-2">@yorum.YorumMetni</p>
+                            </details>
+                        }
+                        else
+                        {
+                            <p class="mb-0">@yorum.YorumMetni</p>
                         }
                     </div>
-                </figure>
+                }
             }
-        }
-        else
-        {
-            <p class="text-muted text-center">Henüz alıntı paylaşılmamış. İlk alıntıyı siz ekleyin!</p>
-        }
-
-        <hr />
-
-        <h5>Alıntı Ekle</h5>
-        <form asp-action="AlintiEkle" method="post">
-            <input type="hidden" name="kitapId" value="@Model.Id" />
-            <div class="mb-2">
-                <textarea name="metin" class="form-control" rows="3" maxlength="1000" placeholder="Kitaptan etkilendiğiniz bir bölüm..." required></textarea>
-            </div>
-            <div class="row g-2">
-                <div class="col-md-3">
-                    <input type="number" name="sayfaNo" class="form-control" min="1" max="20000" placeholder="Sayfa no (isteğe bağlı)" />
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-warning">Alıntıyı Paylaş</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Yorumlar -->
-<div class="card mb-4">
-    <div class="card-header">Yorumlar (@(Model.Yorumlar?.Count ?? 0))</div>
-    <div class="card-body">
-        @{
-            var gorunumler = (List<YorumGorunumu>)ViewBag.YorumGorunumleri;
-            int? okuyucuSayfasi = ViewBag.OkuyucuSayfasi;
-        }
-        @if (gorunumler.Any())
-        {
-            @foreach (var g in gorunumler)
+            else
             {
-                var yorum = g.Yorum;
-                <div class="border-start border-4 border-primary ps-3 mb-3">
-                    <h6 class="text-muted mb-2">
-                        @yorum.Kullanici.UserName
-                        <small>- @yorum.YorumTarihi.ToString("dd.MM.yyyy HH:mm")</small>
-                        @if (yorum.SayfaNo.HasValue)
-                        {
-                            <span class="badge text-bg-secondary ms-1">s. @yorum.SayfaNo</span>
-                        }
-                    </h6>
-                    @if (g.Kilitli)
-                    {
-                        <p class="mb-0 text-muted fst-italic">
-                            🔒 Bu yorum @yorum.SayfaNo. sayfadan sonrasını okuyanlar için.
-                            @(okuyucuSayfasi.HasValue ? $"Siz {okuyucuSayfasi}. sayfadasınız." : "Kitaplığınızda ilerlemenizi girerek açabilirsiniz.")
-                        </p>
-                    }
-                    else if (yorum.Spoiler)
-                    {
-                        <details>
-                            <summary class="text-warning">Bu yorum spoiler içeriyor, görmek için tıklayın</summary>
-                            <p class="mb-0 mt-2">@yorum.YorumMetni</p>
-                        </details>
-                    }
-                    else
-                    {
-                        <p class="mb-0">@yorum.YorumMetni</p>
-                    }
-                </div>
+                <p class="text-muted">Henüz yorum yapılmamış. İlk yorumu sen yap!</p>
             }
-        }
-        else
-        {
-            <p class="text-muted text-center">Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
-        }
 
-        <hr />
-
-        <h5>Yorum Yap</h5>
-        <form asp-action="YorumEkle" method="post">
-            <input type="hidden" name="kitapId" value="@Model.Id" />
-            <div class="mb-3">
-                <textarea name="yorumMetni" class="form-control" rows="3" placeholder="Yorumunuzu yazın..." required></textarea>
-            </div>
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" name="spoiler" value="true" id="spoilerCheck" />
-                <label class="form-check-label" for="spoilerCheck">Bu yorum spoiler içeriyor</label>
-            </div>
-            <div class="mb-3" style="max-width:320px">
-                <input type="number" name="sayfaNo" class="form-control" min="1" max="20000" placeholder="Sayfa no (isteğe bağlı)" />
-                <div class="form-text">Doldurursanız yorum yalnızca o sayfaya ulaşmış okuyuculara açılır.</div>
-            </div>
-            <button type="submit" class="btn btn-primary">Yorum Gönder</button>
-            <a asp-action="Index" class="btn btn-secondary">Kitaplara Dön</a>
-        </form>
+            <h3 class="sekme-alt-baslik">Yorum yap</h3>
+            <form asp-action="YorumEkle" method="post">
+                <input type="hidden" name="kitapId" value="@Model.Id" />
+                <div class="mb-3">
+                    <textarea name="yorumMetni" class="form-control" rows="3" placeholder="Yorumunu yaz..." required></textarea>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="spoiler" value="true" id="spoilerCheck" />
+                    <label class="form-check-label" for="spoilerCheck">Bu yorum spoiler içeriyor</label>
+                </div>
+                <div class="mb-3" style="max-width:320px">
+                    <input type="number" name="sayfaNo" class="form-control" min="1" max="20000" placeholder="Sayfa no (isteğe bağlı)" />
+                    <div class="form-text">Doldurursan yorum yalnızca o sayfaya ulaşmış okuyuculara açılır.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Yorum gönder</button>
+            </form>
+        </section>
     </div>
 </div>
+
+@if (uye)
+{
+    <!-- "Birlikte oku" pencereleri -->
+    <div class="modal fade" id="modalOda" tabindex="-1" aria-labelledby="modalOdaBaslik" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-controller="Oda" asp-action="Olustur" method="post" class="modal-content">
+                <div class="modal-header"><h2 class="modal-title" id="modalOdaBaslik">Okuma odası aç</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button></div>
+                <div class="modal-body">
+                    <p class="text-muted">Arkadaşlarınla aynı kitabı oku; ilerlemeler yan yana görünür, mesajlar yazarın sayfasına bağlanır ve geride kalan için kilitli kalır. Davet koduyla katılırlar.</p>
+                    <input type="hidden" name="kitapId" value="@Model.Id" />
+                    <input type="text" name="ad" class="form-control" maxlength="80" placeholder="Oda adı (isteğe bağlı)" aria-label="Oda adı" />
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary">Odayı aç</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalSezon" tabindex="-1" aria-labelledby="modalSezonBaslik" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-controller="Sezon" asp-action="Olustur" method="post" class="modal-content">
+                <div class="modal-header"><h2 class="modal-title" id="modalSezonBaslik">Sezon başlat</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button></div>
+                <div class="modal-body">
+                    <p class="text-muted">Topluluk kitabı dizi gibi günlük bölümlerle birlikte okur. Bölümü okuyunca sohbeti açılır, kimse spoiler yemez.</p>
+                    <input type="hidden" name="kitapId" value="@Model.Id" />
+                    <div class="mb-2"><input type="text" name="ad" class="form-control" maxlength="80" placeholder="Sezon adı (isteğe bağlı)" aria-label="Sezon adı" /></div>
+                    <div class="row g-2">
+                        <div class="col-7"><label class="form-label small" for="sezonBaslangic">Başlangıç</label><input type="date" id="sezonBaslangic" name="baslangic" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" min="@DateTime.Now.ToString("yyyy-MM-dd")" required /></div>
+                        <div class="col-5"><label class="form-label small" for="sezonGun">Gün sayısı</label><input type="number" id="sezonGun" name="gunSayisi" class="form-control" value="21" min="5" max="90" required /></div>
+                    </div>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary">Sezonu aç</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalOneri" tabindex="-1" aria-labelledby="modalOneriBaslik" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-controller="Oneri" asp-action="Olustur" method="post" class="modal-content">
+                <div class="modal-header"><h2 class="modal-title" id="modalOneriBaslik">Birine öner</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button></div>
+                <div class="modal-body">
+                    <p class="text-muted">Kişisel bir notla öneri bağlantısı oluştur. Açıp kabul eden herkes zincire eklenir; kitabın kimden kime gittiğini görürsün.</p>
+                    <input type="hidden" name="kitapId" value="@Model.Id" />
+                    <input type="text" name="not" class="form-control" maxlength="300" placeholder="Kişisel notun: neden okumalı?" aria-label="Öneri notu" />
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary">Bağlantı oluştur</button></div>
+            </form>
+        </div>
+    </div>
+}
 
 @section Scripts {
     <script>
@@ -280,5 +372,24 @@
             document.getElementById('puanInput').value = rating;
             document.getElementById('ratingForm').submit();
         }
+
+        function sekmeGoster(id) {
+            var dugme = document.querySelector('[data-bs-target="#' + id + '"]');
+            if (dugme) bootstrap.Tab.getOrCreateInstance(dugme).show();
+        }
+
+        // Adres çubuğundaki bağlantı (#notlar, #kenar-notlari, #yorumlar...) bir sekmenin içindeyse o sekmeyi aç
+        function hashSekmesi() {
+            var h = location.hash;
+            if (!h || h.length < 2) return;
+            var hedef;
+            try { hedef = document.querySelector(h); } catch (e) { return; }
+            var panel = hedef && hedef.closest('.tab-pane');
+            if (!panel) return;
+            sekmeGoster(panel.id);
+            setTimeout(function () { hedef.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+        }
+        document.addEventListener('DOMContentLoaded', hashSekmesi);
+        window.addEventListener('hashchange', hashSekmesi);
     </script>
 }

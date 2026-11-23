@@ -10,16 +10,10 @@
         <h1>Kitaplığım</h1>
         <span class="not">@Model.Count() kitap</span>
     </div>
-    <div class="d-flex gap-2">
-        <a href="@Url.Action("Index", "AiLibrary")" id="aiOneriBtn" class="btn btn-primary d-flex align-items-center gap-2">
-            <span id="btnText">Yapay zekâdan öneri al</span>
-            <span id="loadingSpinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
-        </a>
-        <a asp-controller="Ikiz" asp-action="Index" class="btn btn-outline-secondary">Okuma ikizi</a>
-        <a asp-controller="IceAktar" asp-action="Index" class="btn btn-outline-secondary">İçe aktar</a>
-        <a asp-action="OkumaIstatistiklerim" class="btn btn-outline-secondary">İstatistikler</a>
-    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Kitap ekle</a>
 </div>
+
+<partial name="_KitaplikSekmeleri" model='"raf"' />
 
 @if (TempData["Mesaj"] != null)
 {
@@ -124,45 +118,8 @@ else
         </div>
         <h4 class="text-muted">Kitaplığınız Henüz Boş</h4>
         <p class="text-secondary mb-4">Okuduğunuz veya okumak istediğiniz kitapları ekleyerek başlayın.</p>
-        <a asp-action="Index" asp-controller="Home" class="btn btn-primary btn-lg">
+        <a asp-action="Index" asp-controller="Kitap" class="btn btn-primary btn-lg">
             <i class="bi bi-search"></i> Kitaplara Göz At
         </a>
     </div>
 }
-@section Scripts {
-    <script>
-        document.getElementById('aiOneriBtn').addEventListener('click', function(e) {
-            var btn = this;
-            var now = new Date().getTime();
-            var lastClick = localStorage.getItem('lastAiRequestTime');
-
-            // 1. ZAMAN KONTROLÜ (10 Saniye Kuralı)
-            // Eğer son tıklama üzerinden 10 saniye (10000 ms) geçmediyse engelle
-            if (lastClick && (now - lastClick < 10000)) {
-                e.preventDefault(); // Sayfaya gitmeyi durdur
-
-                var kalanSure = Math.ceil((10000 - (now - lastClick)) / 1000);
-                alert('Çok hızlı işlem yapıyorsunuz! Lütfen ' + kalanSure + ' saniye bekleyin.');
-                return;
-            }
-
-            // 2. BUTONU KİLİTLEME (Görsel Geri Bildirim)
-            // Eğer süre dolmuşsa veya ilk kez tıklanıyorsa:
-
-            // Tıklamayı kaydet
-            localStorage.setItem('lastAiRequestTime', now);
-
-            // Butonu pasif görünüme sok (Pointer events ile tıklamayı engelle)
-            btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.7';
-
-            // Yazıyı ve ikonu değiştir
-            document.getElementById('btnText').innerText = 'AI Hazırlanıyor...';
-            document.querySelector('.bi-stars').style.display = 'none';
-            document.getElementById('loadingSpinner').style.display = 'inline-block';
-
-            // Sayfanın yönlenmesine izin ver (href çalışacak)
-        });
-    </script>
-}
-

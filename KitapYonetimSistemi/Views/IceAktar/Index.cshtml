@@ -6,11 +6,15 @@
 
 <div class="sayfa-baslik">
     <div>
-        <span class="etiket">Kitaplık</span>
-        <h1>Kitaplığı içe aktar</h1>
-        <span class="not">Başka bir yerdeki kitap listeni CSV dosyasıyla Satır Arası'na taşı.</span>
+        <span class="etiket">Kişisel</span>
+        <h1>Kitaplığım</h1>
     </div>
 </div>
+
+<partial name="_KitaplikSekmeleri" model='"iceaktar"' />
+
+<h2 class="alt-baslik">Başka bir yerden içe aktar</h2>
+<p class="text-muted">Kitap listeni CSV dosyasıyla Satır Arası'na taşı.</p>
 
 @if (Model.Hata != null)
 {

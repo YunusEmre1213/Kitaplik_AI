@@ -135,6 +135,9 @@ namespace KitapYonetimSistemi.Models
         public bool Benim { get; set; }
     }
 
+    // Kitap sayfasında gösterilen, bitmemiş bir sezonun özeti
+    public record KitapSezonOzeti(int Id, string Ad, int UyeSayisi, DateTime Baslangic, bool Yaklasan, int BugunBolum, int BolumSayisi, bool Uye);
+
     public class SezonViewModel
     {
         public OkumaSezonu Sezon { get; set; } = null!;

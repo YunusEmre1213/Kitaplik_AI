@@ -525,3 +525,47 @@ main { padding-top: 1.4rem; }
 .ikiz-ad { font-family: var(--sa-display); font-size: 1.15rem; }
 .ikiz-uyum strong { color: var(--sa-accent); font-size: 1.2rem; }
 .ikiz-ornek { list-style: none; padding: 0; margin: .5rem 0; font-size: .92rem; }
+
+/* ---------- Gezinme sadeleştirmesi: Topluluk menüsü, Kitaplığım sekmeleri, kitap sayfası ---------- */
+.sa-nav .dropdown-menu { background: var(--sa-paper); border: 1px solid var(--sa-line); border-radius: var(--sa-radius); padding: .4rem; min-width: 17rem; box-shadow: 0 8px 24px rgba(0,0,0,.12); margin-top: .5rem; }
+.sa-nav .dropdown-toggle::after { vertical-align: .15em; margin-left: .35em; }
+.dropdown-menu .dropdown-item { display: block; width: 100%; padding: .5rem .75rem; border-radius: var(--sa-radius); color: var(--sa-ink); font-size: .92rem; font-weight: 600; text-align: left; white-space: normal; }
+.dropdown-menu .dropdown-item small { display: block; font-weight: 400; font-size: .78rem; color: var(--sa-muted); margin-top: .1rem; }
+.dropdown-menu .dropdown-item:hover, .dropdown-menu .dropdown-item:focus, .dropdown-menu .dropdown-item.active { background: var(--sa-surface); color: var(--sa-ink); }
+.dropdown-menu .dropdown-item:disabled { opacity: .5; }
+.dropdown-menu .dropdown-divider { border-color: var(--sa-line); }
+@media (max-width: 767.98px) { .sa-nav .dropdown-menu { box-shadow: none; border: 0; padding: 0 0 0 .75rem; background: transparent; } }
+
+.kitaplik-sekme-baglanti { display: flex; flex-wrap: wrap; gap: 1.6rem; border-bottom: 1px solid var(--sa-line); margin-bottom: 1.5rem; }
+.kitaplik-sekme-baglanti .nav-link { padding: .5rem 0; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--sa-muted); font-weight: 500; text-decoration: none; }
+.kitaplik-sekme-baglanti .nav-link:hover { color: var(--sa-ink); }
+.kitaplik-sekme-baglanti .nav-link.active { color: var(--sa-ink); border-bottom-color: var(--sa-accent); }
+.alt-baslik { font-size: 1.5rem; margin: 1.5rem 0 .75rem; }
+
+.detay-eylem { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-top: 1.25rem; }
+.durum-cip { display: inline-block; padding: .25rem .7rem; border: 1px solid var(--sa-accent); border-radius: 999px; color: var(--sa-accent); font-size: .85rem; font-weight: 600; text-decoration: none; }
+.durum-cip:hover { background: var(--sa-surface); }
+.puan-ozet { display: inline-flex; align-items: center; gap: .35rem; color: var(--sa-ink); text-decoration: none; font-size: .95rem; }
+.yildiz { color: var(--sa-line); }
+.yildiz.dolu { color: var(--sa-gold-text); }
+
+.kitap-sekmeleri-bosluk { margin-top: 1.5rem; }
+.puan-blok { display: flex; flex-wrap: wrap; gap: 2.5rem; align-items: center; padding: 1.25rem 0; border-bottom: 1px solid var(--sa-line); margin-bottom: 1rem; }
+.puan-sayi { font-family: var(--sa-display); font-size: 3rem; font-weight: 700; line-height: 1; }
+.puan-sayi.bos { color: var(--sa-muted); }
+.puan-yildizlar-sabit { font-size: 1.3rem; letter-spacing: .1em; }
+.puan-yildizlar { display: flex; gap: .1rem; }
+.yildiz-btn { background: none; border: 0; padding: 0 .1rem; font-size: 2rem; line-height: 1; color: var(--sa-line); cursor: pointer; }
+.yildiz-btn.dolu, .yildiz-btn:hover { color: var(--sa-gold-text); }
+.puan-yildizlar:hover .yildiz-btn { color: var(--sa-gold-text); }
+.puan-yildizlar .yildiz-btn:hover ~ .yildiz-btn { color: var(--sa-line); }
+
+.sekme-bolum { max-width: 46rem; }
+.sekme-alt-baslik { font-size: 1.15rem; margin: 2rem 0 .75rem; padding-top: 1.25rem; border-top: 1px solid var(--sa-line); }
+.alinti-kutu { margin: 0 0 1.5rem; padding-left: 1rem; border-left: 3px solid var(--sa-gold); }
+.alinti-kutu blockquote { font-family: var(--sa-display); font-style: italic; font-size: 1.1rem; margin-bottom: .35rem; }
+.yorum-kutu { margin-bottom: 1.25rem; padding-left: 1rem; border-left: 3px solid var(--sa-line); }
+
+.modal-content { background: var(--sa-paper); border: 1px solid var(--sa-line); border-radius: var(--sa-radius); color: var(--sa-ink); }
+.modal-header, .modal-footer { border-color: var(--sa-line); }
+.modal-title { font-size: 1.4rem; }
