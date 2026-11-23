@@ -1,0 +1,102 @@
+@model KitapYonetimSistemi.Controllers.IkizViewModel
+
+@{
+    ViewData["Title"] = "Okuma ikizi";
+    string Ad(string id) => Model.Adlar.TryGetValue(id, out var a) ? a : "okur";
+    (string Emoji, string Ad) Tepki(TepkiTuru t) => t switch
+    {
+        TepkiTuru.Saskin => ("😮", "şaşırdınız"),
+        TepkiTuru.Aglatti => ("😢", "ağladınız"),
+        TepkiTuru.Guldurdu => ("😄", "güldünüz"),
+        _ => ("😴", "sıkıldınız")
+    };
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Okuma ikizi</span>
+        <h1>Seninle aynı sayfalarda hisseden okurlar</h1>
+        <span class="not">Yıldızlara değil, sayfa tepkilerine bakıyoruz: aynı yerde ağlayan, gülen, sıkılan insanlar.</span>
+    </div>
+</div>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+@if (!Model.Katiliyor)
+{
+    <section class="ikiz-izin">
+        <h2>Eşleşmeyi aç</h2>
+        <p>Açarsan sayfa tepkilerin, bu özelliği açmış diğer okurlarınkiyle karşılaştırılır. Karşındakiler yalnızca <strong>adını, seninle uyum yüzdesini ve ikinizin de aynı hissettiği sayfa aralıklarını</strong> görür. Başka hiçbir şey paylaşılmaz. İstediğin zaman kapatabilirsin.</p>
+        <p class="text-muted">Tepkilerin kitabın sayfalarına bıraktığın şaşırdım, ağlattı, güldürdü, sıkıcı işaretleridir. Henüz @Model.BenimTepkiSayim tepkin var.</p>
+        <form asp-action="Katilimi" method="post">
+            <input type="hidden" name="katil" value="true" />
+            <button type="submit" class="btn btn-primary">Okuma ikizimi bul</button>
+        </form>
+    </section>
+}
+else
+{
+    @if (Model.BenimTepkiSayim == 0)
+    {
+        <p class="text-muted">Henüz hiç sayfa tepkin yok. Okuduğun kitapların sayfasındaki "Duygu eğrisi" bölümünden okuduğun sayfalara tepki bırak; ikizin tepkilerine göre bulunur.</p>
+    }
+    else if (!Model.Ikizler.Any())
+    {
+        <section class="ikiz-izin">
+            <p><strong>Henüz ikizin yok.</strong> @Model.BenimKitapSayim kitapta @Model.BenimTepkiSayim tepkin var.</p>
+            <p class="text-muted mb-0">Eşleşme için başka bir okurla en az @OkumaIkizi.EnAzOrtakKitap ortak kitapta toplam @OkumaIkizi.EnAzOrtakPencere ortak sayfa aralığında ( @OkumaIkizi.PencereBoyu sayfalık ) tepki bırakmış olmanız gerekir. Daha çok kitapta daha çok tepki bırakıp tekrar bak.</p>
+        </section>
+    }
+    else
+    {
+        <ul class="ikiz-liste">
+            @foreach (var i in Model.Ikizler)
+            {
+                <li>
+                    <div class="ikiz-ust">
+                        <span class="ikiz-ad">@Ad(i.KullaniciId)</span>
+                        <span class="ikiz-uyum"><strong>%@i.Uyum</strong> uyum</span>
+                    </div>
+                    <div class="ruh-cubuk"><span style="width:@i.Uyum%"></span></div>
+                    <div class="text-muted small">@i.OrtakKitap ortak kitap · @i.OrtakPencere ortak sayfa aralığının @i.AyniPencere tanesinde aynı hissettiniz</div>
+                    @if (i.Ornekler.Any())
+                    {
+                        <ul class="ikiz-ornek">
+                            @foreach (var o in i.Ornekler)
+                            {
+                                var (emoji, fiil) = Tepki(o.Tur);
+                                <li>@emoji <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@o.KitapId">@(Model.KitapAdlari.TryGetValue(o.KitapId, out var ka) ? ka : "Kitap")</a> s. @o.SayfaBasi–@o.SayfaSonu: ikiniz de @fiil</li>
+                            }
+                        </ul>
+                    }
+                    <a asp-controller="Kitap" asp-action="KullaniciKitapligi" asp-route-kullaniciId="@i.KullaniciId" class="small">Herkese açık kitaplığına bak</a>
+                </li>
+            }
+        </ul>
+
+        @if (Model.OnerilenKitaplar.Any())
+        {
+            <h2 class="sezon-grup">İkizlerinin bitirdiği, sende olmayan kitaplar</h2>
+            <ul class="oda-liste">
+                @foreach (var k in Model.OnerilenKitaplar)
+                {
+                    <li>
+                        <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@k.Kitap.Id" class="oda-kart">
+                            <span class="oda-ad">@k.Kitap.KitapAdi</span>
+                            <span class="oda-alt">@(string.IsNullOrWhiteSpace(k.Kitap.YazarAdi) ? "Yazar bilinmiyor" : k.Kitap.YazarAdi) · @string.Join(", ", k.Okuyanlar.Select(Ad)) bitirdi</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+            <div class="tepki-ipucu">Yalnızca ikizlerinin kitaplığını herkese açık yaptığı kitaplar gösterilir.</div>
+        }
+    }
+
+    <form asp-action="Katilimi" method="post" class="mt-4">
+        <input type="hidden" name="katil" value="false" />
+        <button type="submit" class="cikar-btn">Eşleşmeyi kapat</button>
+    </form>
+}

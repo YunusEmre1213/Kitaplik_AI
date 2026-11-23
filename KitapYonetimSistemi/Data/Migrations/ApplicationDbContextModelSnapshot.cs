@@ -41,6 +41,9 @@ namespace KitapYonetimSistemi.Data.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IkizOlabilir")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("KayitTarihi")
                         .HasColumnType("datetime2");
 

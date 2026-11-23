@@ -516,3 +516,12 @@ main { padding-top: 1.4rem; }
 .oneri-not { border-left: 3px solid var(--sa-gold); padding: .25rem 0 .25rem 1rem; font-family: var(--sa-display); font-style: italic; margin: .75rem 0; }
 .oneri-not footer { font-family: var(--sa-sans); font-style: normal; font-size: .85rem; color: var(--sa-muted); margin-top: .25rem; }
 .oneri-yolu { margin-bottom: 1rem; }
+
+/* Okuma ikizi */
+.ikiz-izin { max-width: 40rem; background: var(--sa-paper); border: 1px solid var(--sa-line); border-radius: var(--sa-radius); padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+.ikiz-liste { list-style: none; padding: 0; margin: 0 0 1.5rem; display: grid; gap: 1rem; max-width: 46rem; }
+.ikiz-liste > li { border: 1px solid var(--sa-line); border-radius: var(--sa-radius); padding: .9rem 1.1rem; background: var(--sa-paper); }
+.ikiz-ust { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .35rem; }
+.ikiz-ad { font-family: var(--sa-display); font-size: 1.15rem; }
+.ikiz-uyum strong { color: var(--sa-accent); font-size: 1.2rem; }
+.ikiz-ornek { list-style: none; padding: 0; margin: .5rem 0; font-size: .92rem; }
