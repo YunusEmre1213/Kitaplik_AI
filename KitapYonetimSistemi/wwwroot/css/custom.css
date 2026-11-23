@@ -501,3 +501,18 @@ main { padding-top: 1.4rem; }
 .sezon-ac summary { cursor: pointer; color: var(--sa-muted); font-size: .9rem; }
 .sezon-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; margin-top: .6rem; }
 .sezon-form label { font-size: .8rem; color: var(--sa-muted); display: grid; }
+
+/* Öneri zinciri */
+.oneri-baglanti { max-width: 44rem; margin: 1rem 0 1.5rem; }
+.zincir-yol { color: var(--sa-muted); margin: .5rem 0 1rem; }
+.zincir-kok { font-family: var(--sa-display); font-size: 1.1rem; color: var(--sa-accent); }
+.zincir-agac { list-style: none; margin: .25rem 0 0 .6rem; padding-left: 1rem; border-left: 1px solid var(--sa-line); }
+.zincir-agac li { margin: .35rem 0; }
+.zincir-ad { font-weight: 600; margin-right: .5rem; }
+.zincir-durum { font-size: .85rem; color: var(--sa-muted); }
+.zincir-durum.bitti { color: var(--sa-green); }
+.oneri-ac { max-width: 40rem; }
+.oneri-kitap { display: flex; gap: 1.25rem; align-items: flex-start; margin: 1.25rem 0; }
+.oneri-not { border-left: 3px solid var(--sa-gold); padding: .25rem 0 .25rem 1rem; font-family: var(--sa-display); font-style: italic; margin: .75rem 0; }
+.oneri-not footer { font-family: var(--sa-sans); font-style: normal; font-size: .85rem; color: var(--sa-muted); margin-top: .25rem; }
+.oneri-yolu { margin-bottom: 1rem; }

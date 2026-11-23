@@ -27,6 +27,8 @@ namespace KitapYonetimSistemi.Data
         public DbSet<OkumaOdasi> OkumaOdalari { get; set; }
         public DbSet<OdaUyesi> OdaUyeleri { get; set; }
         public DbSet<OdaMesaji> OdaMesajlari { get; set; }
+        public DbSet<Oneri> Oneriler { get; set; }
+        public DbSet<OneriKabul> OneriKabulleri { get; set; }
         public DbSet<OkumaSezonu> OkumaSezonlari { get; set; }
         public DbSet<SezonUyesi> SezonUyeleri { get; set; }
         public DbSet<SezonMesaji> SezonMesajlari { get; set; }
@@ -264,6 +266,26 @@ namespace KitapYonetimSistemi.Data
                 m.HasOne(x => x.Oda).WithMany(o => o.Mesajlar).HasForeignKey(x => x.OdaId).OnDelete(DeleteBehavior.Cascade);
                 m.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
                 m.HasIndex(x => new { x.OdaId, x.Tarih });
+            });
+
+            // Öneri zinciri: kullanıcılara bilerek veritabanı bağı yok (silinen okurun halkası zincirde kalır, admin silerken elle temizlenir)
+            builder.Entity<Oneri>(o =>
+            {
+                o.Property(x => x.Kod).HasMaxLength(Oneri.KodUzunlugu).IsRequired();
+                o.Property(x => x.Not).HasMaxLength(Oneri.NotUzunlugu);
+                o.Property(x => x.GonderenId).HasMaxLength(450);
+                o.HasIndex(x => x.Kod).IsUnique();
+                o.HasIndex(x => x.GonderenId);
+                o.HasOne(x => x.Kitap).WithMany().HasForeignKey(x => x.KitapId).OnDelete(DeleteBehavior.Cascade);
+                o.HasOne(x => x.OncekiKabul).WithMany().HasForeignKey(x => x.OncekiKabulId).OnDelete(DeleteBehavior.NoAction);
+            });
+
+            builder.Entity<OneriKabul>(k =>
+            {
+                k.Property(x => x.KullaniciId).HasMaxLength(450).IsRequired();
+                k.HasOne(x => x.Oneri).WithMany(o => o.Kabuller).HasForeignKey(x => x.OneriId).OnDelete(DeleteBehavior.Cascade);
+                k.HasIndex(x => new { x.KullaniciId, x.KitapId }).IsUnique();
+                k.HasIndex(x => x.OneriId);
             });
 
             // Okuma sezonları (dizi gibi ortak okuma): oluşturan için NoAction, üyelik ve mesajlar kullanıcıyla silinir

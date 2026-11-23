@@ -471,6 +471,34 @@ namespace KitapYonetimSistemi.Controllers
             _context.Comments.RemoveRange(_context.Comments.Where(c => tartismaIdleri.Contains(c.TartismaId)));
             _context.Tartismalar.RemoveRange(_context.Tartismalar.Where(t => t.UserId == kullaniciId));
 
+            // Okuma odası ve sezon oluşturanı NoAction olduğu için: başka üye varsa sahiplik ona geçer, yoksa oda/sezon silinir
+            var odalar = await _context.OkumaOdalari.Include(o => o.Uyeler).Where(o => o.OlusturanId == kullaniciId).ToListAsync();
+            foreach (var oda in odalar)
+            {
+                var diger = oda.Uyeler.FirstOrDefault(u => u.KullaniciId != kullaniciId);
+                if (diger != null) oda.OlusturanId = diger.KullaniciId;
+                else _context.OkumaOdalari.Remove(oda);
+            }
+            var sezonlar = await _context.OkumaSezonlari.Include(s => s.Uyeler).Where(s => s.OlusturanId == kullaniciId).ToListAsync();
+            foreach (var sezon in sezonlar)
+            {
+                var diger = sezon.Uyeler.FirstOrDefault(u => u.KullaniciId != kullaniciId);
+                if (diger != null) sezon.OlusturanId = diger.KullaniciId;
+                else _context.OkumaSezonlari.Remove(sezon);
+            }
+
+            // Öneri zinciri: kullanıcıya veritabanı bağı olmadığı için elle temizlenir. Zincirin geri kalanı korunur.
+            var kabulIdleri = await _context.OneriKabulleri.Where(k => k.KullaniciId == kullaniciId).Select(k => k.Id).ToListAsync();
+            foreach (var oneri in await _context.Oneriler.Where(o => o.OncekiKabulId != null && kabulIdleri.Contains(o.OncekiKabulId.Value)).ToListAsync())
+                oneri.OncekiKabulId = null;
+            foreach (var oneri in await _context.Oneriler.Where(o => o.GonderenId == kullaniciId).ToListAsync())
+            {
+                oneri.GonderenId = null;
+                oneri.Not = string.Empty;
+            }
+            await _context.SaveChangesAsync();
+            _context.OneriKabulleri.RemoveRange(_context.OneriKabulleri.Where(k => k.KullaniciId == kullaniciId));
+
             await _context.SaveChangesAsync();
 
             var sonuc = await _userManager.DeleteAsync(kullanici);

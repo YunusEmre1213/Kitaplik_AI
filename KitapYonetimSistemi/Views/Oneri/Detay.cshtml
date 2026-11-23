@@ -1,0 +1,65 @@
+@model KitapYonetimSistemi.Controllers.OneriDetayViewModel
+
+@{
+    ViewData["Title"] = "Öneri zinciri";
+    var kitapAdi = Model.Oneri.Kitap?.KitapAdi ?? "";
+    var paylasim = Uri.EscapeDataString($"Sana \"{kitapAdi}\" kitabını öneriyorum. Aç, zincire katıl: {Model.Baglanti}");
+    string Ad(string? id) => id != null && Model.Adlar.TryGetValue(id, out var a) ? a : "silinmiş okur";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Öneri zincirlerim</a></li>
+        <li class="breadcrumb-item active">@kitapAdi</li>
+    </ol>
+</nav>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Öneri zinciri</span>
+        <h1>@kitapAdi</h1>
+        @if (!string.IsNullOrWhiteSpace(Model.Oneri.Not))
+        {
+            <span class="not">Notun: "@Model.Oneri.Not"</span>
+        }
+    </div>
+</div>
+
+<section class="oneri-baglanti">
+    <label class="form-label" for="oneriBaglanti">Öneri bağlantın</label>
+    <div class="input-group">
+        <input type="text" id="oneriBaglanti" class="form-control" readonly value="@Model.Baglanti" onfocus="this.select()" />
+        <button type="button" class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText(document.getElementById('oneriBaglanti').value).then(() => { this.textContent = 'Kopyalandı'; })">Kopyala</button>
+        <a class="btn btn-outline-secondary" target="_blank" rel="noopener" href="https://wa.me/?text=@paylasim">WhatsApp</a>
+    </div>
+    <div class="tepki-ipucu">Bağlantıyı alan herkes giriş yapıp kabul ederek zincire katılabilir. Adın ve kitabı bitirip bitirmediğin zincirde görünür.</div>
+</section>
+
+@if (Model.Yol.Count > 1)
+{
+    <p class="zincir-yol">Bu zincirin kaynağı: <strong>@string.Join(" → ", Model.Yol.Select(Ad))</strong></p>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-4"><div class="stat-card"><div class="stat-number">@Model.Ozet.Ulasan</div><div class="stat-label">Ulaştığın kişi</div></div></div>
+    <div class="col-4"><div class="stat-card"><div class="stat-number">@Model.Ozet.Bitiren</div><div class="stat-label">Bitiren</div></div></div>
+    <div class="col-4"><div class="stat-card"><div class="stat-number">@Model.Ozet.Derinlik</div><div class="stat-label">Halka derinliği</div></div></div>
+</div>
+
+<section>
+    <h2 class="sezon-grup">Zincir</h2>
+    @if (!Model.Agac.Any())
+    {
+        <p class="text-muted">Henüz kimse bağlantıyı kabul etmedi. Bağlantıyı paylaş.</p>
+    }
+    else
+    {
+        <div class="zincir-kok">sen</div>
+        <partial name="_Dugumler" model="new KitapYonetimSistemi.Controllers.OneriAgacModel { Dugumler = Model.Agac, Adlar = Model.Adlar }" />
+    }
+</section>

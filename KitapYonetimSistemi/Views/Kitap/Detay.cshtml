@@ -67,6 +67,8 @@
     }
 }
 
+@await Component.InvokeAsync("OneriYolu", new { kitapId = Model.Id })
+
 <partial name="_KenarNotlari" model="(KenarNotlariViewModel)ViewBag.KenarNotlari" />
 
 <!-- Puan Sistemi -->

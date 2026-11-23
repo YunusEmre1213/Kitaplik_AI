@@ -1,0 +1,15 @@
+@model KitapYonetimSistemi.Controllers.OneriAgacModel
+
+<ul class="zincir-agac">
+    @foreach (var d in Model.Dugumler)
+    {
+        <li>
+            <span class="zincir-ad">@(Model.Adlar.TryGetValue(d.KullaniciId, out var ad) ? ad : "silinmiş okur")</span>
+            <span class="zincir-durum @(d.Bitirdi ? "bitti" : "")">@(d.Bitirdi ? "bitirdi ✓" : "yolda")</span>
+            @if (d.Cocuklar.Count > 0)
+            {
+                <partial name="_Dugumler" model="new KitapYonetimSistemi.Controllers.OneriAgacModel { Dugumler = d.Cocuklar, Adlar = Model.Adlar }" />
+            }
+        </li>
+    }
+</ul>

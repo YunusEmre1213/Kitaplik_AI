@@ -1,0 +1,49 @@
+@model KitapYonetimSistemi.Controllers.OneriAcViewModel
+
+@{
+    ViewData["Title"] = "Sana bir kitap önerildi";
+    var kitap = Model.Oneri.Kitap!;
+    string Ad(string? id) => id != null && Model.Adlar.TryGetValue(id, out var a) ? a : "silinmiş okur";
+    var gonderen = Ad(Model.Oneri.GonderenId);
+}
+
+<div class="oneri-ac">
+    <span class="etiket">Öneri zinciri</span>
+    <h1>@gonderen sana bir kitap önerdi</h1>
+
+    <div class="oneri-kitap">
+        <div class="detay-kapak"><partial name="_Kapak" model='KapakModel.Of(kitap, "md")' /></div>
+        <div>
+            <h2 class="oda-ad">@kitap.KitapAdi</h2>
+            <p class="detay-yazar">@(string.IsNullOrWhiteSpace(kitap.YazarAdi) ? "Yazar bilinmiyor" : kitap.YazarAdi)</p>
+            @if (!string.IsNullOrWhiteSpace(Model.Oneri.Not))
+            {
+                <blockquote class="oneri-not">"@Model.Oneri.Not"<footer>@gonderen</footer></blockquote>
+            }
+        </div>
+    </div>
+
+    @if (Model.Yol.Count > 1)
+    {
+        <p class="zincir-yol">Bu kitap sana şöyle ulaştı: <strong>@string.Join(" → ", Model.Yol.Select(Ad)) → sen</strong></p>
+    }
+
+    @if (Model.Kendi)
+    {
+        <div class="alert alert-info">Bu senin kendi öneri bağlantın. Arkadaşlarına gönder.</div>
+        <a asp-controller="Oneri" asp-action="Index" class="btn btn-outline-secondary">Öneri zincirlerim</a>
+    }
+    else if (Model.Dongu)
+    {
+        <div class="alert alert-info">Bu zincirin zaten bir halkasısın, tekrar katılamazsın.</div>
+    }
+    else
+    {
+        <form asp-action="Kabul" method="post">
+            <input type="hidden" name="kod" value="@Model.Kod" />
+            <button type="submit" class="btn btn-primary">Zincire katıl ve kitaplığıma ekle</button>
+            <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@kitap.Id" class="btn btn-outline-secondary ms-2">Önce kitaba bak</a>
+        </form>
+        <div class="tepki-ipucu mt-2">Katılınca adın ve kitabı bitirip bitirmediğin bu zincirdeki okurlara görünür. Kitap kitaplığına "Okunacak" olarak eklenir, istediğin zaman çıkarabilirsin.</div>
+    }
+</div>

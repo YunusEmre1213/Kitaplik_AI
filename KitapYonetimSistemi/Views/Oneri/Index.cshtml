@@ -1,0 +1,66 @@
+@model KitapYonetimSistemi.Controllers.OneriIndexViewModel
+
+@{
+    ViewData["Title"] = "Öneri zincirlerim";
+    string Ad(string? id) => id != null && Model.Adlar.TryGetValue(id, out var a) ? a : "silinmiş okur";
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Öneri zinciri</span>
+        <h1>Öneri zincirlerim</h1>
+        <span class="not">Bir kitabı kişisel notla öner. Bağlantıyı açıp kabul eden herkes zincire eklenir; kitabın kimden kime gittiğini görürsün.</span>
+    </div>
+</div>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["Hata"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<h2 class="sezon-grup">Önerdiklerim</h2>
+@if (!Model.Gonderdiklerim.Any())
+{
+    <p class="text-muted">Henüz kimseye bir kitap önermedin. Bir kitabın sayfasındaki "Birine öner" bölümünden başla.</p>
+}
+else
+{
+    <ul class="oda-liste">
+        @foreach (var s in Model.Gonderdiklerim)
+        {
+            <li>
+                <a asp-action="Detay" asp-route-id="@s.Oneri.Id" class="oda-kart">
+                    <span class="oda-ad">@s.Oneri.Kitap?.KitapAdi</span>
+                    <span class="oda-alt">
+                        @s.DogrudanKabul kişi açtı · zincir toplam @s.Ozet.Ulasan kişiye ulaştı · @s.Ozet.Bitiren kişi bitirdi
+                        @if (s.Ozet.Derinlik > 1) { <text> · @s.Ozet.Derinlik halka derinliğinde</text> }
+                    </span>
+                </a>
+            </li>
+        }
+    </ul>
+}
+
+<h2 class="sezon-grup">Bana ulaşanlar</h2>
+@if (!Model.Alinanlar.Any())
+{
+    <p class="text-muted">Henüz sana bir öneri bağlantısıyla ulaşan kitap yok.</p>
+}
+else
+{
+    <ul class="oda-liste">
+        @foreach (var a in Model.Alinanlar)
+        {
+            <li>
+                <a asp-controller="Kitap" asp-action="Detay" asp-route-id="@a.Kitap.Id" class="oda-kart">
+                    <span class="oda-ad">@a.Kitap.KitapAdi</span>
+                    <span class="oda-alt">@string.Join(" → ", a.Yol.Select(Ad)) → sen@(string.IsNullOrWhiteSpace(a.Not) ? "" : " · \"" + a.Not + "\"")</span>
+                </a>
+            </li>
+        }
+    </ul>
+}
