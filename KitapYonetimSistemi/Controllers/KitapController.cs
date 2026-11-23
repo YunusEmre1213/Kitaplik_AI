@@ -652,39 +652,7 @@ namespace KitapYonetimSistemi.Controllers
 
         // Sayfa ilerlemesini kitaplık kaydına işler ve günlüğe yazar. Kitap bu işlemle bittiyse true döner.
         private bool IlerlemeUygula(KullaniciKitaplik kayit, int sayfa, string? not)
-        {
-            var toplamSayfa = kayit.Kitap?.SayfaSayisi;
-            kayit.MevcutSayfa = sayfa;
-            // Okumaya devam eden kitabı bırakmış sayılmaz
-            kayit.BirakmaNedeni = null;
-            kayit.BirakmaTarihi = null;
-
-            // İlk sayfa girilince okunacak kitap otomatik "Okuyorum" olur
-            if (kayit.OkumaDurumu == OkumaDurumu.Okunacak && sayfa > 0)
-            {
-                kayit.OkumaDurumu = OkumaDurumu.Okuyorum;
-                kayit.OkumayaBaslamaTarihi ??= DateTime.Now;
-            }
-
-            // Son sayfaya gelince kitap otomatik "Okundu" olur
-            var bitirdi = false;
-            if (toplamSayfa.HasValue && sayfa == toplamSayfa.Value && kayit.OkumaDurumu != OkumaDurumu.Okundu)
-            {
-                kayit.OkumaDurumu = OkumaDurumu.Okundu;
-                kayit.OkumayaBaslamaTarihi ??= DateTime.Now;
-                kayit.OkumaBitisTarihi = DateTime.Now;
-                bitirdi = true;
-            }
-
-            _context.OkumaGunlukleri.Add(new OkumaGunlugu
-            {
-                KullaniciKitaplikId = kayit.Id,
-                Sayfa = sayfa,
-                Not = not,
-                Tarih = DateTime.Now
-            });
-            return bitirdi;
-        }
+            => Services.IlerlemeIsleyici.Uygula(_context, kayit, sayfa, not);
 
         // ----- Okuma oturumu (başlat / bitir / iptal) -----
 

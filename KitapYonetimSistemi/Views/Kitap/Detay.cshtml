@@ -51,6 +51,20 @@
         <input type="text" name="ad" class="form-control form-control-sm" maxlength="80" placeholder="Oda adı (isteğe bağlı)" aria-label="Oda adı" />
         <button type="submit" class="btn btn-outline-secondary btn-sm">Arkadaşlarınla birlikte oku</button>
     </form>
+
+    @if (Model.SayfaSayisi is > 0)
+    {
+        <details class="sezon-ac">
+            <summary>Dizi gibi okuma: sezon başlat</summary>
+            <form asp-controller="Sezon" asp-action="Olustur" method="post" class="sezon-form">
+                <input type="hidden" name="kitapId" value="@Model.Id" />
+                <input type="text" name="ad" class="form-control form-control-sm" maxlength="80" placeholder="Sezon adı (isteğe bağlı)" aria-label="Sezon adı" />
+                <label>Başlangıç <input type="date" name="baslangic" class="form-control form-control-sm" value="@DateTime.Now:yyyy-MM-dd" min="@DateTime.Now:yyyy-MM-dd" required /></label>
+                <label>Gün sayısı <input type="number" name="gunSayisi" class="form-control form-control-sm" value="21" min="5" max="90" required /></label>
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Sezonu aç</button>
+            </form>
+        </details>
+    }
 }
 
 <partial name="_KenarNotlari" model="(KenarNotlariViewModel)ViewBag.KenarNotlari" />

@@ -1,0 +1,173 @@
+@model KitapYonetimSistemi.Models.SezonViewModel
+
+@{
+    ViewData["Title"] = Model.Sezon.Ad;
+    var t = Model.Takvim;
+    var enCok = Math.Max(1, Model.UyeSayisi);
+    string Durum() => Model.Durum switch
+    {
+        SezonDurumu.Yaklasan => $"{Model.Sezon.Baslangic:dd.MM.yyyy} tarihinde başlıyor",
+        SezonDurumu.Surmekte => $"Bugün {Model.BugunBolum}. bölüm / {t.BolumSayisi}",
+        _ => "Sezon bitti, sohbetler açık"
+    };
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Okuma sezonları</a></li>
+        <li class="breadcrumb-item active">@Model.Sezon.Ad</li>
+    </ol>
+</nav>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["Hata"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Sezon</span>
+        <h1>@Model.Sezon.Ad</h1>
+        <span class="not"><a asp-controller="Kitap" asp-action="Detay" asp-route-id="@Model.Sezon.KitapId">@Model.Sezon.Kitap?.KitapAdi</a> · @Model.Sezon.Kitap?.YazarAdi</span>
+    </div>
+    <div class="sezon-durum">
+        <strong>@Durum()</strong>
+        <span class="text-muted">@Model.UyeSayisi okur · günde ~@t.GunlukSayfa sayfa · @Model.TamamlayanSayisi kişi bitirdi</span>
+    </div>
+</div>
+
+@if (!Model.Uye)
+{
+    <form asp-action="Katil" method="post" class="mb-4">
+        <input type="hidden" name="sezonId" value="@Model.Sezon.Id" />
+        <button type="submit" class="btn btn-primary">Sezona katıl</button>
+        <span class="text-muted ms-2">Bölümlerin sohbetini görmek ve yazmak için katıl, bölümleri okudukça açılır.</span>
+    </form>
+}
+else if (Model.BenimSonBolum >= t.BolumSayisi)
+{
+    <div class="sezon-panel">Sezonu tamamladın. Tüm bölümlerin sohbeti sana açık.</div>
+}
+else if (Model.Onaylanabilir)
+{
+    var sonraki = Model.BenimSonBolum + 1;
+    <div class="sezon-panel">
+        <div>
+            <span class="etiket">Sıradaki bölüm</span>
+            <div class="oturum-baslik">@sonraki. bölüm · s. @t.SayfaBasi(sonraki)–@t.SayfaSonu(sonraki)</div>
+            <div class="text-muted small">Okuyup bitirince onayla; bölümün sohbeti açılır ve kitaplık ilerlemen güncellenir.</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <form asp-action="BolumuOkudum" method="post">
+                <input type="hidden" name="sezonId" value="@Model.Sezon.Id" />
+                <button type="submit" class="btn btn-primary">@sonraki. bölümü okudum</button>
+            </form>
+            @if (Model.BugunBolum - Model.BenimSonBolum > 1)
+            {
+                <form asp-action="BolumuOkudum" method="post" onsubmit="return confirm('Bugüne kadarki @Model.BugunBolum bölümün hepsini okuduğunu onaylıyorsun. Devam edilsin mi?');">
+                    <input type="hidden" name="sezonId" value="@Model.Sezon.Id" />
+                    <input type="hidden" name="hepsi" value="true" />
+                    <button type="submit" class="btn btn-outline-secondary">Bugüne kadar hepsini okudum</button>
+                </form>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="sezon-panel">
+        @if (Model.Durum == SezonDurumu.Yaklasan)
+        {
+            <span>Sezon @Model.Sezon.Baslangic.ToString("dd.MM.yyyy") tarihinde başlıyor. İlk bölüm o gün açılır.</span>
+        }
+        else
+        {
+            <span>Bugünkü bölümü okudun. Sıradaki bölüm yarın açılır.</span>
+        }
+    </div>
+}
+
+<ol class="sezon-bolumler">
+    @foreach (var b in Model.Bolumler)
+    {
+        var okudum = Model.Uye && Model.BenimSonBolum >= b.No;
+        <li id="bolum-@b.No" class="@(b.Bugun ? "bugun" : "") @(!b.Acildi ? "kapali" : "")">
+            <div class="bolum-ust">
+                <div>
+                    <span class="bolum-no">@b.No. bölüm</span>
+                    <span class="text-muted">s. @b.SayfaBasi–@b.SayfaSonu · @b.Gun.ToString("dd MMM")</span>
+                    @if (b.Bugun) { <span class="etiket">Bugün</span> }
+                    @if (okudum) { <span class="etiket">Okudun ✓</span> }
+                </div>
+                <div class="bolum-okuyan" title="@b.OkuyanSayisi / @Model.UyeSayisi okur bu bölümü okudu">
+                    <span class="ruh-cubuk"><span style="width:@(b.OkuyanSayisi * 100 / enCok)%"></span></span>
+                    <span class="text-muted small">@b.OkuyanSayisi/@Model.UyeSayisi</span>
+                </div>
+            </div>
+
+            @if (!b.Acildi)
+            {
+                <p class="text-muted small mb-0">Bu bölüm @b.Gun.ToString("dd.MM.yyyy") tarihinde açılır.</p>
+            }
+            else if (!Model.Uye)
+            {
+                <p class="text-muted small mb-0">@b.MesajSayisi mesaj · sohbeti görmek için sezona katıl.</p>
+            }
+            else if (!b.SohbetAcik)
+            {
+                <p class="kapsul-metin mb-0">🔒 @b.MesajSayisi mesaj var. Bu bölümü okuyunca açılır.</p>
+            }
+            else
+            {
+                @if (!b.Mesajlar.Any())
+                {
+                    <p class="text-muted small">Henüz mesaj yok. İlk yorumu sen yaz.</p>
+                }
+                else
+                {
+                    <ul class="kenar-liste">
+                        @foreach (var m in b.Mesajlar)
+                        {
+                            <li>
+                                <span class="kenar-sayfa">@m.Ad</span>
+                                <div class="kenar-icerik">
+                                    <p>@m.Metin</p>
+                                    <div class="kenar-alt">
+                                        <span>@m.Tarih.ToString("dd.MM.yyyy HH:mm")</span>
+                                        @if (m.Benim)
+                                        {
+                                            <form asp-action="MesajSil" method="post" onsubmit="return confirm('Mesaj silinsin mi?');" class="d-inline">
+                                                <input type="hidden" name="mesajId" value="@m.Id" />
+                                                <button type="submit" class="cikar-btn">Sil</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+                <form asp-action="MesajGonder" method="post" class="kenar-form">
+                    <input type="hidden" name="sezonId" value="@Model.Sezon.Id" />
+                    <input type="hidden" name="bolum" value="@b.No" />
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="metin" class="form-control" maxlength="1000" placeholder="@b.No. bölüm hakkında bir şey yaz..." required aria-label="Mesaj" />
+                        <button type="submit" class="btn btn-outline-secondary">Gönder</button>
+                    </div>
+                </form>
+            }
+        </li>
+    }
+</ol>
+
+@if (Model.Uye)
+{
+    <form asp-action="Ayril" method="post" onsubmit="return confirm('Sezondan ayrılmak istediğine emin misin?');" class="mt-4">
+        <input type="hidden" name="sezonId" value="@Model.Sezon.Id" />
+        <button type="submit" class="cikar-btn">Sezondan ayrıl</button>
+    </form>
+}

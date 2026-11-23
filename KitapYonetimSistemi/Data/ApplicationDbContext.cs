@@ -27,6 +27,9 @@ namespace KitapYonetimSistemi.Data
         public DbSet<OkumaOdasi> OkumaOdalari { get; set; }
         public DbSet<OdaUyesi> OdaUyeleri { get; set; }
         public DbSet<OdaMesaji> OdaMesajlari { get; set; }
+        public DbSet<OkumaSezonu> OkumaSezonlari { get; set; }
+        public DbSet<SezonUyesi> SezonUyeleri { get; set; }
+        public DbSet<SezonMesaji> SezonMesajlari { get; set; }
         public DbSet<Yazar> Yazarlar { get; set; }
         public DbSet<KitapYazar> KitapYazarlari { get; set; }
         public DbSet<Kategori> Kategoriler { get; set; }
@@ -261,6 +264,31 @@ namespace KitapYonetimSistemi.Data
                 m.HasOne(x => x.Oda).WithMany(o => o.Mesajlar).HasForeignKey(x => x.OdaId).OnDelete(DeleteBehavior.Cascade);
                 m.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
                 m.HasIndex(x => new { x.OdaId, x.Tarih });
+            });
+
+            // Okuma sezonları (dizi gibi ortak okuma): oluşturan için NoAction, üyelik ve mesajlar kullanıcıyla silinir
+            builder.Entity<OkumaSezonu>(s =>
+            {
+                s.Property(x => x.Ad).HasMaxLength(OkumaSezonu.AdUzunlugu).IsRequired();
+                s.HasOne(x => x.Kitap).WithMany().HasForeignKey(x => x.KitapId).OnDelete(DeleteBehavior.Cascade);
+                s.HasOne(x => x.Olusturan).WithMany().HasForeignKey(x => x.OlusturanId).OnDelete(DeleteBehavior.NoAction);
+                s.HasIndex(x => x.Baslangic);
+            });
+
+            builder.Entity<SezonUyesi>(u =>
+            {
+                u.HasOne(x => x.Sezon).WithMany(s => s.Uyeler).HasForeignKey(x => x.SezonId).OnDelete(DeleteBehavior.Cascade);
+                u.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
+                u.HasIndex(x => new { x.SezonId, x.KullaniciId }).IsUnique();
+                u.HasIndex(x => x.KullaniciId);
+            });
+
+            builder.Entity<SezonMesaji>(m =>
+            {
+                m.Property(x => x.Metin).HasMaxLength(SezonMesaji.EnFazlaUzunluk);
+                m.HasOne(x => x.Sezon).WithMany(s => s.Mesajlar).HasForeignKey(x => x.SezonId).OnDelete(DeleteBehavior.Cascade);
+                m.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
+                m.HasIndex(x => new { x.SezonId, x.Bolum, x.Tarih });
             });
 
             builder.Entity<AlintiBegeni>()

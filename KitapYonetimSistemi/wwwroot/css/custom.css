@@ -484,3 +484,20 @@ main { padding-top: 1.4rem; }
 .ice-bulunamayan { max-height: 16rem; overflow: auto; font-size: .9rem; }
 .ice-yardim { max-width: 46rem; color: var(--sa-muted); }
 .ice-yardim h2 { font-size: 1.1rem; color: var(--sa-ink); }
+
+/* Okuma sezonları (dizi gibi okuma) */
+.sezon-grup { font-family: var(--sa-display); font-size: 1.2rem; margin: 1.75rem 0 .25rem; }
+.sezon-durum { text-align: right; display: grid; }
+.sezon-panel { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: center; background: var(--sa-paper); border: 1px solid var(--sa-line); border-left: 3px solid var(--sa-accent); border-radius: var(--sa-radius); padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+.sezon-bolumler { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
+.sezon-bolumler > li { border: 1px solid var(--sa-line); border-radius: var(--sa-radius); padding: .85rem 1.1rem; background: var(--sa-paper); }
+.sezon-bolumler > li.bugun { border-color: var(--sa-accent); }
+.sezon-bolumler > li.kapali { opacity: .6; }
+.bolum-ust { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; margin-bottom: .5rem; }
+.bolum-no { font-family: var(--sa-display); font-size: 1.05rem; margin-right: .5rem; }
+.bolum-okuyan { display: flex; align-items: center; gap: .5rem; min-width: 8rem; }
+.bolum-okuyan .ruh-cubuk { flex: 1; }
+.sezon-ac { margin: 0 0 1.5rem; }
+.sezon-ac summary { cursor: pointer; color: var(--sa-muted); font-size: .9rem; }
+.sezon-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; margin-top: .6rem; }
+.sezon-form label { font-size: .8rem; color: var(--sa-muted); display: grid; }
