@@ -578,3 +578,9 @@ main { padding-top: 1.4rem; }
 .bugun-kapsul { max-width: 46rem; margin: 0 0 1.5rem; padding: 1rem 1.25rem; background: var(--sa-paper); border: 1px solid var(--sa-gold); border-radius: var(--sa-radius); }
 .bugun-sayfa-form { margin-top: .5rem; }
 @media (max-width: 575.98px) { .bugun-ozet { align-items: flex-start; } }
+
+/* Düzeltmeler (tarayıcı doğrulamasından): adlı mesaj listesi ve koyu tema menüsü */
+.kenar-liste.adli li { grid-template-columns: 7.5rem 1fr; }
+.kenar-liste.adli .kenar-sayfa { font-size: 1rem; overflow-wrap: anywhere; }
+:root[data-theme="dark"] .dropdown-menu .dropdown-item { color: var(--sa-ink); }
+:root[data-theme="dark"] .dropdown-menu .dropdown-item small { color: var(--sa-muted); }
