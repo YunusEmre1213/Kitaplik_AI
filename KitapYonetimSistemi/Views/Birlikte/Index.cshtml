@@ -1,0 +1,71 @@
+@using KitapYonetimSistemi.Controllers
+@model KitapYonetimSistemi.Controllers.BirlikteViewModel
+
+@{
+    ViewData["Title"] = "Birlikte okuma";
+    string Adres(BirlikteOgesi o) => o.Tur == BirlikteTuru.Sezon
+        ? Url.Action("Detay", "Sezon", new { id = o.Id })!
+        : Url.Action("Detay", "Oda", new { id = o.Id })!;
+    string Etiket(BirlikteOgesi o) => o.Tur == BirlikteTuru.Sezon ? "Sezon" : "Oda";
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Topluluk</span>
+        <h1>Birlikte okuma</h1>
+        <span class="not">Bir kitabı arkadaşlarınla serbest tempoda (oda) ya da günlük bölümlerle (sezon) oku. Sohbetler yalnızca okuduğun sayfaya kadar açılır.</span>
+    </div>
+</div>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["Hata"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<form asp-controller="Oda" asp-action="Katil" method="post" class="oda-katil">
+    <label class="form-label" for="odaKod">Bir odanın davet kodu var mı?</label>
+    <div class="input-group">
+        <input type="text" id="odaKod" name="kod" class="form-control" maxlength="8" placeholder="8 haneli kod" autocomplete="off" style="text-transform:uppercase" required />
+        <button type="submit" class="btn btn-primary">Odaya katıl</button>
+    </div>
+</form>
+
+<h2 class="sezon-grup">Birlikte okuduklarım</h2>
+@if (!Model.Benimkiler.Any())
+{
+    <p class="text-muted">Henüz bir okumaya katılmadın. Bir kitabın sayfasındaki "Birlikte oku" menüsünden oda ya da sezon başlatabilir, aşağıdaki açık sezonlara katılabilir ya da bir davet koduyla odaya girebilirsin.</p>
+}
+else
+{
+    <ul class="oda-liste">
+        @foreach (var o in Model.Benimkiler)
+        {
+            <li>
+                <a href="@Adres(o)" class="oda-kart">
+                    <span class="oda-ad"><span class="etiket">@Etiket(o)</span> @o.Ad</span>
+                    <span class="oda-alt">@o.KitapAdi · @o.Ozet</span>
+                </a>
+            </li>
+        }
+    </ul>
+}
+
+@if (Model.Acik.Any())
+{
+    <h2 class="sezon-grup">Katılabileceğin açık sezonlar</h2>
+    <ul class="oda-liste">
+        @foreach (var o in Model.Acik)
+        {
+            <li>
+                <a href="@Adres(o)" class="oda-kart">
+                    <span class="oda-ad"><span class="etiket">Sezon</span> @o.Ad</span>
+                    <span class="oda-alt">@o.KitapAdi · @o.Ozet</span>
+                </a>
+            </li>
+        }
+    </ul>
+}

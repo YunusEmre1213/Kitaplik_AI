@@ -21,17 +21,8 @@ namespace KitapYonetimSistemi.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
-        {
-            var sezonlar = await _context.OkumaSezonlari.AsNoTracking()
-                .Include(s => s.Kitap)
-                .Include(s => s.Uyeler)
-                .OrderByDescending(s => s.Baslangic)
-                .Take(100)
-                .ToListAsync();
-            ViewBag.KullaniciId = _userManager.GetUserId(User);
-            return View(sezonlar);
-        }
+        // Oda ve sezon listeleri "Birlikte okuma" merkezinde birleşti
+        public IActionResult Index() => RedirectToAction("Index", "Birlikte");
 
         // Kitap detayından sezon başlat
         [HttpPost]

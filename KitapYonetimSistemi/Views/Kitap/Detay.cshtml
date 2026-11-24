@@ -94,10 +94,7 @@
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Birlikte oku</button>
                     <ul class="dropdown-menu">
-                        <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalOda">Okuma odası aç<small>Arkadaşlarınla ilerlemeni paylaş</small></button></li>
-                        <li>
-                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalSezon" disabled="@(!(Model.SayfaSayisi is > 0))">Sezon başlat<small>Dizi gibi, günlük bölümlerle</small></button>
-                        </li>
+                        <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalBirlikte">Birlikte okumayı başlat<small>Oda (serbest tempo) ya da sezon (günlük bölümler)</small></button></li>
                         <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalOneri">Birine öner<small>Kişisel notla bağlantı gönder</small></button></li>
                         <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalSoz" disabled="@(kitaplikDurumu == OkumaDurumu.Okundu)">Okuma sözü ver<small>Bir tarihe kadar bitireceğine söz ver</small></button></li>
                     </ul>
@@ -320,37 +317,34 @@
 @if (uye)
 {
     <!-- "Birlikte oku" pencereleri -->
-    <div class="modal fade" id="modalOda" tabindex="-1" aria-labelledby="modalOdaBaslik" aria-hidden="true">
+    <div class="modal fade" id="modalBirlikte" tabindex="-1" aria-labelledby="modalBirlikteBaslik" aria-hidden="true">
         <div class="modal-dialog">
-            <form asp-controller="Oda" asp-action="Olustur" method="post" class="modal-content">
-                <div class="modal-header"><h2 class="modal-title" id="modalOdaBaslik">Okuma odası aç</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button></div>
+            <form id="formBirlikte" asp-controller="Oda" asp-action="Olustur" method="post" class="modal-content">
+                <div class="modal-header"><h2 class="modal-title" id="modalBirlikteBaslik">Birlikte okumayı başlat</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button></div>
                 <div class="modal-body">
-                    <p class="text-muted">Arkadaşlarınla aynı kitabı oku; ilerlemeler yan yana görünür, mesajlar yazarın sayfasına bağlanır ve geride kalan için kilitli kalır. Davet koduyla katılırlar.</p>
                     <input type="hidden" name="kitapId" value="@Model.Id" />
-                    <input type="text" name="ad" class="form-control" maxlength="80" placeholder="Oda adı (isteğe bağlı)" aria-label="Oda adı" />
+                    <div class="birlikte-secim" role="radiogroup" aria-label="Okuma biçimi">
+                        <label class="birlikte-kart">
+                            <input type="radio" name="birlikteTuru" value="oda" checked />
+                            <span><strong>Oda</strong><small>Serbest tempo. Davet koduyla arkadaşların katılır, ilerlemeler yan yana görünür.</small></span>
+                        </label>
+                        <label class="birlikte-kart @(Model.SayfaSayisi is > 0 ? "" : "devre-disi")">
+                            <input type="radio" name="birlikteTuru" value="sezon" disabled="@(!(Model.SayfaSayisi is > 0))" />
+                            <span><strong>Sezon</strong><small>Dizi gibi, günlük bölümlerle. Herkese açık, bölümü okuyunca sohbeti açılır.@(Model.SayfaSayisi is > 0 ? "" : " (Sayfa sayısı bilinmeyen kitaplarda kullanılamaz.)")</small></span>
+                        </label>
+                    </div>
+                    <p class="text-muted small mt-2">Her iki biçimde de mesajlar yazarın sayfasına bağlanır; geride kalan okur ilerideki mesajı göremez.</p>
+                    <div class="mb-2"><input type="text" name="ad" class="form-control" maxlength="80" placeholder="Ad (isteğe bağlı)" aria-label="Ad" /></div>
+                    <div class="row g-2 sezon-alanlari" hidden>
+                        <div class="col-7"><label class="form-label small" for="sezonBaslangic">Başlangıç</label><input type="date" id="sezonBaslangic" name="baslangic" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" min="@DateTime.Now.ToString("yyyy-MM-dd")" disabled /></div>
+                        <div class="col-5"><label class="form-label small" for="sezonGun">Gün sayısı</label><input type="number" id="sezonGun" name="gunSayisi" class="form-control" value="21" min="5" max="90" disabled /></div>
+                    </div>
                 </div>
-                <div class="modal-footer"><button type="submit" class="btn btn-primary">Odayı aç</button></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary" id="birlikteGonder">Odayı aç</button></div>
             </form>
         </div>
     </div>
 
-    <div class="modal fade" id="modalSezon" tabindex="-1" aria-labelledby="modalSezonBaslik" aria-hidden="true">
-        <div class="modal-dialog">
-            <form asp-controller="Sezon" asp-action="Olustur" method="post" class="modal-content">
-                <div class="modal-header"><h2 class="modal-title" id="modalSezonBaslik">Sezon başlat</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button></div>
-                <div class="modal-body">
-                    <p class="text-muted">Topluluk kitabı dizi gibi günlük bölümlerle birlikte okur. Bölümü okuyunca sohbeti açılır, kimse spoiler yemez.</p>
-                    <input type="hidden" name="kitapId" value="@Model.Id" />
-                    <div class="mb-2"><input type="text" name="ad" class="form-control" maxlength="80" placeholder="Sezon adı (isteğe bağlı)" aria-label="Sezon adı" /></div>
-                    <div class="row g-2">
-                        <div class="col-7"><label class="form-label small" for="sezonBaslangic">Başlangıç</label><input type="date" id="sezonBaslangic" name="baslangic" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" min="@DateTime.Now.ToString("yyyy-MM-dd")" required /></div>
-                        <div class="col-5"><label class="form-label small" for="sezonGun">Gün sayısı</label><input type="number" id="sezonGun" name="gunSayisi" class="form-control" value="21" min="5" max="90" required /></div>
-                    </div>
-                </div>
-                <div class="modal-footer"><button type="submit" class="btn btn-primary">Sezonu aç</button></div>
-            </form>
-        </div>
-    </div>
 
     <div class="modal fade" id="modalOneri" tabindex="-1" aria-labelledby="modalOneriBaslik" aria-hidden="true">
         <div class="modal-dialog">
@@ -391,6 +385,25 @@
             document.getElementById('puanInput').value = rating;
             document.getElementById('ratingForm').submit();
         }
+
+        // "Birlikte okumayı başlat" penceresi: oda ya da sezon seçimine göre form adresini ve alanları değiştirir
+        (function () {
+            var form = document.getElementById("formBirlikte");
+            if (!form) return;
+            var odaAdres = form.getAttribute("action");
+            var sezonAdres = odaAdres.replace("/Oda/Olustur", "/Sezon/Olustur");
+            var alanlar = form.querySelector(".sezon-alanlari");
+            var gonder = document.getElementById("birlikteGonder");
+            form.querySelectorAll("input[name=birlikteTuru]").forEach(function (r) {
+                r.addEventListener("change", function () {
+                    var sezon = form.querySelector("input[name=birlikteTuru]:checked").value === "sezon";
+                    form.setAttribute("action", sezon ? sezonAdres : odaAdres);
+                    alanlar.hidden = !sezon;
+                    alanlar.querySelectorAll("input").forEach(function (i) { i.disabled = !sezon; i.required = sezon; });
+                    gonder.textContent = sezon ? "Sezonu aç" : "Odayı aç";
+                });
+            });
+        })();
 
         function sekmeGoster(id) {
             var dugme = document.querySelector('[data-bs-target="#' + id + '"]');

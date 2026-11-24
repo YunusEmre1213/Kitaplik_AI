@@ -68,7 +68,7 @@
         <div class="d-flex flex-wrap gap-2">
             <a asp-controller="Kitap" asp-action="Index" class="btn btn-primary">Kitaplara göz at</a>
             <a asp-controller="IceAktar" asp-action="Index" class="btn btn-outline-secondary">Kitap listeni içe aktar</a>
-            <a asp-controller="Sezon" asp-action="Index" class="btn btn-outline-secondary">Bir sezona katıl</a>
+            <a asp-controller="Birlikte" asp-action="Index" class="btn btn-outline-secondary">Birlikte okumaya katıl</a>
         </div>
     </section>
 }
@@ -117,19 +117,19 @@
     </section>
 }
 
-@if (Model.Sezonlar.Any())
+@if (Model.Sezonlar.Any() || Model.Odalar.Any())
 {
     <section class="ana-bolum">
         <div class="bolum-baslik">
-            <h2>Sezonlarım</h2>
-            <a asp-controller="Sezon" asp-action="Index" class="etiket">Tüm sezonlar &rarr;</a>
+            <h2>Birlikte okuduklarım</h2>
+            <a asp-controller="Birlikte" asp-action="Index" class="etiket">Tümü &rarr;</a>
         </div>
         <ul class="oda-liste">
             @foreach (var s in Model.Sezonlar)
             {
                 <li>
                     <a asp-controller="Sezon" asp-action="Detay" asp-route-id="@s.SezonId" asp-fragment="@(s.Gorev.Durum == SezonGorevDurumu.Gorev ? $"bolum-{s.Gorev.Bolum}" : null)" class="oda-kart">
-                        <span class="oda-ad">@s.Ad</span>
+                        <span class="oda-ad"><span class="etiket">Sezon</span> @s.Ad</span>
                         <span class="oda-alt">
                             @switch (s.Gorev.Durum)
                             {
@@ -143,6 +143,20 @@
                                     <text>@s.Baslangic.ToString("d MMMM", tr) tarihinde başlıyor · @s.BolumSayisi bölüm</text>
                                     break;
                             }
+                        </span>
+                    </a>
+                </li>
+            }
+            @foreach (var o in Model.Odalar)
+            {
+                <li>
+                    <a asp-controller="Oda" asp-action="Detay" asp-route-id="@o.OdaId" class="oda-kart">
+                        <span class="oda-ad"><span class="etiket">Oda</span> @o.Ad</span>
+                        <span class="oda-alt">
+                            @o.KitapAdi ·
+                            @if (o.IlerideKisi > 0) { <text>@o.IlerideKisi kişi senden ilerde (en ilerisi s. @o.EnIlerideSayfa)</text> }
+                            else { <text>odada en önde sensin</text> }
+                            @if (o.SonMesajTarihi.HasValue) { <text> · son mesaj @o.SonMesajYazari, @Goreli(o.SonMesajTarihi.Value)</text> }
                         </span>
                     </a>
                 </li>
@@ -178,32 +192,6 @@
                                     break;
                             }
                             @if (s.Benim && s.YeniDestek > 0) { <text> · @s.YeniDestek destek mesajı</text> }
-                        </span>
-                    </a>
-                </li>
-            }
-        </ul>
-    </section>
-}
-
-@if (Model.Odalar.Any())
-{
-    <section class="ana-bolum">
-        <div class="bolum-baslik">
-            <h2>Okuma odalarım</h2>
-            <a asp-controller="Oda" asp-action="Index" class="etiket">Tüm odalar &rarr;</a>
-        </div>
-        <ul class="oda-liste">
-            @foreach (var o in Model.Odalar)
-            {
-                <li>
-                    <a asp-controller="Oda" asp-action="Detay" asp-route-id="@o.OdaId" class="oda-kart">
-                        <span class="oda-ad">@o.Ad</span>
-                        <span class="oda-alt">
-                            @o.KitapAdi ·
-                            @if (o.IlerideKisi > 0) { <text>@o.IlerideKisi kişi senden ilerde (en ilerisi s. @o.EnIlerideSayfa)</text> }
-                            else { <text>odada en önde sensin</text> }
-                            @if (o.SonMesajTarihi.HasValue) { <text> · son mesaj @o.SonMesajYazari, @Goreli(o.SonMesajTarihi.Value)</text> }
                         </span>
                     </a>
                 </li>

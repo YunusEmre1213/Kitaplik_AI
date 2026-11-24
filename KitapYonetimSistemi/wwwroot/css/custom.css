@@ -584,3 +584,11 @@ main { padding-top: 1.4rem; }
 .kenar-liste.adli .kenar-sayfa { font-size: 1rem; overflow-wrap: anywhere; }
 :root[data-theme="dark"] .dropdown-menu .dropdown-item { color: var(--sa-ink); }
 :root[data-theme="dark"] .dropdown-menu .dropdown-item small { color: var(--sa-muted); }
+
+/* Birlikte okuma: oda / sezon seçimi */
+.birlikte-secim { display: grid; gap: .6rem; }
+.birlikte-kart { display: flex; gap: .75rem; align-items: flex-start; border: 1px solid var(--sa-line); border-radius: var(--sa-radius); padding: .7rem .9rem; cursor: pointer; background: var(--sa-paper); }
+.birlikte-kart:has(input:checked) { border-color: var(--sa-accent); background: var(--sa-surface); }
+.birlikte-kart input { margin-top: .3rem; }
+.birlikte-kart small { display: block; color: var(--sa-muted); font-size: .82rem; }
+.birlikte-kart.devre-disi { opacity: .55; cursor: not-allowed; }

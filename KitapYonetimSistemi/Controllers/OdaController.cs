@@ -23,17 +23,8 @@ namespace KitapYonetimSistemi.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
-        {
-            var kullaniciId = _userManager.GetUserId(User)!;
-            var odalar = await _context.OkumaOdalari.AsNoTracking()
-                .Where(o => o.Uyeler.Any(u => u.KullaniciId == kullaniciId))
-                .Include(o => o.Kitap)
-                .Include(o => o.Uyeler)
-                .OrderByDescending(o => o.Tarih)
-                .ToListAsync();
-            return View(odalar);
-        }
+        // Oda ve sezon listeleri "Birlikte okuma" merkezinde birleşti
+        public IActionResult Index() => RedirectToAction("Index", "Birlikte");
 
         // Kitap detayından oda aç
         [HttpPost]

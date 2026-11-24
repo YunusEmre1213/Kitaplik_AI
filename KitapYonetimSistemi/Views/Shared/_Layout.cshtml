@@ -23,7 +23,7 @@
         var kitaplikAktif = (string.Equals(kontrolcu, "Kitap", StringComparison.OrdinalIgnoreCase) && kitaplikEylemleri.Contains(eylem, StringComparer.OrdinalIgnoreCase))
             || string.Equals(kontrolcu, "IceAktar", StringComparison.OrdinalIgnoreCase);
         var kitaplarAktif = string.Equals(kontrolcu, "Kitap", StringComparison.OrdinalIgnoreCase) && !kitaplikAktif;
-        var toplulukKontrolcular = new[] { "Sezon", "Oda", "Oneri", "Soz", "Tartisma", "Ikiz" };
+        var toplulukKontrolcular = new[] { "Birlikte", "Sezon", "Oda", "Oneri", "Soz", "Tartisma", "Ikiz" };
         var toplulukAktif = toplulukKontrolcular.Contains(kontrolcu, StringComparer.OrdinalIgnoreCase);
     }
     <header>
@@ -49,8 +49,7 @@
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle @(toplulukAktif ? "active" : "")" href="#" id="toplulukMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Topluluk</a>
                                 <ul class="dropdown-menu" aria-labelledby="toplulukMenu">
-                                    <li><a class="dropdown-item @Aktif("Sezon")" asp-controller="Sezon" asp-action="Index">Sezonlar<small>Dizi gibi birlikte okuma</small></a></li>
-                                    <li><a class="dropdown-item @Aktif("Oda")" asp-controller="Oda" asp-action="Index">Okuma odaları<small>Arkadaşlarınla aynı kitap</small></a></li>
+                                    <li><a class="dropdown-item @Aktif("Birlikte")" asp-controller="Birlikte" asp-action="Index">Birlikte okuma<small>Oda ve sezonlar: arkadaşlarınla aynı kitap</small></a></li>
                                     <li><a class="dropdown-item @Aktif("Oneri")" asp-controller="Oneri" asp-action="Index">Öneri zincirleri<small>Kitabın kimden kime gittiği</small></a></li>
                                     <li><a class="dropdown-item @Aktif("Soz")" asp-controller="Soz" asp-action="Index">Okuma sözleri<small>Arkadaşlarına söz ver, destek al</small></a></li>
                                     <li><a class="dropdown-item @Aktif("Ikiz")" asp-controller="Ikiz" asp-action="Index">Okuma ikizi<small>Aynı sayfalarda hisseden okurlar</small></a></li>
