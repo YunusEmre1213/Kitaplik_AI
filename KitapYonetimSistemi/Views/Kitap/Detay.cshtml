@@ -99,6 +99,7 @@
                             <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalSezon" disabled="@(!(Model.SayfaSayisi is > 0))">Sezon başlat<small>Dizi gibi, günlük bölümlerle</small></button>
                         </li>
                         <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalOneri">Birine öner<small>Kişisel notla bağlantı gönder</small></button></li>
+                        <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalSoz" disabled="@(kitaplikDurumu == OkumaDurumu.Okundu)">Okuma sözü ver<small>Bir tarihe kadar bitireceğine söz ver</small></button></li>
                     </ul>
                 </div>
             </div>
@@ -361,6 +362,24 @@
                     <input type="text" name="not" class="form-control" maxlength="300" placeholder="Kişisel notun: neden okumalı?" aria-label="Öneri notu" />
                 </div>
                 <div class="modal-footer"><button type="submit" class="btn btn-primary">Bağlantı oluştur</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalSoz" tabindex="-1" aria-labelledby="modalSozBaslik" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-controller="Soz" asp-action="Olustur" method="post" class="modal-content">
+                <div class="modal-header"><h2 class="modal-title" id="modalSozBaslik">Okuma sözü ver</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button></div>
+                <div class="modal-body">
+                    <p class="text-muted">Bu kitabı bir tarihe kadar bitireceğine söz ver. Tanık olan arkadaşların ilerlemeni (yalnızca sayfa ve yüzde) görür, nazik mesajlarla destek olur. Gerekirse sözü bir kez uzatabilirsin.</p>
+                    <input type="hidden" name="kitapId" value="@Model.Id" />
+                    <div class="mb-2">
+                        <label class="form-label small" for="sozBitis">Bitiş tarihi</label>
+                        <input type="date" id="sozBitis" name="bitis" class="form-control" value="@DateTime.Now.AddDays(14).ToString("yyyy-MM-dd")" min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" max="@DateTime.Now.AddDays(SozKurali.EnFazlaGun).ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <input type="text" name="not" class="form-control" maxlength="300" placeholder="Arkadaşlarına notun (isteğe bağlı)" aria-label="Söz notu" />
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary">Söz ver</button></div>
             </form>
         </div>
     </div>

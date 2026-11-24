@@ -487,6 +487,11 @@ namespace KitapYonetimSistemi.Controllers
                 else _context.OkumaSezonlari.Remove(sezon);
             }
 
+            // Okuma sözleri: kullanıcıya veritabanı bağı yoktur. Sahibi olduğu sözler (tanıklar ve dürtmelerle birlikte) silinir, tanıklığı ve dürtmeleri temizlenir.
+            _context.OkumaSozleri.RemoveRange(_context.OkumaSozleri.Where(s => s.SahipId == kullaniciId));
+            _context.SozTanikleri.RemoveRange(_context.SozTanikleri.Where(t => t.KullaniciId == kullaniciId));
+            _context.SozDurtmeleri.RemoveRange(_context.SozDurtmeleri.Where(d => d.GonderenId == kullaniciId));
+
             // Öneri zinciri: kullanıcıya veritabanı bağı olmadığı için elle temizlenir. Zincirin geri kalanı korunur.
             var kabulIdleri = await _context.OneriKabulleri.Where(k => k.KullaniciId == kullaniciId).Select(k => k.Id).ToListAsync();
             foreach (var oneri in await _context.Oneriler.Where(o => o.OncekiKabulId != null && kabulIdleri.Contains(o.OncekiKabulId.Value)).ToListAsync())

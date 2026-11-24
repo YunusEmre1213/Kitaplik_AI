@@ -27,6 +27,9 @@ namespace KitapYonetimSistemi.Data
         public DbSet<OkumaOdasi> OkumaOdalari { get; set; }
         public DbSet<OdaUyesi> OdaUyeleri { get; set; }
         public DbSet<OdaMesaji> OdaMesajlari { get; set; }
+        public DbSet<OkumaSozu> OkumaSozleri { get; set; }
+        public DbSet<SozTanigi> SozTanikleri { get; set; }
+        public DbSet<SozDurtmesi> SozDurtmeleri { get; set; }
         public DbSet<Oneri> Oneriler { get; set; }
         public DbSet<OneriKabul> OneriKabulleri { get; set; }
         public DbSet<OkumaSezonu> OkumaSezonlari { get; set; }
@@ -266,6 +269,32 @@ namespace KitapYonetimSistemi.Data
                 m.HasOne(x => x.Oda).WithMany(o => o.Mesajlar).HasForeignKey(x => x.OdaId).OnDelete(DeleteBehavior.Cascade);
                 m.HasOne(x => x.Kullanici).WithMany().HasForeignKey(x => x.KullaniciId).OnDelete(DeleteBehavior.Cascade);
                 m.HasIndex(x => new { x.OdaId, x.Tarih });
+            });
+
+            // Okuma sözleri: kullanıcılara bilerek veritabanı bağı yok (admin silerken elle temizlenir)
+            builder.Entity<OkumaSozu>(s =>
+            {
+                s.Property(x => x.Kod).HasMaxLength(OkumaSozu.KodUzunlugu).IsRequired();
+                s.Property(x => x.Not).HasMaxLength(SozKurali.NotUzunlugu);
+                s.Property(x => x.SahipId).HasMaxLength(450).IsRequired();
+                s.HasIndex(x => x.Kod).IsUnique();
+                s.HasIndex(x => x.SahipId);
+                s.HasOne(x => x.Kitap).WithMany().HasForeignKey(x => x.KitapId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<SozTanigi>(t =>
+            {
+                t.Property(x => x.KullaniciId).HasMaxLength(450).IsRequired();
+                t.HasOne(x => x.Soz).WithMany(s => s.Tanikler).HasForeignKey(x => x.SozId).OnDelete(DeleteBehavior.Cascade);
+                t.HasIndex(x => new { x.SozId, x.KullaniciId }).IsUnique();
+                t.HasIndex(x => x.KullaniciId);
+            });
+
+            builder.Entity<SozDurtmesi>(d =>
+            {
+                d.Property(x => x.GonderenId).HasMaxLength(450).IsRequired();
+                d.HasOne(x => x.Soz).WithMany(s => s.Durtmeler).HasForeignKey(x => x.SozId).OnDelete(DeleteBehavior.Cascade);
+                d.HasIndex(x => new { x.SozId, x.GonderenId, x.Tarih });
             });
 
             // Öneri zinciri: kullanıcılara bilerek veritabanı bağı yok (silinen okurun halkası zincirde kalır, admin silerken elle temizlenir)

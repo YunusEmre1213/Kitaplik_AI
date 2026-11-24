@@ -1,0 +1,48 @@
+@model KitapYonetimSistemi.Controllers.SozAcViewModel
+
+@{
+    ViewData["Title"] = "Bir okuma sözüne tanık ol";
+    var k = Model.Kart;
+    var kitap = k.Soz.Kitap!;
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+}
+
+<div class="oneri-ac">
+    <span class="etiket">Okuma sözü</span>
+    <h1>@k.SahipAdi sana bir söz verdi</h1>
+
+    <div class="oneri-kitap">
+        <div class="detay-kapak"><partial name="_Kapak" model='KapakModel.Of(kitap, "md")' /></div>
+        <div>
+            <h2 class="oda-ad">@kitap.KitapAdi</h2>
+            <p class="detay-yazar">@(string.IsNullOrWhiteSpace(kitap.YazarAdi) ? "Yazar bilinmiyor" : kitap.YazarAdi)</p>
+            <p><strong>@k.Soz.Bitis.ToString("d MMMM yyyy", tr)</strong> tarihine kadar bu kitabı bitireceğini söyledi.</p>
+            @if (!string.IsNullOrWhiteSpace(k.Soz.Not))
+            {
+                <blockquote class="oneri-not">"@k.Soz.Not"<footer>@k.SahipAdi</footer></blockquote>
+            }
+        </div>
+    </div>
+
+    @if (Model.Kendi)
+    {
+        <div class="alert alert-info">Bu senin kendi söz bağlantın. Tanık olmasını istediğin arkadaşlarına gönder.</div>
+        <a asp-action="Detay" asp-route-id="@k.Soz.Id" class="btn btn-outline-secondary">Sözüme git</a>
+    }
+    else if (k.Durum != SozDurumu.Surmekte)
+    {
+        <div class="alert alert-info">Bu sözün süresi dolmuş ya da tamamlanmış, artık tanık olunamaz.</div>
+    }
+    else if (Model.Dolu)
+    {
+        <div class="alert alert-info">Bu sözün tanık sayısı doldu (en fazla @SozKurali.EnFazlaTanik kişi).</div>
+    }
+    else
+    {
+        <form asp-action="Taniklik" method="post">
+            <input type="hidden" name="kod" value="@Model.Kod" />
+            <button type="submit" class="btn btn-primary">Tanık ol</button>
+        </form>
+        <div class="tepki-ipucu mt-2">Tanık olunca @k.SahipAdi'in bu kitaptaki ilerlemesini (yalnızca sayfa ve yüzde) görür ve günde bir kez nazik bir destek mesajı gönderebilirsin. Notlarına ve alıntılarına erişemezsin.</div>
+    }
+</div>

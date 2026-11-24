@@ -1,0 +1,69 @@
+@model KitapYonetimSistemi.Controllers.SozIndexViewModel
+
+@{
+    ViewData["Title"] = "Okuma sözleri";
+    string Durum(SozKarti k) => k.Durum switch
+    {
+        SozDurumu.Surmekte => k.KalanGun == 0 ? "bugün son gün" : $"{k.KalanGun} gün kaldı",
+        SozDurumu.Tuttu => "sözünü tuttu 🎉",
+        SozDurumu.GecTuttu => "geç de olsa tuttu",
+        _ => "süre doldu"
+    };
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Okuma sözü</span>
+        <h1>Okuma sözlerim</h1>
+        <span class="not">Bir kitabı belirli bir tarihe kadar bitireceğine arkadaşlarına söz ver. Onlar ilerlemeni görür, nazikçe destek olur.</span>
+    </div>
+</div>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["Hata"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<h2 class="sezon-grup">Verdiğim sözler</h2>
+@if (!Model.Benim.Any())
+{
+    <p class="text-muted">Henüz bir söz vermedin. Bir kitabın sayfasındaki "Birlikte oku" menüsünden "Okuma sözü ver" seçeneğini kullanabilirsin.</p>
+}
+else
+{
+    <ul class="oda-liste">
+        @foreach (var k in Model.Benim)
+        {
+            <li>
+                <a asp-action="Detay" asp-route-id="@k.Soz.Id" class="oda-kart">
+                    <span class="oda-ad">@k.Soz.Kitap?.KitapAdi</span>
+                    <span class="oda-alt">@k.Soz.Bitis.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("tr-TR")) · @Durum(k) · %@k.Yuzde · @k.TanikSayisi tanık</span>
+                </a>
+            </li>
+        }
+    </ul>
+}
+
+<h2 class="sezon-grup">Tanık olduklarım</h2>
+@if (!Model.Taniklarim.Any())
+{
+    <p class="text-muted">Henüz kimsenin sözüne tanık olmadın. Bir arkadaşının gönderdiği söz bağlantısını açınca burada görünür.</p>
+}
+else
+{
+    <ul class="oda-liste">
+        @foreach (var k in Model.Taniklarim)
+        {
+            <li>
+                <a asp-action="Detay" asp-route-id="@k.Soz.Id" class="oda-kart">
+                    <span class="oda-ad">@k.SahipAdi: @k.Soz.Kitap?.KitapAdi</span>
+                    <span class="oda-alt">@k.Soz.Bitis.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("tr-TR")) · @Durum(k) · %@k.Yuzde</span>
+                </a>
+            </li>
+        }
+    </ul>
+}

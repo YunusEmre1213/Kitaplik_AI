@@ -14,6 +14,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddScoped<KitapYonetimSistemi.Services.LibraryToolService>();
+builder.Services.AddScoped<KitapYonetimSistemi.Services.SozServisi>();
 builder.Services.AddScoped<KitapYonetimSistemi.Services.BugunServisi>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

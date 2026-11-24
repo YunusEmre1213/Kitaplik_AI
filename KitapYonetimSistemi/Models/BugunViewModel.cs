@@ -13,6 +13,7 @@ namespace KitapYonetimSistemi.Models
         public List<BugunSezon> Sezonlar { get; set; } = new();
         public List<BugunOda> Odalar { get; set; } = new();
         public List<BugunOneri> Oneriler { get; set; } = new();
+        public List<BugunSoz> Sozler { get; set; } = new();
         public List<BugunKapsul> Kapsuller { get; set; } = new();
         public List<Kitap> Yeniler { get; set; } = new();
         public bool Bos => Okuyorlar.Count == 0 && Sezonlar.Count == 0 && Odalar.Count == 0;
@@ -41,6 +42,21 @@ namespace KitapYonetimSistemi.Models
         public int EnIlerideSayfa { get; set; }
         public string? SonMesajYazari { get; set; }
         public DateTime? SonMesajTarihi { get; set; }
+    }
+
+    public class BugunSoz
+    {
+        public int SozId { get; set; }
+        public string KitapAdi { get; set; } = string.Empty;
+        // Sözü veren okur; kendi sözümse boş
+        public string? SahipAdi { get; set; }
+        public bool Benim { get; set; }
+        public SozDurumu Durum { get; set; }
+        public int KalanGun { get; set; }
+        public int Yuzde { get; set; }
+        public int GunlukGereken { get; set; }
+        // Kendi sözüme son günlerde gelen destek mesajı sayısı
+        public int YeniDestek { get; set; }
     }
 
     public class BugunOneri

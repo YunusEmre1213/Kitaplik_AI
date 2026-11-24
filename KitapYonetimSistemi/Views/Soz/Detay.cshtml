@@ -1,0 +1,153 @@
+@model KitapYonetimSistemi.Controllers.SozDetayViewModel
+
+@{
+    var k = Model.Kart;
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    ViewData["Title"] = "Okuma sözü";
+    var kitapAdi = k.Soz.Kitap?.KitapAdi ?? "";
+    var paylasim = Uri.EscapeDataString($"\"{kitapAdi}\" kitabını {k.Soz.Bitis.ToString("d MMMM", tr)} tarihine kadar bitireceğime söz veriyorum. Tanığım olur musun? {Model.Baglanti}");
+    string Goreli(DateTime t)
+    {
+        var fark = DateTime.Now - t;
+        if (fark.TotalHours < 1) return $"{Math.Max(1, (int)fark.TotalMinutes)} dk önce";
+        if (fark.TotalHours < 24) return $"{(int)fark.TotalHours} saat önce";
+        return $"{(int)fark.TotalDays} gün önce";
+    }
+    var durumMetni = k.Durum switch
+    {
+        SozDurumu.Surmekte => k.KalanGun == 0 ? "Bugün son gün" : $"{k.KalanGun} gün kaldı",
+        SozDurumu.Tuttu => "Sözünü tuttu 🎉",
+        SozDurumu.GecTuttu => "Geç de olsa tuttu",
+        _ => "Süre doldu"
+    };
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Okuma sözleri</a></li>
+        <li class="breadcrumb-item active">@kitapAdi</li>
+    </ol>
+</nav>
+
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Mesaj"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["Hata"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<div class="sayfa-baslik">
+    <div>
+        <span class="etiket">Okuma sözü</span>
+        <h1>@(Model.Sahip ? "Sözüm" : k.SahipAdi + "'in sözü")</h1>
+        <span class="not"><a asp-controller="Kitap" asp-action="Detay" asp-route-id="@k.Soz.KitapId">@kitapAdi</a> · @k.Soz.Bitis.ToString("d MMMM yyyy", tr) tarihine kadar</span>
+    </div>
+    <div class="sezon-durum"><strong>@durumMetni</strong></div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(k.Soz.Not))
+{
+    <blockquote class="oneri-not">"@k.Soz.Not"<footer>@k.SahipAdi</footer></blockquote>
+}
+
+<section class="soz-ilerleme">
+    <div class="d-flex justify-content-between small text-muted mb-1">
+        <span>@(k.ToplamSayfa.HasValue ? $"{k.MevcutSayfa} / {k.ToplamSayfa} sayfa" : $"{k.MevcutSayfa}. sayfa")</span>
+        <span>%@k.Yuzde</span>
+    </div>
+    <div class="ince-ilerleme" role="progressbar" aria-valuenow="@k.Yuzde" aria-valuemin="0" aria-valuemax="100"><span style="width: @k.Yuzde%"></span></div>
+    @if (k.Durum == SozDurumu.Surmekte && k.GunlukGereken > 0)
+    {
+        <div class="tepki-ipucu">Sözü tutmak için günde yaklaşık <strong>@k.GunlukGereken sayfa</strong> yeter.</div>
+    }
+    @if (!Model.Sahip)
+    {
+        <div class="tepki-ipucu">Yalnızca sayfa ve yüzde görünür; notları ve alıntıları paylaşılmaz.</div>
+    }
+</section>
+
+@if (Model.Sahip)
+{
+    <section class="oneri-baglanti">
+        <label class="form-label" for="sozBaglanti">Tanıklık bağlantın (en fazla @SozKurali.EnFazlaTanik kişi)</label>
+        <div class="input-group">
+            <input type="text" id="sozBaglanti" class="form-control" readonly value="@Model.Baglanti" onfocus="this.select()" />
+            <button type="button" class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText(document.getElementById('sozBaglanti').value).then(() => { this.textContent = 'Kopyalandı'; })">Kopyala</button>
+            <a class="btn btn-outline-secondary" target="_blank" rel="noopener" href="https://wa.me/?text=@paylasim">WhatsApp</a>
+        </div>
+        <div class="tepki-ipucu">Tanık olanlar ilerlemeni (sayfa ve yüzde) görür ve sana nazik hazır mesajlar gönderebilir.</div>
+    </section>
+
+    @if (Model.Durtmeler.Any())
+    {
+        <section>
+            <h2 class="sezon-grup">Sana gelen destek</h2>
+            <ul class="kenar-liste adli">
+                @foreach (var d in Model.Durtmeler)
+                {
+                    <li><span class="kenar-sayfa">@d.Gonderen</span><div class="kenar-icerik"><p>@d.Mesaj</p><div class="kenar-alt"><span>@Goreli(d.Tarih)</span></div></div></li>
+                }
+            </ul>
+        </section>
+    }
+
+    @if (Model.UzatilabilirMi)
+    {
+        <details class="sezon-ac">
+            <summary>Süreye ihtiyacın mı var? Sözü bir kez uzat</summary>
+            <form asp-action="Uzat" method="post" class="sezon-form">
+                <input type="hidden" name="sozId" value="@k.Soz.Id" />
+                <label>Yeni tarih <input type="date" name="yeniBitis" class="form-control form-control-sm" min="@k.Soz.Bitis.AddDays(1).ToString("yyyy-MM-dd")" max="@k.Soz.Bitis.AddDays(SozKurali.UzatmaEnFazlaGun).ToString("yyyy-MM-dd")" required /></label>
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Uzat</button>
+            </form>
+            <div class="tepki-ipucu">En fazla @SozKurali.UzatmaEnFazlaGun gün ve yalnızca bir kez.</div>
+        </details>
+    }
+
+    <form asp-action="Vazgec" method="post" onsubmit="return confirm('Sözü geri çekmek istediğine emin misin? Tanıklar ve mesajlar silinir.');" class="mt-4">
+        <input type="hidden" name="sozId" value="@k.Soz.Id" />
+        <button type="submit" class="cikar-btn">Sözü geri çek</button>
+    </form>
+}
+else
+{
+    <section>
+        <h2 class="sezon-grup">Destek ol</h2>
+        @{
+            var uygunlar = Enum.GetValues<DurtmeTuru>().Where(t => SozKurali.DurtmeUygunMu(t, k.Durum)).ToList();
+            var tebrikMi = k.Durum is SozDurumu.Tuttu or SozDurumu.GecTuttu;
+            // Tebrik söz başına bir kez, dürtmeler günde bir kez gönderilir
+            var gosterilecek = tebrikMi ? (Model.TebrikGonderdi ? new List<DurtmeTuru>() : uygunlar) : (Model.Durtebilir ? uygunlar : new List<DurtmeTuru>());
+        }
+        @if (gosterilecek.Any())
+        {
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var tur in gosterilecek)
+                {
+                    <form asp-action="Durt" method="post">
+                        <input type="hidden" name="sozId" value="@k.Soz.Id" />
+                        <input type="hidden" name="tur" value="@((int)tur)" />
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">@SozKurali.DurtmeMetni(tur)</button>
+                    </form>
+                }
+            </div>
+            <div class="tepki-ipucu">@(tebrikMi ? "Sözünü tutan arkadaşını tebrik edebilirsin." : "Günde bir mesaj gönderebilirsin.")</div>
+        }
+        else
+        {
+            <p class="text-muted">@(tebrikMi ? "Tebrik mesajını gönderdin." : "Bugün zaten bir mesaj gönderdin. Yarın tekrar destek olabilirsin.")</p>
+        }
+    </section>
+
+    <form asp-action="TaniklikBirak" method="post" class="mt-4">
+        <input type="hidden" name="sozId" value="@k.Soz.Id" />
+        <button type="submit" class="cikar-btn">Tanıklıktan çık</button>
+    </form>
+}
+
+@if (Model.Tanikler.Any())
+{
+    <p class="zincir-yol mt-4">Tanıklar: <strong>@string.Join(", ", Model.Tanikler)</strong></p>
+}

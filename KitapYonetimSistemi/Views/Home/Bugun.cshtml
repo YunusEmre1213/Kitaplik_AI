@@ -151,6 +151,41 @@
     </section>
 }
 
+@if (Model.Sozler.Any())
+{
+    <section class="ana-bolum">
+        <div class="bolum-baslik">
+            <h2>Okuma sözleri</h2>
+            <a asp-controller="Soz" asp-action="Index" class="etiket">Tüm sözler &rarr;</a>
+        </div>
+        <ul class="oda-liste">
+            @foreach (var s in Model.Sozler)
+            {
+                <li>
+                    <a asp-controller="Soz" asp-action="Detay" asp-route-id="@s.SozId" class="oda-kart">
+                        <span class="oda-ad">@(s.Benim ? "Sözüm" : s.SahipAdi + "'in sözü"): @s.KitapAdi</span>
+                        <span class="oda-alt">
+                            @switch (s.Durum)
+                            {
+                                case SozDurumu.Surmekte:
+                                    <text>@(s.KalanGun == 0 ? "bugün son gün" : $"{s.KalanGun} gün kaldı") · %@s.Yuzde@(s.Benim && s.GunlukGereken > 0 ? $" · günde ~{s.GunlukGereken} sayfa yeter" : "")</text>
+                                    break;
+                                case SozDurumu.SuresiDoldu:
+                                    <text>süre doldu · %@s.Yuzde@(s.Benim ? " · istersen bir kez uzatabilirsin" : "")</text>
+                                    break;
+                                default:
+                                    <text>@(s.Benim ? "sözünü tuttun 🎉" : "sözünü tuttu 🎉 tebrik edebilirsin")</text>
+                                    break;
+                            }
+                            @if (s.Benim && s.YeniDestek > 0) { <text> · @s.YeniDestek destek mesajı</text> }
+                        </span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
 @if (Model.Odalar.Any())
 {
     <section class="ana-bolum">

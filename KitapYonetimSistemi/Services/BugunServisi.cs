@@ -14,10 +14,12 @@ namespace KitapYonetimSistemi.Services
         private const int YenilerSayisi = 8;
 
         private readonly ApplicationDbContext _context;
+        private readonly SozServisi _sozServisi;
 
-        public BugunServisi(ApplicationDbContext context)
+        public BugunServisi(ApplicationDbContext context, SozServisi sozServisi)
         {
             _context = context;
+            _sozServisi = sozServisi;
         }
 
         public async Task<BugunViewModel> HazirlaAsync(string kullaniciId, string? kullaniciAdi, DateTime simdi)
@@ -47,6 +49,7 @@ namespace KitapYonetimSistemi.Services
             await OdalariDoldur(vm, kullaniciId, adIdleri);
             await OnerileriDoldur(vm, kullaniciId, simdi, adIdleri);
             await KapsulleriDoldur(vm, kullaniciId, simdi);
+            await SozleriDoldur(vm, kullaniciId, simdi);
             await AdlariCoz(vm, adIdleri);
 
             vm.Yeniler = await _context.Kitaplar.AsNoTracking()
@@ -230,6 +233,46 @@ namespace KitapYonetimSistemi.Services
                     SayfaNo = n.SayfaNo,
                     Metin = n.Metin,
                     Yazildi = n.Tarih
+                })
+                .ToList();
+        }
+
+        // Verdiğim ve tanık olduğum açık sözler (yakın zamanda tutulanlar da kutlanır)
+        private async Task SozleriDoldur(BugunViewModel vm, string kullaniciId, DateTime simdi)
+        {
+            var taniklikIdleri = await _context.SozTanikleri.AsNoTracking()
+                .Where(t => t.KullaniciId == kullaniciId).Select(t => t.SozId).ToListAsync();
+            var sozler = await _context.OkumaSozleri.AsNoTracking()
+                .Include(s => s.Kitap).Include(s => s.Tanikler)
+                .Where(s => s.SahipId == kullaniciId || taniklikIdleri.Contains(s.Id))
+                .ToListAsync();
+            if (sozler.Count == 0) return;
+
+            var kartlar = await _sozServisi.KartlariOlusturAsync(sozler, simdi);
+            var pencere = simdi.AddDays(-SozKurali.DurtmeGostermeGunu);
+            var benimIdler = sozler.Where(s => s.SahipId == kullaniciId).Select(s => s.Id).ToList();
+            var destekler = (await _context.SozDurtmeleri.AsNoTracking()
+                .Where(d => benimIdler.Contains(d.SozId) && d.Tarih >= pencere)
+                .Select(d => d.SozId).ToListAsync())
+                .GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+
+            vm.Sozler = sozler
+                .Select(s => kartlar[s.Id])
+                .Where(k => k.Durum is SozDurumu.Surmekte or SozDurumu.SuresiDoldu
+                         || (k.Soz.Bitis >= simdi.Date.AddDays(-SozKurali.DurtmeGostermeGunu)))
+                .OrderBy(k => k.Durum is SozDurumu.Surmekte ? 0 : k.Durum is SozDurumu.SuresiDoldu ? 1 : 2)
+                .ThenBy(k => k.Soz.Bitis)
+                .Select(k => new BugunSoz
+                {
+                    SozId = k.Soz.Id,
+                    KitapAdi = k.Soz.Kitap?.KitapAdi ?? string.Empty,
+                    Benim = k.Soz.SahipId == kullaniciId,
+                    SahipAdi = k.Soz.SahipId == kullaniciId ? null : k.SahipAdi,
+                    Durum = k.Durum,
+                    KalanGun = k.KalanGun,
+                    Yuzde = k.Yuzde,
+                    GunlukGereken = k.GunlukGereken,
+                    YeniDestek = destekler.GetValueOrDefault(k.Soz.Id)
                 })
                 .ToList();
         }
